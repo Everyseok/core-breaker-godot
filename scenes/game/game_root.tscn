@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/game_root.gd" id="1_gr"]
+[ext_resource type="PackedScene" path="res://scenes/game/core.tscn" id="2_core"]
+[ext_resource type="Script" path="res://scripts/gameplay/weapon.gd" id="3_wpn"]
+[ext_resource type="Script" path="res://scripts/gameplay/ring_spawner.gd" id="4_rs"]
+
+[node name="GameRoot" type="Node2D"]
+position = Vector2(195, 337)
+script = ExtResource("1_gr")
+
+[node name="Core" parent="." instance=ExtResource("2_core")]
+
+[node name="BrickLayer" type="Node2D" parent="."]
+
+[node name="ProjectileLayer" type="Node2D" parent="."]
+
+[node name="Weapon" type="Node2D" parent="."]
+position = Vector2(0, 0)
+script = ExtResource("3_wpn")
+
+[node name="RingSpawner" type="Node2D" parent="."]
+script = ExtResource("4_rs")

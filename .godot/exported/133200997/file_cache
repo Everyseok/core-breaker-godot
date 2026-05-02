@@ -1,0 +1,10 @@
+res://scenes/game/core.tscn::582457dbbbe68503f8516d2d4d5130ed::1776674296::res://.godot/exported/133200997/export-c2bde64930e792b1196b04017e91ef87-core.scn
+res://scenes/game/game_root.tscn::8ba170e3ff9105611c00f7ed6f745ed1::1776759711::res://.godot/exported/133200997/export-10b7ad43eef77a47c48df36ed0a1b813-game_root.scn
+res://scenes/gameplay/arrow_projectile.tscn::2d2426ae3b64fa8b031afeb28f6ba8d6::1776671892::res://.godot/exported/133200997/export-af2ea687d468632328de15d91b2c650e-arrow_projectile.scn
+res://scenes/gameplay/brick_instance.tscn::f897fddc69ee32fabdc95e949e8d94a7::1776671890::res://.godot/exported/133200997/export-abb68f37ad5d47afa5e5ed261eee5e52-brick_instance.scn
+res://scenes/gameplay/electric_split_projectile.tscn::280b62a12f26a272f72c146afa648091::1776843152::res://.godot/exported/133200997/export-b2176e22e96ea4eddfbe4abfb63742b4-electric_split_projectile.scn
+res://scenes/gameplay/piercing_bomb_spear_projectile.tscn::41fb875d4ddcb07d95218ea7cc81e964::1776923631::res://.godot/exported/133200997/export-1a5cea95c8a80e144c2c72dcb9fa0641-piercing_bomb_spear_projectile.scn
+res://scenes/gameplay/ring_instance.tscn::f1bee9c91a116aba7b07e48f349273e7::1776671891::res://.godot/exported/133200997/export-b2c542da58a92ff98839386ed0710400-ring_instance.scn
+res://scenes/gameplay/stone_projectile.tscn::422416dc02b390acad0a87c9ac8c0a2c::1776673154::res://.godot/exported/133200997/export-84aeb450ee960645022672a46a3c5394-stone_projectile.scn
+res://scenes/main/main.tscn::a136e93024b4fdd96c28004b82631d0c::1776679979::res://.godot/exported/133200997/export-f39996a6d27a38698d16421ab974097b-main.scn
+res://scenes/ui/root_ui.tscn::c713d0e25b3e9268884236f1e543621c::1777601042::res://.godot/exported/133200997/export-ccbc75a379cdb8988d344b92f3f71f7e-root_ui.scn

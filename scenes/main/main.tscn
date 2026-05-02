@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://dslxie5d8tvvi"]
+
+[ext_resource type="PackedScene" path="res://scenes/game/game_root.tscn" id="1_game"]
+[ext_resource type="Script" uid="uid://b1fiiw8ksjoal" path="res://scripts/ui/danger_overlay.gd" id="2_do"]
+[ext_resource type="PackedScene" path="res://scenes/ui/root_ui.tscn" id="3_ui"]
+
+[node name="Main" type="Node" unique_id=825774261]
+
+[node name="GameRoot" parent="." unique_id=605932089 instance=ExtResource("1_game")]
+
+[node name="DangerOverlay" type="CanvasLayer" parent="." unique_id=395345050]
+script = ExtResource("2_do")
+
+[node name="EdgeTint" type="ColorRect" parent="DangerOverlay" unique_id=877608069]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.8, 0.05, 0.05, 0)
+
+[node name="RootUI" parent="." unique_id=1344735405 instance=ExtResource("3_ui")]

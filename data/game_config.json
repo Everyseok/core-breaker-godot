@@ -1,0 +1,11 @@
+{
+  "_comment": "Global game configuration. Loaded at startup by GameState.",
+  "version": "0.2.0",
+  "play_field_height_fraction": 0.8,
+  "core_y": 337,
+  "weapon_y": 337,
+  "play_field_radius": 280,
+  "wall_layer_spacing": 18,
+  "core_kill_radius": 40,
+  "segment_size": 28.0
+}
