@@ -110,8 +110,8 @@ jobs:
 
       - name: Write CI Godot editor settings for Android export
         run: |
-          mkdir -p "$HOME/.config/godot-ci"
-          cat > "$HOME/.config/godot-ci/editor_settings-4.6.tres" <<EOF
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-4.6.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
@@ -161,7 +161,6 @@ jobs:
             --headless \
             --editor \
             --quit \
-            --editor-settings-path "$HOME/.config/godot-ci" \
             --path "$GITHUB_WORKSPACE"
           test -d .godot/imported
           find .godot/imported -type f | wc -l
@@ -172,7 +171,6 @@ jobs:
           ".ci-tools/godot/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64" \
             --verbose \
             --headless \
-            --editor-settings-path "$HOME/.config/godot-ci" \
             --path "$GITHUB_WORKSPACE" \
             --export-debug "${EXPORT_PRESET_NAME}" "${APK_OUTPUT}"
           test -f "${APK_OUTPUT}"
