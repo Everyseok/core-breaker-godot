@@ -6,12 +6,15 @@
 English version: [README.md](README.md)
 
 [![비공개 저장소](https://img.shields.io/badge/PRIVATE-REPO-2f3640?style=for-the-badge&logo=github)](https://github.com/Everyseok/core-breaker-godot)
-[![APK 다운로드](https://img.shields.io/badge/DOWNLOAD-APK-e67e22?style=for-the-badge&logo=android)](https://github.com/Everyseok/core-breaker-godot/actions/workflows/android-debug-apk.yml)
+[![APK 다운로드](https://img.shields.io/badge/DOWNLOAD-APK-e67e22?style=for-the-badge&logo=android)](https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk)
+[![최신 디버그 릴리즈](https://img.shields.io/badge/LATEST-DEBUG%20RELEASE-1f6feb?style=for-the-badge&logo=github)](https://github.com/Everyseok/core-breaker-godot/releases/tag/android-debug-latest)
 [![폰 설치 가이드](https://img.shields.io/badge/PHONE-INSTALL%20GUIDE-2980b9?style=for-the-badge&logo=readthedocs)](docs/ANDROID_PHONE_TEST_FROM_GITHUB.md)
 [![AAB 나중에](https://img.shields.io/badge/GOOGLE%20PLAY-AAB%20LATER-4b5563?style=for-the-badge&logo=googleplay)](docs/GOOGLE_PLAY_RELEASE_MASTER_CHECKLIST.md)
 
 ## 빠른 링크
 
+- [APK 직접 다운로드](https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk)
+- [최신 디버그 릴리즈 페이지 열기](https://github.com/Everyseok/core-breaker-godot/releases/tag/android-debug-latest)
 - [Android Debug APK 워크플로 열기](https://github.com/Everyseok/core-breaker-godot/actions/workflows/android-debug-apk.yml)
 - [비공개 저장소 열기](https://github.com/Everyseok/core-breaker-godot)
 - [휴대폰 설치 가이드 열기](docs/ANDROID_PHONE_TEST_FROM_GITHUB.md)
@@ -19,8 +22,14 @@ English version: [README.md](README.md)
 
 ## APK 다운로드
 
-현재 안드로이드 패키지는 **비공개 GitHub Actions artifact**로 배포됩니다.  
+현재 안드로이드 패키지는 **비공개 GitHub Release asset**로 배포되며, 실제 생성은 Android Debug APK workflow가 담당합니다.
 Google Play에서 받는 구조가 아닙니다.
+
+기본 직접 다운로드 링크:
+
+- [core-breaker-debug.apk 직접 다운로드](https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk)
+
+직접 링크가 아직 준비되지 않았을 때의 우회 경로:
 
 1. 아래 워크플로 페이지를 엽니다.  
    [Android Debug APK](https://github.com/Everyseok/core-breaker-godot/actions/workflows/android-debug-apk.yml)
@@ -53,6 +62,7 @@ Google Play에서 받는 구조가 아닙니다.
 
 - 이 APK는 **비공개 테스트용 디버그 빌드**입니다.
 - 저장소가 **private** 이므로 GitHub 로그인과 저장소 접근 권한이 필요합니다.
+- 직접 APK 링크가 동작하려면 `android-debug-latest` 릴리즈 태그로 최소 한 번 성공적으로 게시되어야 합니다.
 - GitHub Actions artifact는 보관 기간이 지나면 만료될 수 있습니다.
 - Google Play 제출용 `AAB`는 나중 단계이며, 현재 다운로드 형식은 아닙니다.
 

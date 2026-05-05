@@ -14,7 +14,7 @@ on:
       - "assets/**"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-debug-apk:
@@ -160,3 +160,39 @@ jobs:
           path: exports/android_debug/core_breaker_debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish direct APK download release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_TAG="android-debug-latest"
+          RELEASE_TITLE="Latest Debug APK"
+          ASSET_SOURCE="exports/android_debug/core_breaker_debug.apk"
+          ASSET_NAME="core-breaker-debug.apk"
+          ASSET_DIR=".ci-tools/release"
+          ASSET_PATH="${ASSET_DIR}/${ASSET_NAME}"
+          DIRECT_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${ASSET_NAME}"
+
+          mkdir -p "${ASSET_DIR}"
+          cp "${ASSET_SOURCE}" "${ASSET_PATH}"
+
+          NOTES_FILE=".ci-tools/release/notes.md"
+          cat > "${NOTES_FILE}" <<EOF
+          Latest private debug APK for direct Android sideload testing.
+
+          Direct APK download:
+          ${DIRECT_URL}
+
+          If the direct link returns 404, the latest workflow has not published successfully yet.
+          EOF
+
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release upload "${RELEASE_TAG}" "${ASSET_PATH}#${ASSET_NAME}" --clobber
+            gh release edit "${RELEASE_TAG}" --title "${RELEASE_TITLE}" --notes-file "${NOTES_FILE}"
+          else
+            gh release create "${RELEASE_TAG}" "${ASSET_PATH}#${ASSET_NAME}" \
+              --target "${GITHUB_SHA}" \
+              --title "${RELEASE_TITLE}" \
+              --notes-file "${NOTES_FILE}" \
+              --prerelease
+          fi

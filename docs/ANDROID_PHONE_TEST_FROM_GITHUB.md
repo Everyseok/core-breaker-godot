@@ -19,6 +19,13 @@ Scope: private GitHub debug APK artifact testing only.
 
 ## Download Steps
 
+### Direct Link
+
+- Primary direct APK URL:
+  `https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk`
+
+### Fallback via Actions Artifact
+
 1. Open the private GitHub repository.
 2. Go to the **Actions** tab.
 3. Select the workflow named **Android Debug APK**.

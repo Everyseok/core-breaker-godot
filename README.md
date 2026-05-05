@@ -6,12 +6,15 @@ You defend the center core, break shrinking concentric walls, and survive as lon
 Korean version: [README.ko.md](README.ko.md)
 
 [![Private Repo](https://img.shields.io/badge/PRIVATE-REPO-2f3640?style=for-the-badge&logo=github)](https://github.com/Everyseok/core-breaker-godot)
-[![Download APK](https://img.shields.io/badge/DOWNLOAD-APK-e67e22?style=for-the-badge&logo=android)](https://github.com/Everyseok/core-breaker-godot/actions/workflows/android-debug-apk.yml)
+[![Download APK](https://img.shields.io/badge/DOWNLOAD-APK-e67e22?style=for-the-badge&logo=android)](https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk)
+[![Latest Release](https://img.shields.io/badge/LATEST-DEBUG%20RELEASE-1f6feb?style=for-the-badge&logo=github)](https://github.com/Everyseok/core-breaker-godot/releases/tag/android-debug-latest)
 [![Phone Guide](https://img.shields.io/badge/PHONE-INSTALL%20GUIDE-2980b9?style=for-the-badge&logo=readthedocs)](docs/ANDROID_PHONE_TEST_FROM_GITHUB.md)
 [![AAB Later](https://img.shields.io/badge/GOOGLE%20PLAY-AAB%20LATER-4b5563?style=for-the-badge&logo=googleplay)](docs/GOOGLE_PLAY_RELEASE_MASTER_CHECKLIST.md)
 
 ## Quick Links
 
+- [Direct APK download](https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk)
+- [Open the latest debug release page](https://github.com/Everyseok/core-breaker-godot/releases/tag/android-debug-latest)
 - [Open the Android Debug APK workflow](https://github.com/Everyseok/core-breaker-godot/actions/workflows/android-debug-apk.yml)
 - [Open the private repository](https://github.com/Everyseok/core-breaker-godot)
 - [Open the phone install guide](docs/ANDROID_PHONE_TEST_FROM_GITHUB.md)
@@ -19,7 +22,13 @@ Korean version: [README.ko.md](README.ko.md)
 
 ## Download APK
 
-The current Android package is distributed through a **private GitHub Actions artifact**, not through Google Play.
+The current Android package is distributed through a **private GitHub Release asset** backed by the Android Debug APK workflow.
+
+Primary direct download link:
+
+- [Download core-breaker-debug.apk](https://github.com/Everyseok/core-breaker-godot/releases/download/android-debug-latest/core-breaker-debug.apk)
+
+Fallback path if the direct link is not ready yet:
 
 1. Open the workflow page:
    [Android Debug APK](https://github.com/Everyseok/core-breaker-godot/actions/workflows/android-debug-apk.yml)
@@ -52,6 +61,7 @@ The current Android package is distributed through a **private GitHub Actions ar
 
 - This is a **private testing APK**, not a production release.
 - The repository is **private**, so GitHub login with repo access is required.
+- The direct APK link depends on at least one successful workflow publication to the `android-debug-latest` release tag.
 - The APK artifact can expire after the configured GitHub Actions retention window.
 - Google Play `AAB` packaging is a later release path and is not the current download format.
 
