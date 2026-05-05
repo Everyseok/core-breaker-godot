@@ -57,11 +57,11 @@ func tier_definition_for_tier(target_tier: int) -> Dictionary:
 func display_name_for_tier(target_tier: int) -> String:
 	var tier: Dictionary = tier_definition_for_tier(target_tier)
 	if tier.is_empty():
-		return "UNKNOWN"
+		return "알 수 없음"
 	var display_name: String = String(tier.get("display_name", ""))
 	if display_name != "":
 		return display_name
-	return String(tier.get("name", "UNKNOWN")).replace("_", " ").to_upper()
+	return String(tier.get("name", "unknown")).replace("_", " ")
 
 
 func next_tier_after_k(k_value: int) -> Dictionary:
@@ -96,7 +96,7 @@ func loop_length() -> int:
 			continue
 		highest_enabled_k_max = maxi(highest_enabled_k_max, int(tier.get("k_max", -1)))
 	if highest_enabled_k_max < 0:
-		return 1000
+		return 3000
 	return highest_enabled_k_max + 1
 
 

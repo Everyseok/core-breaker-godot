@@ -11,6 +11,7 @@ signal user_id_received(id: String)
 signal game_user_key_received(key_hash: String)
 signal game_user_key_failed(reason: String)
 signal leaderboard_score_submitted(success: bool)
+signal leaderboard_open_failed(message: String)
 
 var _is_web: bool = false
 var _js_callbacks: Array = []
@@ -233,40 +234,66 @@ func submit_leaderboard_score(total_progress_value: int) -> void:
 			leaderboard_score_submitted.emit(false)
 
 
-func open_leaderboard() -> void:
+func open_leaderboard() -> bool:
 	# GC-02 / GM-03: Open the Game Center leaderboard UI.
 	# Must be user-triggered (not automatic on game entry).
 	# Minimum Toss app version: v5.221.0.
 	# Opening backgrounds the miniapp — C-27 visibilitychange will handle the tree pause.
 	# Suitable trigger: a button on the game-over/result screen added when scene is updated.
 	if not _is_web:
-		push_warning("[PlatformBridge] open_leaderboard: non-Web runtime; no-op")
-		return
-	JavaScriptBridge.eval(
+		return _emit_leaderboard_open_failure("현재 환경에서는 순위를 열 수 없어요.")
+	SaveManager.save()
+	var js_code: String = (
 		"(function(){"
 		+ "try {"
-		+ "  if (!window.TossBridge || typeof window.TossBridge.openGameCenterLeaderboard !== 'function') {"
-		+ "    console.warn('[PlatformBridge] openGameCenterLeaderboard: TossBridge not available (< v"
-		+ MIN_VERSION_LEADERBOARD
-		+ " or no bridge)');"
-		+ "    return;"
+		+ "  if (!window.TossBridge) {"
+		+ "    return JSON.stringify({status:'NO_BRIDGE'});"
+		+ "  }"
+		+ "  if (typeof window.TossBridge.openGameCenterLeaderboard !== 'function') {"
+		+ "    return JSON.stringify({status:'UNSUPPORTED_VERSION'});"
 		+ "  }"
 		+ "  var r = window.TossBridge.openGameCenterLeaderboard();"
-		+ "  if (r === undefined) {"
-		+ "    console.warn('[PlatformBridge] openGameCenterLeaderboard: undefined (Toss app < v"
-		+ MIN_VERSION_LEADERBOARD
-		+ ")');"
+		+ "  if (r === 'INVALID_CATEGORY') {"
+		+ "    return JSON.stringify({status:'INVALID_CATEGORY'});"
 		+ "  }"
+		+ "  if (r === 'ERROR') {"
+		+ "    return JSON.stringify({status:'ERROR'});"
+		+ "  }"
+		+ "  return JSON.stringify({status:'OPEN_REQUESTED'});"
 		+ "} catch(e) {"
-		+ "  console.error('[PlatformBridge] openGameCenterLeaderboard exception: ' + String(e.message));"
+		+ "  return JSON.stringify({status:'EXCEPTION', msg:String(e.message)});"
 		+ "}"
 		+ "})()"
 	)
+	var response: String = JavaScriptBridge.eval(js_code)
+	var data = JSON.parse_string(response)
+	if not (data is Dictionary):
+		return _emit_leaderboard_open_failure("현재 환경에서는 순위를 열 수 없어요.")
+	var status: String = String(data.get("status", "UNKNOWN"))
+	match status:
+		"OPEN_REQUESTED":
+			return true
+		"NO_BRIDGE":
+			return _emit_leaderboard_open_failure("토스 앱에서 다시 시도해 주세요.")
+		"UNSUPPORTED_VERSION":
+			return _emit_leaderboard_open_failure("토스 앱 업데이트 후 순위를 확인할 수 있어요.")
+		"INVALID_CATEGORY":
+			return _emit_leaderboard_open_failure("토스 게임센터 설정 후 사용할 수 있어요.")
+		"ERROR":
+			return _emit_leaderboard_open_failure("현재 환경에서는 순위를 열 수 없어요.")
+		_:
+			return _emit_leaderboard_open_failure("현재 환경에서는 순위를 열 수 없어요.")
 
 
 func _on_game_started() -> void:
 	# GM-02 / GC-03: reset per-run submission gate when a new run begins
 	_score_submitted_this_run = false
+
+
+func _emit_leaderboard_open_failure(message: String) -> bool:
+	push_warning("[PlatformBridge] open_leaderboard unavailable: %s" % message)
+	leaderboard_open_failed.emit(message)
+	return false
 
 
 # Future stubs — not implemented for MVP

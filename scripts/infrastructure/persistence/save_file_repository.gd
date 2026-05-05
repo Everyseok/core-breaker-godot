@@ -3,6 +3,9 @@ extends RefCounted
 
 const DEFAULT_DATA := {
 	"best_k": 0,
+	"best_total_progress": 0,
+	"best_level": 1,
+	"best_level_k": 0,
 	"sound_enabled": true,
 	"aim_joystick_position": "center",
 	"user_id": "",

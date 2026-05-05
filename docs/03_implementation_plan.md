@@ -28,7 +28,10 @@
 | **4.19c** | **C-26 HTML Export Shell Pass** — create `export_presets.cfg` with Godot 4.6 "Toss Web" preset; `html/head_include` sets `user-scalable=no`, `touch-action:none`, `overscroll-behavior:none`; no gameplay change; static-validated | **Done (Session 39)** |
 | **4.19d** | **Web Export Dry Run + Official Benchmark** — Godot 4.6.2 Web templates installed from official GitHub release; export dry run produced 36.40 MB; 100MB: PASS; HTML viewport/touch/overscroll confirmed; official App-in-Toss docs cross-checked | **Done (Session 41)** |
 | **4.20** | **Ads Integration Planning / Policy-Safe Placement Pass** — official App-in-Toss ad APIs confirmed; placement policy locked; prerequisites documented; no code implemented | **Done — planning only (Session 42)** |
-| **4.21** | **Ads Implementation Pass** — implement `loadFullScreenAd`/`showFullScreenAd` in PlatformBridge; wire `GameState.game_over` and `max_level_cleared` triggers; implement BannerAd; wire audio mute/restore; add `isSupported()` version gates; use test IDs; rerun bundle audit | **Blocked — requires console/business/settlement setup first** |
+| **4.21R** | **Clean Design Rebuild from Session 42 Base** — discard Session 43 visuals, rebuild presentation from `88d0ffe`, replace Stone presentation with yellow electric, localize player-facing UI to Korean, add lightweight tier VFX, and keep gameplay/platform rules stable | **Implemented, headless QA passed (Session 44)** |
+| **4.21U** | **Targeted Combat Feedback Pass** — centralize numeric brick HP + weapon damage, format compact K damage popups, and make brick destruction happen in place with brick-type-specific break effects | **Implemented, headless QA passed (Session 47)** |
+| **4.21V** | **Targeted Progression + Layout Pass** — lower the bottom controls, shrink damage text slightly, expand one level to `3000`, add the `2000` weapon-evolution choice event, and escalate the late 5-layer wall plan to 8 layers | **Implemented, headless QA passed (Session 48)** |
+| **4.22** | **Ads Implementation Pass** — implement `loadFullScreenAd`/`showFullScreenAd` in PlatformBridge; wire `GameState.game_over` and `max_level_cleared` triggers; implement BannerAd; wire audio mute/restore; add `isSupported()` version gates; use test IDs; rerun bundle audit | **Blocked — requires console/business/settlement setup first** |
 | 5 | Audio resource / legal pass | Pending |
 | 6 | Art / resource optimization pass | Pending |
 | 7 | Toss QR/device QA + bundle size audit | Pending |
@@ -564,6 +567,146 @@
 3. Lock interstitial timing at expected transitions only.
 4. Explicitly avoid treating pause-modal timing as the default interstitial slot.
 5. Define preload / mute / resume requirements for ads.
+
+---
+
+## Phase 4.21R — Clean Design Rebuild from Session 42 Base
+
+**Goal:** Rebuild the game's presentation from the stable pre-design baseline (`88d0ffe`) instead of continuing the discarded Session 43 visual pass.
+
+### What Changed
+
+- Created a fresh clean worktree/branch from `88d0ffe` and treated Session 43 only as a diff/reference audit.
+- Replaced the old Stone presentation with a yellow electric `번개` tier while preserving the existing stable progression thresholds.
+- Rebuilt the visible tier ladder as:
+  - `화살`
+  - `번개`
+  - `스파크 랜스`
+  - `볼트 스톰`
+  - `시즈 캐논`
+- Added a centralized `WeaponProfile` for tier names, colors, unlock copy, aim-line color, and guardian silhouette.
+- Rebuilt the center guardian/core as a cute guarded core with tier-aware silhouettes and a visual-only unlock pulse.
+- Rebuilt brick visuals with layered frames/highlights/damage tint instead of flat prototype blocks.
+- Added a lightweight procedural `GameBackground`.
+- Added per-tier visual-only hit bursts in `scripts/visual/hit_effect_burst.gd`.
+- Added a non-blocking Korean unlock banner in `scripts/ui/unlock_announcement.gd`.
+- Reworked player-facing UI copy to Korean and replaced visible raw `K` labels with `깬 벽돌`.
+- Kept gameplay/platform rules intact:
+  - MainMenu launch flow
+  - Ranking button → `PlatformBridge.open_leaderboard()`
+  - Overclock = `3x`
+  - K `500–999` seven-shot siege
+  - K `1000` level loop
+  - Level `100` max clear
+
+### Explicit Discards from Session 43
+
+- Session 43 visual scripts/scenes were **not** used as the implementation base.
+- The rebuild started from Session 42 baseline and reimplemented the presentation cleanly.
+- Old Stone presentation is no longer part of the active runtime.
+
+### Validation
+
+- Godot 4.6.2 headless project-open smoke test: passed
+- Headless scripted runtime validation: passed
+  - MainMenu launch / Start Game / Ranking path
+  - Korean HUD / pause / result / unlock text
+  - Tier projectile spawn counts
+  - hit-effect scene instantiation
+  - unlock banner thresholds
+  - K `1000` level transition
+  - Level `100` K `1000` max clear
+
+### Remaining Work After This Phase
+
+- Visible interactive editor/device playtest for touch feel, safe area, and game-feel polish
+- Final authored sprite/asset pass if desired later
+
+---
+
+## Phase 4.21S — Original Repo Partial Apply + Stronger Visible Pass
+
+**Goal:** Move the useful clean-rebuild structure into the original `/Volumes` repo, then strengthen visible UI/VFX so the player does not remain stuck on the older prototype-like presentation.
+
+### What Changed
+
+- Preserved the dirty original Session 43 worktree with a safety patch and stash before changing branches.
+- Created `feature/design-rebuild-apply-pass` from `88d0ffe` in the original repo.
+- Ported only the useful clean-rebuild structure from the temp worktree:
+  - Korean UI strings
+  - `깬 벽돌` terminology
+  - tier ladder/progression data
+  - `번개` / `스파크 랜스` projectile paths
+  - `WeaponProfile`, `ui_style`, `unlock_announcement`, and presentation hooks
+- Strengthened visible presentation beyond the temp rebuild:
+  - larger pixel-card MainMenu framing
+  - stronger HUD/pause/result panels
+  - larger tier-aware hit flashes/bursts
+  - clearer guardian/core silhouette and aura
+  - more readable `Normal` / `Strong` / `Armored` brick differentiation
+- Removed the active runtime Stone projectile scene/script from the original repo branch.
+
+### Validation
+
+- `git diff --check`: passed
+- JSON parse (`data/progression.json`, `data/dev_status.json`): passed
+- Godot 4.6.2 headless project-open smoke test on the original repo: passed
+- Headless scripted runtime validation on the original repo: passed
+  - MainMenu launch / Start Game / Ranking path
+  - Korean menu / HUD / pause / result text
+  - tier projectile spawn counts
+  - hit-effect scene loading
+  - unlock banner thresholds
+  - K `500–999` seven-shot siege
+  - K `1000` level transition
+  - Level `100` max clear
+
+### Remaining Work After This Phase
+
+- Visible GUI/editor playtest of the original repo branch
+- On-screen tuning for hit readability, Korean layout fit, and safe-area feel if needed
+
+---
+
+## Phase 4.21T — Targeted Visible-Playtest Fix Pass
+
+**Goal:** Address the first visible playtest complaints in the original repo without changing preserved gameplay/platform behavior.
+
+### What Changed
+
+- Added cute layered floating damage numbers through `scripts/visual/damage_number.gd` + `scenes/vfx/damage_number.tscn`.
+- Routed damage-popup requests through confirmed brick-damage paths in `ring_instance.gd`, `brick_instance.gd`, and `game_root.gd`.
+- Lowered the playfield anchor in the original repo so the upper rotating wall clears the fixed HUD.
+- Removed the old bottom square buff slot and kept only the joystick-area buff button.
+- Reworked the joystick visuals with layered base/knob/shadow/gloss treatment while preserving left/center/right placement.
+- Strengthened pseudo-3D cues in bricks, guardian/core shell, UI cards, and background parallax.
+- Added guardian aim-follow presentation so the center guardian/weapon silhouette turns toward the joystick / fire direction.
+- Fixed the top dark-blue level chip so it visibly shows the current `단계`.
+
+### Validation
+
+- Godot 4.6.2 headless smoke test on the original repo: passed
+- Targeted structural validation on the original repo: passed
+  - top level label present in Korean
+  - bottom square buff slot removed
+  - joystick-area buff button present
+  - joystick layered redesign nodes present
+  - playfield anchor lowered enough to clear the HUD structurally
+  - damage numbers spawn on confirmed brick hit
+  - guardian visual follows aim direction structurally
+  - weapon still fires from the core center origin
+- Broad regression QA re-run after the pass: passed
+  - MainMenu / Start / Ranking path
+  - Korean UI
+  - `번개` / `스파크 랜스`
+  - K `500–999` seven-shot siege
+  - K `1000` level transition
+  - Level `100` max clear
+
+### Remaining Work After This Phase
+
+- Real visible GUI/editor observation of the updated visuals
+- On-screen tuning for cute/game-feel polish after the next visible playtest
 
 ---
 

@@ -5,7 +5,7 @@
 A mobile-first, portrait pixel-art **radial survival** game.
 Concentric segmented walls shrink inward toward a central core.
 The player defends the core by shooting outward from the center core area, destroying wall segments before the wall reaches the death zone.
-Survive as long as possible. Score is total segments (bricks) destroyed (K).
+Survive as long as possible. Internal progression still uses `K`, but player-facing UI describes this as **깬 벽돌**.
 
 ---
 
@@ -15,9 +15,10 @@ Survive as long as possible. Score is total segments (bricks) destroyed (K).
 
 - **Portrait orientation** (9:16 base, 390×844 reference).
 - Safe-area padding required for iOS Dynamic Island and Android status bar/gesture bar.
-- Bottom ~20 % of screen: **Skill Bar UI** (square skill slots, always visible).
+- Bottom ~20 % of screen: **control UI zone** (aiming joystick + joystick-area buff button).
 - Remaining ~80 % of screen: the **play field** (ring system + projectiles).
-- The **play field** occupies roughly y = 0 to y = 675 (portrait, safe-area-aware).
+- The **play field** sits intentionally lower than the top HUD so the upper rotating wall does not hide behind UI.
+- The lower control zone should sit far enough down that the player finger does not cover too much of the visible action area.
 
 ### 2.2 Play Field Positions
 
@@ -25,10 +26,10 @@ Survive as long as possible. Score is total segments (bricks) destroyed (K).
 
 | Element | Position |
 |---------|----------|
-| Core (game-over point) | Center of the play field: approx. `(195, 337)` in a 390×844 viewport |
+| Core (game-over point) | Center of the play field: approx. `(195, 432)` in a 390×844 viewport |
 | Weapon / projectile origin | Center core area: same launch region as the Core |
 | Ring center | Same point as the Core — rings are centered on the core |
-| Skill Bar | Below the play field, always above safe-area bottom inset |
+| Lower control zone | Below the play field, always above safe-area bottom inset |
 
 **Central radial defense:**
 - The weapon fires from the center core area, not from the bottom of the play field.
@@ -84,13 +85,16 @@ Survive as long as possible. Score is total segments (bricks) destroyed (K).
 
 | Type | HP | Visual Indication |
 |------|----|-------------------|
-| Normal | 1 | Single color, no damage state |
-| Tough | 2 | Darkens / cracks at 1 HP remaining |
-| Armored | 3 | Three-step color/crack progression |
-| (future) | 4+ | Extended crack atlas |
+| Normal | 3000 | warm cute block, lighter crumble on death |
+| Strong | 6000 | reinforced cool-tone frame, heavier crack burst |
+| Armored | 9000 | plated violet/dark silhouette, heaviest shard burst |
 
 **Readability rule:** Damage state must be readable at a glance at small pixel-art resolution.
-Use distinct hue shift + crack overlay (not just brightness).
+Use distinct hue shift + layered shadow/highlight treatment (not just brightness).
+
+**Death rule:** Destroyed bricks die in place.
+They must not fly to the core or the attack point before removal.
+Each brick type should emit its own local destruction effect where it dies.
 
 **Normal segments are always 1-hit. Do not flatten all segment types into generic HP scaling.**
 
@@ -105,35 +109,82 @@ Use distinct hue shift + crack overlay (not just brightness).
 - On normal 1-HP walls, that means 3 destroyed segments per impact.
 - On strong / armored walls, the same 3-target pattern applies while still respecting HP > 1.
 
-### 2.8 Stone Weapon Behavior
+### 2.8 Thunder Weapon Behavior
 
-- A stone weapon / upgraded projectile unlocks after a **destroyed-brick threshold**.
-- That threshold is **not permanent design law yet** and must remain configurable for playtesting.
-- On each wall impact, the stone applies a **5-segment hit spread**:
+- The first upgrade after the default arrow is a **yellow electric weapon**.
+- It unlocks at the first destroyed-brick threshold and that threshold remains tunable in data.
+- It fires **2 projectiles** per volley.
+- Each projectile keeps the baseline **3-bounce** rhythm.
+- On impact, each projectile applies a **3-segment same-layer spread**:
   - the hit segment
-  - two adjacent segments to the left
-  - two adjacent segments to the right
-- On normal 1-HP walls, that means 5 destroyed segments per impact.
-- On strong / armored walls, the same 5-target pattern applies while still respecting HP > 1.
+  - one adjacent segment to the left
+  - one adjacent segment to the right
+- It does **not** transfer damage to adjacent layers.
+
+### 2.8b Spark Lance Behavior
+
+- The next upgrade is a **blue electric / plasma lance evolution**.
+- It should feel like a clear upgrade from the yellow electric tier, not just a recolor.
+- Current implementation keeps a split-lance presentation with a centered refined electric identity.
+- The weapon family should stay sharp, fast, and readable in portrait play.
+
+### 2.8c Volt Storm Behavior
+
+- The mid-late upgrade is an evolved electric storm family.
+- It bridges the earlier electric weapons into the final siege tier.
+- The visual identity should use a stronger violet / magenta / teal family and feel more premium than Spark Lance.
+- Gameplay behavior must remain visually distinct while preserving the existing stable damage rules.
+
+### 2.8d Siege Cannon Behavior
+
+- The final late-game weapon is a **7-shot Piercing Bomb Siege** presentation.
+- It must read as a true end-tier artillery weapon.
+- Presentation should feel heavy, hot, and breach-focused without changing the locked gameplay math.
+
+### 2.8e Numeric Damage Model
+
+| Tier | Visible Name | Damage | Compact Popup |
+|------|--------------|--------|---------------|
+| 1 | `화살` | 3000 | `3K` |
+| 2 | `번개` | 4000 | `4K` |
+| 3 | `스파크 랜스` | 5000 | `5K` |
+| 4 | `볼트 스톰` | 6000 | `6K` |
+| 5 | `시즈 캐논` | 9000 | `9K` |
+
+Rules:
+
+- The base Normal brick dies from one `화살` hit.
+- Strong and Armored bricks survive longer unless struck by stronger tiers or multiple hits.
+- Damage popups display compact arcade-style values such as `3K` / `11.3K`.
+- Damage numbers are visual-only feedback and do not change combat rules by themselves.
 
 ### 2.9 Game Over Condition
 
 - Any segment with HP > 0 reaches the core kill radius → instant game over.
-- Show final score (K value) and a restart prompt.
+- Show the final broken-bricks result (`깬 벽돌`) and a restart prompt.
 
 ### 2.10 Progression (K = Total Segments Destroyed)
 
-| K Range | Active Projectile | Notes |
-|---------|-------------------|-------|
-| 0–Stone unlock threshold-1 | Basic Arrow | 3 bounces, 3-target spread |
-| Stone unlock threshold–79 | Stone Projectile | Slightly slower, 5-target spread |
-| 80–149 | Split Arrow | Fires 3 arrows in a cone |
-| 150–299 | Electric Split Arrow | 3-bolt split identity into 2 layers: Strong + Armored |
-| 300–499 | Electric Split Arrow | Same weapon identity into 2 layers: Strong + Armored |
-| 500–999 | Piercing Bomb Siege | 7-shot siege volley from the center: main spear + 6 support spears into 5 layers |
-| 1000 threshold | Level Transition | Current level clear -> next level start; each new level restarts the same structural band order |
+| K Range | Active Projectile | Player-Facing Name | Notes |
+|---------|-------------------|--------------------|-------|
+| 0–29 | Basic Arrow | `화살` | 3 bounces, 3-target spread |
+| 30–79 | Thunder | `번개` | 2 projectiles, yellow electric, 3 bounces, same-layer 3-target spread |
+| 80–149 | Spark Lance | `스파크 랜스` | blue electric evolution, sharper split-lance presentation |
+| 150–499 | Volt Storm | `볼트 스톰` | evolved storm family, current stable electric-combat rules preserved |
+| 500–2999 | Piercing Bomb Siege | `시즈 캐논` | 7-shot siege volley from the center; from `2000` onward, the 5-layer late wall plan escalates to 8 layers |
+| 3000 threshold | Level Transition | `다음 단계` | current level clear -> next level start; each new level restarts the same structural band order |
 
-This table is the current locked progression plan at the design/spec level. The stone unlock threshold must remain tunable in data during playtesting. The K1000 level-loop runtime rule is now implemented structurally; the next progression-specific runtime step is the explicit max-level cap/end condition rather than a K1000+ Hybrid continuation.
+This table is the current locked progression plan at the design/spec level. Internal progression still uses `K`, but the visible UI should describe the number as **깬 벽돌**. The K3000 level-loop runtime rule and Level 100 max-clear rule are now implemented.
+
+### 2.10b Weapon Evolution Choice
+
+- At **current-level broken bricks `2000 / 3000`**, gameplay pauses and shows a 3-choice evolution panel.
+- The player selects exactly one option for the rest of the current level.
+- The choice resets on the next level and on a new run.
+- Current implemented choices:
+  - `연쇄 번개`
+  - `프리즘 랜스`
+  - `메테오 캐논`
 
 ### 2.10a Locked Late-Tier Rules
 
@@ -168,15 +219,15 @@ This table is the current locked progression plan at the design/spec level. The 
   - Wall thickness for this band is **5 real layers** with composition:
     - `Strong + Strong + Normal + Strong + Armored`
 
-- **K 1000 Level Transition**
-  - `K = 1000` is **not** the start of a new continuous combat tier.
-  - `K = 1000` means the **current level is cleared** and the run transitions into the **next level**.
+- **K 3000 Level Transition**
+  - `K = 3000` is **not** the start of a new continuous combat tier.
+  - `K = 3000` means the **current level is cleared** and the run transitions into the **next level**.
   - Every new level restarts the same structural progression loop:
-    - `0–29` Arrow
-    - `30–79` Stone
-    - `80–149` Split Arrow
-    - `150–499` Electric Split Arrow
-    - `500–999` Piercing Bomb Siege
+    - `0–29` 화살
+    - `30–79` 번개
+    - `80–149` 스파크 랜스
+    - `150–499` 볼트 스톰
+    - `500–999` 시즈 캐논
   - Ranking/progression should prioritize **level first**, then `K` inside the level.
   - Recommended normalized ranking progress:
     - `total_progress = (current_level - 1) * 1000 + current_level_k`
@@ -187,16 +238,16 @@ This table is the current locked progression plan at the design/spec level. The 
 
 - The game has **Level 1 through Level 100**.
 - Each level uses `current_level_k 0–999`.
-- Reaching `current_level_k = 1000` clears the current level and advances to the next level until Level `100`.
+- Reaching `current_level_k = 3000` clears the current level and advances to the next level until Level `100`.
 - Recommended default end condition:
-  - **Level 100 K1000 = MAX LEVEL CLEAR / run ends**
+  - **Level 100 K3000 = `최고 단계 돌파!` / run ends**
 - Ranking should prioritize **level first**, then `K` inside the level.
 - Locked normalized ranking formula:
   - `total_progress = (current_level - 1) * 1000 + current_level_k`
-- Future implementation must still define the exact cap behavior explicitly:
-  - whether `total_progress` hard-caps at `100000`
-  - whether the run ends immediately on Level `100` clear before any further scoring
-  - what exact clear/game-over presentation is shown at the cap
+- Current runtime behavior is explicit:
+  - `total_progress` caps at `300000`
+  - the run ends immediately on Level `100` clear
+  - the result screen shows a distinct `최고 단계 돌파!` clear state
 
 ### 2.10b Layer / HP Interpretation
 
@@ -219,11 +270,11 @@ This table is the current locked progression plan at the design/spec level. The 
 
 ### 2.11 Unlock Progress Display
 
-- The destroyed-brick count used for stone unlock progression must be clearly visible at the top of the screen.
-- If current `K` is the same progression value, that same `K` may be reused instead of inventing a second counter.
-- The display must make the next projectile unlock legible enough that the player can tell how close they are to stone unlock.
-- A clean threshold-crossing event/state hook should exist for later VFX/SFX when the arrow → stone transition is crossed.
-- The top HUD also includes a placeholder **horizontal K progress bar** for level-band readability.
+- The destroyed-brick count used for progression must be clearly visible at the top of the screen.
+- Internal `K` may stay in code, but the visible label should be **깬 벽돌**.
+- The display must make the next projectile unlock legible enough that the player can tell how close they are to the next weapon.
+- A clean threshold-crossing event/state hook should exist for unlock banners / VFX.
+- The top HUD includes a horizontal level-band progress bar plus compact Korean labels.
 - Current locked interpretation:
   - `current_level_k 0–999 = current level progress`
   - reaching `current_level_k = 1000` clears the current level and starts the next level
@@ -235,32 +286,34 @@ This table is the current locked progression plan at the design/spec level. The 
   - `current_level`
   - `current_level_k`
   - normalized total progress for ranking
+- Recommended player-facing label set:
+  - `단계`
+  - `깬 벽돌`
+  - `무기`
+  - `다음 해금`
+  - `최고 기록`
 
 ---
 
 ## 3. Skill System
 
-### 3.1 Skill Bar (Bottom UI)
+### 3.1 Bottom Controls
 
-- Row of **square** skill slots, Maple Story-style iconography.
-- Minimum 4 slots visible. Slots not yet unlocked are grayed out.
-- Each slot shows: icon, tap zone, cooldown overlay.
-- Skill bar sits below the play field, inside the safe-area container.
-- The aiming joystick also lives in the lower safe-area-compatible UI zone, but it remains visually/functionally separate from the skill-slot row.
-- A simple horizontal divider and a placeholder buff button may appear above the joystick area for direct activation of unlocked combat buffs.
+- The aiming joystick lives in the lower safe-area-compatible UI zone.
+- The joystick keeps left / center / right placement switching.
+- A single buff button appears above the joystick area for direct activation of unlocked combat buffs.
+- The older bottom square buff slot is no longer part of the active runtime UI.
 
 ### 3.2 Active Skills
 
 | ID | Name | Effect | Cooldown |
 |----|------|--------|----------|
-| SK_01 | Overclock | Temporary attack-speed boost (3x baseline fire rate for 3 s) | 15 s |
+| SK_01 | Overclock (`가속`) | Temporary attack-speed boost (3x baseline fire rate for 3 s) | 15 s |
 
-- Overclock is the first real attack-speed buff.
+- Overclock (`가속`) is the first real attack-speed buff.
 - It unlocks at **K >= 500**.
-- The same Overclock effect may be triggered from:
-  - the bottom skill-slot scaffold
-  - the placeholder buff button above the joystick
-- Before K `500`, those Overclock triggers should remain visibly locked/disabled rather than acting as separate redundant systems.
+- Overclock (`가속`) is triggered from the joystick-area buff button.
+- Before K `500`, that control should remain visibly locked/disabled rather than acting as a redundant system.
 
 Additional skills to be designed in later phases.
 

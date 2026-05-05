@@ -1,96 +1,83 @@
 # Next Step
 
-**Phase:** 4.21 — Ads Implementation Pass (BLOCKED — awaiting console/business/settlement setup)
-**Context:** Phase 4.20 ads planning complete (Session 42). Official APIs confirmed. Placement policy locked. Prerequisites documented. No code implemented.
+**Phase:** 4.25 — Android Debug APK Pipeline Remediation
+**Date:** 2026-05-05
+**Current verdict:** Shared core can support App-in-Toss and Google Play, the Android Debug APK preset now exists, and the GitHub Actions workflow is hardened for a real debug APK attempt; private push is still blocked by missing remote and invalid `gh` auth.
 
----
+Master source-of-truth: [`docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md`](APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
+Breadth audit: [`docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md`](APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
+Dual-platform audit: [`docs/DUAL_PLATFORM_BRIDGE_AUDIT.md`](DUAL_PLATFORM_BRIDGE_AUDIT.md)
+Google Play checklist: [`docs/GOOGLE_PLAY_RELEASE_MASTER_CHECKLIST.md`](GOOGLE_PLAY_RELEASE_MASTER_CHECKLIST.md)
+Phone artifact guide: [`docs/ANDROID_PHONE_TEST_FROM_GITHUB.md`](ANDROID_PHONE_TEST_FROM_GITHUB.md)
 
-## Phase 4.20 — Done (Session 42)
+## Next 10 Execution Tasks
 
-### Ads Plan — Locked Decisions
+1. **Private GitHub Remote / Auth Prompt**
+   - Add a verified private GitHub remote.
+   - Repair `gh` authentication.
+   - Only then create and push `feature/android-debug-apk-artifact`.
 
-**Official APIs (confirmed from App-in-Toss Developer Center):**
+2. **Private Branch Push Prompt**
+   - Create or switch to `feature/android-debug-apk-artifact` only after private remote/auth verification passes.
+   - Commit only the intended APK pipeline, docs, and skeleton-hardening files.
+   - Do not push to `main` or `master`.
 
-| Format | API | Min Toss Version |
-|--------|-----|-----------------|
-| Full-screen interstitial | `loadFullScreenAd()` → `showFullScreenAd()` (IntegratedAd v2) | v5.247.0 (v2); v5.227.0 (AdMob fallback) |
-| Reward | Same IntegratedAd v2, `userEarnedReward` event | v5.247.0 / v5.227.0 |
-| Banner | `TossAds.initialize()` → `TossAds.attachBanner()` | v5.241.0 |
+3. **GitHub Actions APK Artifact Prompt**
+   - Run the hardened workflow after remote/auth are fixed.
+   - Verify artifact output path `exports/android_debug/core_breaker_debug.apk`.
 
-**Banner dimensions (official):** width 100% screen; height 96px (fixed/list) or 410px (feed/native).
-**All calls via `JavaScriptBridge` in PlatformBridge — no binary SDK added to Godot bundle.**
+4. **Visible Interactive Godot QA Prompt**
+   - Run a visible Godot session.
+   - Confirm current layout feel before any ad-safe playfield prototype.
 
-**Locked interstitial trigger points:**
-- `GameState.game_over` → preload + show on game-over screen
-- `GameState.max_level_cleared` → preload + show on max-clear screen
-- Between-run on restart tap (after current run ends)
-- Frequency limit + cooldown required (official QA requirement)
+5. **Platform Runtime Wiring Prompt**
+   - Decide whether to start migrating `PlatformBridge` callers to platform-neutral adapters.
+   - Keep gameplay/domain files untouched.
 
-**Locked interstitial exclusions (official `ads/develop.md` prohibited placements):**
-- Active gameplay — PROHIBITED
-- Loading / intro screens — PROHIBITED
-- Modal dialogs (PauseMenu is a modal overlay) — PROHIBITED; **pause-screen ad is explicitly excluded**
-- Game UI overlap (joystick, skill bar, HUD) — PROHIBITED
+6. **Google Play Package / Keystore Prompt**
+   - Lock package name and signing strategy.
+   - Decide Play App Signing ownership.
 
-**Banner placement candidate:**
-- Bottom: below joystick / skill bar, above safe-area bottom inset (96px height)
-- Requires device QA to confirm no overlap with gameplay controls
-- Fallback: top banner below HUD K-progress bar (requires HUD layout adjustment)
+7. **Ad-Safe Playfield Prototype Prompt**
+   - Wire a centralized playfield layout owner.
+   - Reserve top-banner height without shrinking HUD/joystick randomly.
 
-**Audio behavior (official QA requirement):**
-- `AudioManager.mute_all()` before `showFullScreenAd()`
-- `AudioManager.restore_mute_state()` on `dismissed` or `failedToShow`
-- Banner: no audio pause required
+8. **Google Play Services Decision Prompt**
+   - Decide whether the Google Play build uses Play Games leaderboards.
+   - Keep `total_progress` as the only score model.
 
-**Ad failure behavior (non-blocking rule):**
-- Any ad failure → proceed normally; never block restart or game-over screen
+9. **Ads Integration Planning Prompt**
+   - Keep production ads disabled.
+   - Use test-only planning for banner/interstitial/rewarded.
 
----
+10. **App-in-Toss Console + Device QA Prompt**
+   - Continue Toss console registration and QR/device QA separately.
 
-## Phase 4.21 Prerequisites (BLOCKED)
+## Newly Clarified From Full Developer Center Audit
 
-Before any ad code is written, the following must be complete:
+- App-in-Toss and Google Play can share the same game core if platform APIs are moved behind adapters.
+- `JavaScriptBridge.eval(...)` remains isolated to Toss-only bridge ownership and must not leak into Android/Google Play code.
+- A top banner requires a centralized playfield layout owner before any SDK integration.
+- APK is now explicitly treated as private phone sideload / GitHub artifact testing only.
+- `Android Debug APK` exists as a debug-only export preset with temporary package `com.junseokism.corebreaker.debug`.
+- AAB remains the later Google Play submission format.
 
-1. **Business registration** in Toss console (required first)
-2. **Terms agreement** in Toss console
-3. **Settlement information** (banking; ~2–3 business day review)
-4. **Ad group creation** in console (format + placement; IDs take ~2h to register with Google)
-5. **Test ad IDs available** after ad group setup:
-   - `ait-ad-test-interstitial-id`
-   - `ait-ad-test-banner-id`
-   - `ait-ad-test-rewarded-id`
+## User-Action Blockers
 
-**Current status of prerequisites:** NOT STARTED — same person/org doing Toss console registration (C-25/C-28) should handle this at the same time.
-
----
-
-## High-Priority Gates (Pre-Submission)
-
-- [ ] **C-25/C-28: Toss console registration** — app name, icon (600×600px), scheme URL. **Primary blocker for QR test.**
-- [ ] **TQA-01: Toss QR/device test** — official gate; min 1 test required before review request button activates.
-- [ ] **Phase 4.21 Ads implementation** — blocked on console/business/settlement setup above.
-
----
-
-## Still-Open Interactive Confirmation
-
-- [ ] Confirm walls rotate smoothly without jitter (Phase 4.17 fix)
-- [ ] Confirm 7-shot siege and K1000 level transition feel correct on screen
-- [ ] Confirm MAX LEVEL CLEAR result screen displays correctly on device
-
----
+- Add a private GitHub remote and restore `gh` auth if you want Codex to push this pass.
+- Validate the Android Debug APK export preset in GitHub Actions.
+- Keep staging path-specific because the current worktree contains pre-existing gameplay/domain/scene/asset changes outside the APK pipeline scope.
+- Final public title decision.
+- Final approval of `app_icon_600.png`.
+- Asset/license proof.
+- Toss console registration and QR/device QA.
+- Future Google Play Console access, package-name decision, privacy policy URL, and signing ownership.
 
 ## Guardrails
 
-- Do not implement Hybrid combat
-- Do not change combat balance, walls, or K-loop
-- Do not auto-open leaderboard (must be user-triggered)
-- Do not implement ads before console/business/settlement setup is complete
-- Do not show ads during pause (PauseMenu = modal = prohibited placement per official docs)
-- Do not show ads during active gameplay, loading, or intro
-
----
-
-## Definition of Done
-
-Phase 4.20 is done: official ad APIs confirmed, placement policy locked, prerequisites documented. Phase 4.21 (ads implementation) is blocked on Toss console prerequisites. Toss-shell runtime confirmation (TQA-01) is the next hard gate before submission.
+- Do not change gameplay math, balance, or progression in platform-readiness prompts.
+- Do not implement production ads or SDK IDs in readiness/audit passes.
+- Do not mix Toss-only and Google Play-only API calls inside the same unguarded function.
+- Do not scatter banner offsets across HUD, joystick, ring spawner, core, or projectile files.
+- Do not push until remote privacy is verified and GitHub auth is healthy.
+- Do not use `git add .` for this branch; stage only release-pipeline/docs/platform-skeleton files after reviewing the dirty worktree.

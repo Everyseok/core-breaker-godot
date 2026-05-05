@@ -1,13 +1,14 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/root_ui.gd" id="1_root"]
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="2_hud"]
 [ext_resource type="Script" path="res://scripts/ui/game_over_screen.gd" id="3_gos"]
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="4_pm"]
-[ext_resource type="Script" path="res://scripts/ui/skill_slot.gd" id="5_ss"]
 [ext_resource type="Script" path="res://scripts/ui/confirm_exit_dialog.gd" id="6_ced"]
 [ext_resource type="Script" path="res://scripts/ui/aim_joystick.gd" id="7_aj"]
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="8_mm"]
+[ext_resource type="Script" path="res://scripts/ui/unlock_announcement.gd" id="9_ua"]
+[ext_resource type="PackedScene" path="res://scenes/ui/weapon_choice_panel.tscn" id="10_wcp"]
 
 [node name="RootUI" type="CanvasLayer"]
 layer = 2
@@ -22,105 +23,266 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("2_hud")
 
-[node name="LevelLabel" type="Label" parent="SafeAreaContainer/HUD"]
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -90.0
-offset_top = 6.0
-offset_right = 90.0
-offset_bottom = 24.0
-horizontal_alignment = 1
-text = "LEVEL 1"
+[node name="HudBandShadow" type="ColorRect" parent="SafeAreaContainer/HUD"]
+offset_left = 4.0
+offset_top = 8.0
+offset_right = 386.0
+offset_bottom = 138.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.28)
 
-[node name="KProgressBar" type="ProgressBar" parent="SafeAreaContainer/HUD"]
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -150.0
-offset_top = 26.0
-offset_right = 150.0
-offset_bottom = 42.0
+[node name="HudBand" type="Panel" parent="SafeAreaContainer/HUD"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 386.0
+offset_bottom = 130.0
+mouse_filter = 2
+
+[node name="HudTopTrim" type="ColorRect" parent="SafeAreaContainer/HUD"]
+offset_left = 14.0
+offset_top = 6.0
+offset_right = 376.0
+offset_bottom = 8.0
+mouse_filter = 2
+color = Color(0.76, 0.9, 1, 0.2)
+
+[node name="HudBottomTrim" type="ColorRect" parent="SafeAreaContainer/HUD"]
+offset_left = 14.0
+offset_top = 126.0
+offset_right = 376.0
+offset_bottom = 128.0
+mouse_filter = 2
+color = Color(0.16, 0.26, 0.54, 0.8)
+
+[node name="LevelGauge" type="ProgressBar" parent="SafeAreaContainer/HUD"]
+offset_left = 14.0
+offset_top = 12.0
+offset_right = 376.0
+offset_bottom = 36.0
 max_value = 1.0
 value = 0.0
 show_percentage = false
 
-[node name="KLabel" type="Label" parent="SafeAreaContainer/HUD"]
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -120.0
+[node name="GaugeFillMask" type="Control" parent="SafeAreaContainer/HUD/LevelGauge"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+mouse_filter = 2
+clip_contents = true
+
+[node name="GaugeFillRect" type="ColorRect" parent="SafeAreaContainer/HUD/LevelGauge/GaugeFillMask"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="GaugeStripeRoot" type="Control" parent="SafeAreaContainer/HUD/LevelGauge/GaugeFillMask"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="GaugeShine" type="ColorRect" parent="SafeAreaContainer/HUD/LevelGauge/GaugeFillMask"]
+anchor_right = 1.0
+offset_bottom = 5.0
+mouse_filter = 2
+
+[node name="LevelLabel" type="Label" parent="SafeAreaContainer/HUD/LevelGauge"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "Lv.1"
+
+[node name="ThresholdWeaponModule" type="Control" parent="SafeAreaContainer/HUD"]
+offset_left = 14.0
+offset_top = 47.0
+offset_right = 118.0
+offset_bottom = 83.0
+mouse_filter = 2
+
+[node name="ThresholdAccentLine" type="ColorRect" parent="SafeAreaContainer/HUD/ThresholdWeaponModule"]
+offset_left = 1.0
+offset_top = 29.0
+offset_right = 85.0
+offset_bottom = 31.0
+mouse_filter = 2
+
+[node name="ThresholdIconHolder" type="Control" parent="SafeAreaContainer/HUD/ThresholdWeaponModule"]
+offset_left = 0.0
+offset_top = 5.0
+offset_right = 24.0
+offset_bottom = 29.0
+mouse_filter = 2
+
+[node name="ThresholdValueLabel" type="Label" parent="SafeAreaContainer/HUD/ThresholdWeaponModule"]
+offset_left = 28.0
+offset_top = 2.0
+offset_right = 72.0
+offset_bottom = 16.0
+mouse_filter = 2
+text = "0+"
+
+[node name="ThresholdNameLabel" type="Label" parent="SafeAreaContainer/HUD/ThresholdWeaponModule"]
+offset_left = 28.0
+offset_top = 14.0
+offset_right = 104.0
+offset_bottom = 32.0
+mouse_filter = 2
+text = "화살"
+
+[node name="MainNumberShadowLabel" type="Label" parent="SafeAreaContainer/HUD"]
+offset_left = 122.0
 offset_top = 46.0
-offset_right = 120.0
-offset_bottom = 70.0
-scale = Vector2(1.1, 1.1)
+offset_right = 332.0
+offset_bottom = 102.0
+mouse_filter = 2
 horizontal_alignment = 1
-text = "K: 0"
+vertical_alignment = 1
+text = "0"
 
-[node name="WeaponLabel" type="Label" parent="SafeAreaContainer/HUD"]
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -170.0
-offset_top = 72.0
-offset_right = 170.0
-offset_bottom = 100.0
+[node name="MainNumberLabel" type="Label" parent="SafeAreaContainer/HUD"]
+offset_left = 118.0
+offset_top = 42.0
+offset_right = 328.0
+offset_bottom = 98.0
+mouse_filter = 2
 horizontal_alignment = 1
-text = "WEAPON: ARROW"
-
-[node name="BestKLabel" type="Label" parent="SafeAreaContainer/HUD"]
-offset_left = 12.0
-offset_top = 104.0
-offset_right = 150.0
-offset_bottom = 130.0
-text = "Best: 0"
+vertical_alignment = 1
+text = "0"
 
 [node name="PauseButton" type="Button" parent="SafeAreaContainer/HUD"]
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -60.0
-offset_top = 104.0
+offset_left = -52.0
+offset_top = 46.0
 offset_right = -12.0
-offset_bottom = 138.0
-text = "||"
+offset_bottom = 82.0
+text = ""
+
+[node name="PauseBarLeftShadow" type="ColorRect" parent="SafeAreaContainer/HUD/PauseButton"]
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 18.0
+offset_bottom = 26.0
+mouse_filter = 2
+color = Color(0.31, 0.84, 1, 0.55)
+
+[node name="PauseBarRightShadow" type="ColorRect" parent="SafeAreaContainer/HUD/PauseButton"]
+offset_left = 22.0
+offset_top = 8.0
+offset_right = 28.0
+offset_bottom = 26.0
+mouse_filter = 2
+color = Color(0.31, 0.84, 1, 0.55)
+
+[node name="PauseBarLeft" type="ColorRect" parent="SafeAreaContainer/HUD/PauseButton"]
+offset_left = 10.0
+offset_top = 6.0
+offset_right = 16.0
+offset_bottom = 24.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="PauseBarRight" type="ColorRect" parent="SafeAreaContainer/HUD/PauseButton"]
+offset_left = 20.0
+offset_top = 6.0
+offset_right = 26.0
+offset_bottom = 24.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Divider" type="ColorRect" parent="SafeAreaContainer/HUD"]
+offset_left = 14.0
+offset_top = 92.0
+offset_right = 376.0
+offset_bottom = 94.0
+mouse_filter = 2
+color = Color(0.28, 0.42, 0.7, 0.86)
+
+[node name="CurrentWeaponModule" type="Control" parent="SafeAreaContainer/HUD"]
+offset_left = 14.0
+offset_top = 100.0
+offset_right = 204.0
+offset_bottom = 122.0
+mouse_filter = 2
+
+[node name="CurrentWeaponAccent" type="ColorRect" parent="SafeAreaContainer/HUD/CurrentWeaponModule"]
+offset_left = 0.0
+offset_top = 8.0
+offset_right = 3.0
+offset_bottom = 21.0
+mouse_filter = 2
+
+[node name="WeaponLabel" type="Label" parent="SafeAreaContainer/HUD/CurrentWeaponModule"]
+offset_left = 10.0
+offset_top = 1.0
+offset_right = 170.0
+offset_bottom = 20.0
+mouse_filter = 2
+text = "무기: 화살"
+
+[node name="BestKLabel" type="Label" parent="SafeAreaContainer/HUD"]
+offset_left = 266.0
+offset_top = 102.0
+offset_right = 376.0
+offset_bottom = 118.0
+mouse_filter = 2
+horizontal_alignment = 2
+text = "최고 0개"
+
+[node name="WeaponFlash" type="ColorRect" parent="SafeAreaContainer/HUD"]
+visible = false
+offset_left = 14.0
+offset_top = 100.0
+offset_right = 190.0
+offset_bottom = 122.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="WeaponImpactLabel" type="Label" parent="SafeAreaContainer/HUD"]
+visible = false
+offset_left = 130.0
+offset_top = 88.0
+offset_right = 196.0
+offset_bottom = 108.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "쾅!"
+
+[node name="UnlockAnnouncement" type="Control" parent="SafeAreaContainer"]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -140.0
+offset_top = 150.0
+offset_right = 140.0
+offset_bottom = 194.0
+mouse_filter = 2
+script = ExtResource("9_ua")
+
+[node name="Panel" type="Panel" parent="SafeAreaContainer/UnlockAnnouncement"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="SafeAreaContainer/UnlockAnnouncement/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 6.0
+offset_right = -12.0
+offset_bottom = -6.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "번개 무기 해금!"
 
 [node name="AimJoystick" type="Control" parent="SafeAreaContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("7_aj")
 
-[node name="SkillBar" type="Control" parent="SafeAreaContainer"]
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = -35.0
-offset_top = -80.0
-offset_right = 35.0
-offset_bottom = -10.0
-
-[node name="OverclockSlot" type="Control" parent="SafeAreaContainer/SkillBar"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 0
-script = ExtResource("5_ss")
-
-[node name="BG" type="ColorRect" parent="SafeAreaContainer/SkillBar/OverclockSlot"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0.15, 0.55, 0.15, 1.0)
-mouse_filter = 2
-
-[node name="Label" type="Label" parent="SafeAreaContainer/SkillBar/OverclockSlot"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-horizontal_alignment = 1
-vertical_alignment = 1
-text = "OC"
-
-[node name="CooldownLabel" type="Label" parent="SafeAreaContainer/SkillBar/OverclockSlot"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-horizontal_alignment = 1
-vertical_alignment = 1
-visible = false
-text = "0"
+[node name="WeaponChoicePanel" parent="SafeAreaContainer" instance=ExtResource("10_wcp")]
 
 [node name="GameOverScreen" type="Control" parent="."]
 anchor_right = 1.0
@@ -138,7 +300,7 @@ offset_right = 120.0
 offset_bottom = 60.0
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "GAME OVER"
+text = "도전 실패!"
 
 [node name="RestartButton" type="Button" parent="GameOverScreen"]
 anchor_left = 0.5
@@ -149,7 +311,7 @@ offset_left = -90.0
 offset_top = -22.0
 offset_right = 90.0
 offset_bottom = 22.0
-text = "Play Again"
+text = "다시 시작"
 
 [node name="PauseMenu" type="Control" parent="."]
 process_mode = 3
@@ -160,53 +322,102 @@ script = ExtResource("4_pm")
 [node name="DimOverlay" type="ColorRect" parent="PauseMenu"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.65)
+color = Color(0.01, 0.03, 0.08, 0.58)
 mouse_filter = 0
 
-[node name="PauseTitle" type="Label" parent="PauseMenu"]
+[node name="PausePlateShadow" type="ColorRect" parent="PauseMenu"]
 anchor_left = 0.5
-anchor_top = 0.35
+anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.35
-offset_left = -60.0
-offset_top = -18.0
-offset_right = 60.0
-offset_bottom = 18.0
+anchor_bottom = 0.5
+offset_left = -122.0
+offset_top = -148.0
+offset_right = 122.0
+offset_bottom = 188.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.22)
+
+[node name="PausePlate" type="Panel" parent="PauseMenu"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -126.0
+offset_top = -152.0
+offset_right = 126.0
+offset_bottom = 184.0
+mouse_filter = 2
+
+[node name="PauseTrimTop" type="ColorRect" parent="PauseMenu/PausePlate"]
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 234.0
+offset_bottom = 17.0
+mouse_filter = 2
+color = Color(0.72, 0.9, 1, 0.16)
+
+[node name="PauseTrimBottom" type="ColorRect" parent="PauseMenu/PausePlate"]
+offset_left = 18.0
+offset_top = 339.0
+offset_right = 234.0
+offset_bottom = 342.0
+mouse_filter = 2
+color = Color(0.18, 0.3, 0.58, 0.52)
+
+[node name="PauseTitleShadow" type="Label" parent="PauseMenu/PausePlate"]
+offset_left = 40.0
+offset_top = 32.0
+offset_right = 216.0
+offset_bottom = 66.0
 horizontal_alignment = 1
-text = "PAUSED"
+text = "잠시 멈춤"
 
-[node name="ResumeButton" type="Button" parent="PauseMenu"]
-anchor_left = 0.5
-anchor_top = 0.44
-anchor_right = 0.5
-anchor_bottom = 0.44
-offset_left = -100.0
-offset_top = -20.0
-offset_right = 100.0
-offset_bottom = 20.0
-text = "Resume"
+[node name="PauseTitle" type="Label" parent="PauseMenu/PausePlate"]
+offset_left = 36.0
+offset_top = 28.0
+offset_right = 212.0
+offset_bottom = 62.0
+horizontal_alignment = 1
+text = "잠시 멈춤"
 
-[node name="SoundToggleButton" type="Button" parent="PauseMenu"]
-anchor_left = 0.5
-anchor_top = 0.53
-anchor_right = 0.5
-anchor_bottom = 0.53
-offset_left = -100.0
-offset_top = -20.0
-offset_right = 100.0
-offset_bottom = 20.0
-text = "Sound: ON"
+[node name="ResumeButton" type="Button" parent="PauseMenu/PausePlate"]
+offset_left = 28.0
+offset_top = 88.0
+offset_right = 224.0
+offset_bottom = 136.0
+text = "계속하기"
 
-[node name="RestartButton" type="Button" parent="PauseMenu"]
-anchor_left = 0.5
-anchor_top = 0.62
-anchor_right = 0.5
-anchor_bottom = 0.62
-offset_left = -100.0
-offset_top = -20.0
-offset_right = 100.0
-offset_bottom = 20.0
-text = "Restart"
+[node name="RankingButton" type="Button" parent="PauseMenu/PausePlate"]
+offset_left = 28.0
+offset_top = 150.0
+offset_right = 224.0
+offset_bottom = 198.0
+text = "순위 보기"
+
+[node name="SoundToggleButton" type="Button" parent="PauseMenu/PausePlate"]
+offset_left = 28.0
+offset_top = 212.0
+offset_right = 224.0
+offset_bottom = 260.0
+text = "소리 켜짐"
+
+[node name="RestartButton" type="Button" parent="PauseMenu/PausePlate"]
+offset_left = 28.0
+offset_top = 274.0
+offset_right = 224.0
+offset_bottom = 322.0
+text = "다시 시작"
+
+[node name="RankingStatusLabel" type="Label" parent="PauseMenu/PausePlate"]
+visible = false
+offset_left = 22.0
+offset_top = 332.0
+offset_right = 230.0
+offset_bottom = 356.0
+mouse_filter = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+text = ""
 
 [node name="ConfirmExitDialog" type="Control" parent="."]
 process_mode = 3
@@ -236,7 +447,7 @@ anchor_right = 1.0
 offset_top = 14.0
 offset_bottom = 60.0
 horizontal_alignment = 1
-text = "Leave the game?"
+text = "정말 나갈까요?"
 
 [node name="StayButton" type="Button" parent="ConfirmExitDialog/Panel"]
 anchor_top = 1.0
@@ -245,7 +456,7 @@ offset_left = 10.0
 offset_top = -46.0
 offset_right = 115.0
 offset_bottom = -10.0
-text = "Stay"
+text = "아니요"
 
 [node name="LeaveButton" type="Button" parent="ConfirmExitDialog/Panel"]
 anchor_left = 1.0
@@ -256,7 +467,7 @@ offset_left = -115.0
 offset_top = -46.0
 offset_right = -10.0
 offset_bottom = -10.0
-text = "Leave"
+text = "나가기"
 
 [node name="MainMenu" type="Control" parent="."]
 process_mode = 3
@@ -265,54 +476,126 @@ anchor_bottom = 1.0
 mouse_filter = 0
 script = ExtResource("8_mm")
 
-[node name="Background" type="ColorRect" parent="MainMenu"]
+[node name="BackgroundFallback" type="ColorRect" parent="MainMenu"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.05, 0.05, 0.1, 1.0)
 mouse_filter = 2
 
-[node name="TitleLabel" type="Label" parent="MainMenu"]
+[node name="BackgroundTexture" type="TextureRect" parent="MainMenu"]
+offset_top = -26.0
+offset_bottom = 26.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TopOverlay" type="ColorRect" parent="MainMenu"]
+anchor_right = 1.0
+anchor_bottom = 0.42
+mouse_filter = 2
+color = Color(0.01, 0.04, 0.09, 0.18)
+
+[node name="BottomOverlay" type="ColorRect" parent="MainMenu"]
+anchor_top = 0.68
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.02, 0.05, 0.12, 0.28)
+
+[node name="LeftVignette" type="ColorRect" parent="MainMenu"]
+anchor_right = 0.18
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.01, 0.03, 0.08, 0.14)
+
+[node name="RightVignette" type="ColorRect" parent="MainMenu"]
+anchor_left = 0.82
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.01, 0.03, 0.08, 0.14)
+
+[node name="TitleShadow" type="Label" parent="MainMenu"]
 anchor_left = 0.5
-anchor_top = 0.28
+anchor_top = 0.12
 anchor_right = 0.5
-anchor_bottom = 0.28
-offset_left = -120.0
-offset_top = -24.0
-offset_right = 120.0
+anchor_bottom = 0.12
+offset_left = -132.0
+offset_top = -20.0
+offset_right = 136.0
 offset_bottom = 24.0
 horizontal_alignment = 1
-text = "RING BREAKER"
+text = "코어 수호대"
+
+[node name="TitleLabel" type="Label" parent="MainMenu"]
+anchor_left = 0.5
+anchor_top = 0.12
+anchor_right = 0.5
+anchor_bottom = 0.12
+offset_left = -136.0
+offset_top = -24.0
+offset_right = 132.0
+offset_bottom = 20.0
+horizontal_alignment = 1
+text = "코어 수호대"
+
+[node name="MenuTrim" type="ColorRect" parent="MainMenu"]
+anchor_left = 0.5
+anchor_top = 0.20
+anchor_right = 0.5
+anchor_bottom = 0.20
+offset_left = -112.0
+offset_top = 0.0
+offset_right = 112.0
+offset_bottom = 4.0
+mouse_filter = 2
+color = Color(0.64, 0.88, 1, 0.18)
 
 [node name="BestLabel" type="Label" parent="MainMenu"]
-anchor_left = 0.5
-anchor_top = 0.4
-anchor_right = 0.5
-anchor_bottom = 0.4
-offset_left = -80.0
-offset_top = -16.0
-offset_right = 80.0
-offset_bottom = 16.0
-horizontal_alignment = 1
-text = "Best: 0"
-
-[node name="StartButton" type="Button" parent="MainMenu"]
-anchor_left = 0.5
-anchor_top = 0.52
-anchor_right = 0.5
-anchor_bottom = 0.52
-offset_left = -100.0
-offset_top = -26.0
-offset_right = 100.0
-offset_bottom = 26.0
-text = "Start Game"
-
-[node name="RankingButton" type="Button" parent="MainMenu"]
 anchor_left = 0.5
 anchor_top = 0.64
 anchor_right = 0.5
 anchor_bottom = 0.64
+offset_left = -122.0
+offset_top = -14.0
+offset_right = 122.0
+offset_bottom = 14.0
+horizontal_alignment = 1
+text = "최고 기록 0개"
+
+[node name="StartButton" type="Button" parent="MainMenu"]
+anchor_left = 0.5
+anchor_top = 0.73
+anchor_right = 0.5
+anchor_bottom = 0.73
+offset_left = -114.0
+offset_top = -28.0
+offset_right = 114.0
+offset_bottom = 28.0
+text = "게임 시작"
+
+[node name="RankingButton" type="Button" parent="MainMenu"]
+anchor_left = 0.5
+anchor_top = 0.82
+anchor_right = 0.5
+anchor_bottom = 0.82
 offset_left = -100.0
-offset_top = -26.0
+offset_top = -24.0
 offset_right = 100.0
-offset_bottom = 26.0
-text = "Ranking"
+offset_bottom = 24.0
+text = "순위 보기"
+
+[node name="RankingStatusLabel" type="Label" parent="MainMenu"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.90
+anchor_right = 0.5
+anchor_bottom = 0.90
+offset_left = -138.0
+offset_top = -16.0
+offset_right = 138.0
+offset_bottom = 16.0
+mouse_filter = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+text = ""

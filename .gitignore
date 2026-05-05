@@ -1,0 +1,26 @@
+# Godot local/editor state
+.godot/
+
+# OS/editor noise
+.DS_Store
+
+# Android/Gradle local output and credentials
+android/build/
+.gradle/
+local.properties
+*.keystore
+*.jks
+*.p12
+
+# Service accounts, app configs, and environment secrets
+google-services.json
+service-account*.json
+*service_account*.json
+client_secret*.json
+*.env
+
+# Local release/export outputs. Keep export_presets.cfg tracked.
+exports/android_debug/
+exports/**/*.apk
+exports/**/*.aab
+

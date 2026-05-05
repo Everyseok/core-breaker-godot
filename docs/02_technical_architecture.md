@@ -18,9 +18,9 @@ The following positions are hard constraints and override the older bottom-origi
 
 | Element | Node | Position |
 |---------|------|----------|
-| Core (game-over trigger) | `Core` (child of GameRoot) | Center of play field — local `(0, 0)`, world approx. `(195, 337)` |
+| Core (game-over trigger) | `Core` (child of GameRoot) | Center of play field — local `(0, 0)`, world approx. `(195, 432)` |
 | Weapon / launch origin | `Weapon` (child of GameRoot) | Co-located with the core area — local `(0, 0)` so projectiles originate from center |
-| GameRoot anchor | `GameRoot` Node2D | Center of play field at `(195, 337)` |
+| GameRoot anchor | `GameRoot` Node2D | Lowered play-field center at `(195, 432)` so the top rotating wall clears the fixed HUD |
 
 > **Implementation note for the correction pass:** `GameRoot` stays anchored at the ring/core center. `Core` remains the kill zone at local `(0, 0)`. `Weapon` is also positioned at local `(0, 0)` so the projectile launch origin and the protected center share the same world-space point.
 
@@ -42,6 +42,8 @@ Main (Node)
 │   ├── Core  (instance: scenes/game/core.tscn) — death zone at play-field center
 │   ├── BrickLayer
 │   ├── ProjectileLayer
+│   ├── VfxLayer
+│   ├── DamageNumberLayer
 │   ├── Weapon  — launch origin at center core area
 │   └── RingSpawner
 ├── DangerOverlay (CanvasLayer, layer=1)
@@ -49,20 +51,33 @@ Main (Node)
 └── RootUI (instance: scenes/ui/root_ui.tscn, layer=2)
 	├── SafeAreaContainer
 	│   ├── HUD
-	│   │   ├── LevelLabel
-	│   │   ├── KProgressBar
-	│   │   ├── KLabel
-	│   │   ├── WeaponLabel
+	│   │   ├── HudBandShadow / HudBand / HudTopTrim / HudBottomTrim
+	│   │   ├── LevelGauge
+	│   │   │   ├── GaugeFillMask
+	│   │   │   │   ├── GaugeFillRect / GaugeStripeRoot / GaugeShine
+	│   │   │   └── LevelLabel
+	│   │   ├── ThresholdWeaponModule
+	│   │   │   ├── ThresholdAccentLine / ThresholdIconHolder
+	│   │   │   └── ThresholdValueLabel / ThresholdNameLabel
+	│   │   ├── MainNumberShadowLabel / MainNumberLabel
+	│   │   ├── PauseButton
+	│   │   │   └── PauseBarLeftShadow / PauseBarRightShadow / PauseBarLeft / PauseBarRight
+	│   │   ├── Divider
+	│   │   ├── CurrentWeaponModule
+	│   │   │   └── CurrentWeaponAccent / WeaponLabel
 	│   │   ├── BestKLabel
-	│   │   └── PauseButton
+	│   │   └── WeaponFlash / WeaponImpactLabel
+	│   ├── UnlockAnnouncement
+	│   │   └── Panel
+	│   │       └── Label
 	│   ├── AimJoystick
 	│   │   ├── MoveLeftButton
 	│   │   ├── JoystickArea
-	│   │   │   ├── Base
-	│   │   │   └── Knob
-	│   │   └── MoveRightButton
-	│   └── SkillBar
-	│       └── OverclockSlot (BG / Label / CooldownLabel)
+	│   │   │   ├── BaseShadow / BasePlate / BaseInner
+	│   │   │   ├── SocketShadow / Socket / ShaftShadow / Shaft
+	│   │   │   └── KnobShadow / Knob / KnobShine / KnobSpec
+	│   │   ├── MoveRightButton
+	│   │   └── BuffButton
 	├── GameOverScreen
 	│   ├── ScoreLabel
 	│   └── RestartButton
@@ -78,6 +93,12 @@ Main (Node)
 			├── MessageLabel
 			├── StayButton
 			└── LeaveButton
+	└── MainMenu (process_mode=ALWAYS)
+		├── Background
+		├── TitleLabel
+		├── BestLabel
+		├── StartButton
+		└── RankingButton
 ```
 
 `main.tscn` is intentionally small. Gameplay and UI subtrees live in their own scene files.
@@ -105,7 +126,7 @@ Main (Node)
 - Left/right adjacency is evaluated on the current logical segment order of the ring.
 - Index wrap-around is mandatory, so a hit near segment `0` can still affect segments at the end of the array.
 - Arrow impacts target a spread radius of `1` (3 total targeted segments).
-- Stone impacts target a spread radius of `2` (5 total targeted segments).
+- Thunder and Spark Lance currently keep the same-layer hit radius `1` readability rule while using their own projectile-count presentation.
 - Wall compaction must preserve destroyed gaps as best it can without creating large new gaps on its own.
 
 ### What the Correction Pass Must Change
@@ -130,7 +151,7 @@ Main (Node)
 - `scenes/ui/root_ui.tscn`
 - `scenes/gameplay/*.tscn`
 
-**Gameplay / UI scripts**
+**Gameplay / UI / visual scripts**
 - `scripts/gameplay/game_root.gd`
 - `scripts/gameplay/core.gd`
 - `scripts/gameplay/ring_spawner.gd`
@@ -138,7 +159,10 @@ Main (Node)
 - `scripts/gameplay/brick_instance.gd`
 - `scripts/gameplay/weapon.gd`
 - `scripts/gameplay/arrow_projectile.gd`
-- `scripts/gameplay/stone_projectile.gd`
+- `scripts/gameplay/thunder_bolt_projectile.gd`
+- `scripts/gameplay/spark_lance_projectile.gd`
+- `scripts/gameplay/electric_split_projectile.gd`
+- `scripts/gameplay/piercing_bomb_spear_projectile.gd`
 - `scripts/gameplay/input_handler.gd`
 - `scripts/ui/root_ui.gd`
 - `scripts/ui/aim_joystick.gd`
@@ -146,16 +170,44 @@ Main (Node)
 - `scripts/ui/danger_overlay.gd`
 - `scripts/ui/game_over_screen.gd`
 - `scripts/ui/pause_menu.gd`
-- `scripts/ui/skill_slot.gd`
 - `scripts/ui/confirm_exit_dialog.gd`
+- `scripts/ui/main_menu.gd`
+- `scripts/ui/unlock_announcement.gd`
+- `scripts/ui/ui_style.gd`
+- `scripts/ui/weapon_choice_panel.gd`
+- `scripts/visual/weapon_profile.gd`
+- `scripts/visual/weapon_module_factory.gd`
+- `scripts/visual/projectile_visual_factory.gd`
+- `scripts/visual/game_background.gd`
+- `scripts/visual/damage_number.gd`
+- `scripts/visual/hit_effect_burst.gd`
+- `scripts/visual/brick_break_effect.gd`
+- `scripts/visual/combat_proc_effect.gd`
+- `scripts/gameplay/prism_side_ray_projectile.gd`
 
 **Presentation rules**
 - Scene-local scripts emit signals upward instead of directly mutating cross-cutting state.
 - UI scripts bind to autoload/application state, not own gameplay rules.
 - Input remains aim-only; firing stays automatic.
-- `AimJoystick` owns virtual-stick presentation and position-switch UI, while `InputHandler` remains the shared aim-state coordinator.
+- `AimJoystick` owns virtual-stick presentation, the single remaining overclock button, and position-switch UI, while `InputHandler` remains the shared aim-state coordinator.
+- `AimJoystick` also owns the bottom control-dock layout constants, including how low the joystick, side buttons, divider, and buff button sit in portrait view.
+- `WeaponChoicePanel` owns the paused evolution-choice UI only; it does not own damage values or combat balance tables.
+- `HUD` owns the full top-HUD hierarchy as one near-full-width top band: striped top level gauge, left current-band threshold module, center number-only broken-brick display with layered arcade typography, far-right pause button, divider, below-divider current-weapon module, best-record support label, and weapon-change impact feedback.
+- `UiStyle` owns the shared font chain plus the HUD-ready display-font chain so the top panel can use a more game-like retro/cute font order without scattering font setup across unrelated scripts.
+- `HitEffectBurst` owns local electric/storm contact arcs and impact sparks.
+- `CombatProcEffect` owns long-distance chain-electric line rendering, prism proc flares, meteor/cannon proc bursts, and the electric arc visibility tuning for cross-brick connections.
 - `Weapon` is presentation-side launch glue, but its projectile behaviors must reflect the constitutional combat rules.
 - `Weapon` also owns the real Overclock state/effect so multiple UI surfaces can trigger the same buff without duplicating cooldown truth.
+- `WeaponProfile` centralizes legacy/internal id -> player-facing weapon mapping plus tier/evolution names, colors, icon styles, projectile style ids, hit-VFX family ids, guardian weapon-module ids, muzzle reach, muzzle flash scale, recoil distance, and audio-hook ids so those values do not drift across multiple scripts.
+- `WeaponModuleFactory` owns the reusable guardian-mounted weapon silhouettes and muzzle-flash shapes. `Core` asks it to rebuild modules instead of hardcoding every weapon shape inline.
+- `ProjectileVisualFactory` owns the reusable projectile-body silhouettes. Projectile scripts keep movement/collision ownership and only request a style id plus a build helper.
+- `Core` owns the fixed guardian body, aim-follow, recoil, and the tier-specific weapon module presentation around the same center-origin gameplay point.
+- `GameBackground` owns the single `basicbackground.png` gameplay image plus the subtle level-based tint shift. No weapon-specific background switching remains active.
+- `HitEffectBurst`, `CombatProcEffect`, `DamageNumber`, `BrickBreakEffect`, `UnlockAnnouncement`, and `GameBackground` are visual-only presentation layers; they must not change score, HP, damage, progression, or spawn policy.
+- `UnlockAnnouncement` owns the short Korean weapon-change banner, while `AudioManager.play_weapon_change()` is the narrow no-op/future SFX hook for that same event.
+- `AudioManager.play_weapon_proc()` is the narrow no-op/future SFX hook for chain/prism/meteor/cannon proc moments.
+- `GameRoot` may expose narrow spawn helpers such as `spawn_damage_number(...)`, `spawn_brick_break_effect(...)`, and `spawn_combat_effect(...)`, but it must not own combat balance tables.
+- `WeaponChoicePanel` still owns choice-card layout/copy, but its card colors/icons now come from `WeaponProfile` so visual identity is not duplicated in the domain layer.
 
 ### 5.2 Application
 
@@ -163,16 +215,20 @@ Main (Node)
 - `scripts/application/rings/ring_spawn_planner.gd`
 
 **Responsibilities**
-- `ProgressionService`: maps K thresholds to projectile tier.
-- `RingSpawnPlanner`: produces ring spawn specs from current K and radius; must support circumference-derived counts and the shrinking-wall tiling rule.
+- `ProgressionService`: maps K thresholds to projectile tier and current level-loop length.
+- `RingSpawnPlanner`: produces ring spawn specs from current K and radius; must support circumference-derived counts, the shrinking-wall tiling rule, and the `2000+` 5-layer → 8-layer escalation.
 
 ### 5.3 Domain
 
 - `scripts/domain/bricks/brick_rules.gd`
+- `scripts/domain/combat/damage_rules.gd`
+- `scripts/domain/combat/weapon_choice_rules.gd`
 - `scripts/domain/danger/danger_rules.gd`
 
 **Responsibilities**
-- `BrickRules`: segment type enum, HP mapping, base colors, **segment size constant**.
+- `BrickRules`: segment type enum, numeric HP mapping, base colors, **segment size constant**.
+- `DamageRules`: centralized per-tier numeric weapon damage table.
+- `WeaponChoiceRules`: centralized `2000` trigger threshold, choice ids, card copy, proc intervals, and choice-specific constants.
 - `DangerRules`: danger threshold policy from normalized radius.
 
 ### 5.4 Infrastructure
@@ -221,17 +277,18 @@ Main (Node)
    - the current configured progression tier
    - the next configured unlock threshold
 4. HUD reads that state and shows:
-   - current visual level band (`LEVEL 1` / `LEVEL 2`)
-   - current level-band K progress as a horizontal bar
-   - current `K`
+   - current visual level band (`1단계`, `2단계`, ...)
+   - current level-band progress as a horizontal bar
+   - current `깬 벽돌`
    - current combat weapon name
-   - next unlock name + threshold, or READY/MAX state
-5. When `K` crosses any configured tier threshold, `GameState` emits a generic tier-threshold event that future VFX/SFX can subscribe to.
+   - next unlock name + threshold, or next-stage state
+5. When `K` crosses any configured tier threshold, `GameState` emits a generic tier-threshold event.
+6. `UnlockAnnouncement` subscribes to that event for non-blocking Korean unlock banners, and `Core` may subscribe for a small guardian pulse.
 6. The existing stone-specific hook remains available for compatibility with the first unlock.
 7. The level bar is driven by real runtime state:
    - `GameState.current_level` — integer level counter (starts at `1`, increments at K `1000`)
    - `GameState.current_level_k` — K within the current level (resets to `0` on level-up)
-   - `GameState.total_progress` — normalized `float` for ranking (level-first, then `current_level_k`)
+   - `GameState.total_progress` — normalized ranking value (level-first, then `current_level_k`)
    - At K `1000` the runtime transitions to the next level (loop repeats `0–999`); no active K `1000+` continuation band exists
 
 ### 6.2 Game Over Flow
@@ -276,25 +333,37 @@ Main (Node)
 
 ### Locked progression notes
 
-- K `150–299` = `Electric Split Arrow`
+- K `0–29` = `화살`
+  - gold starter arrow identity
+  - `3` bounces
+  - same-layer hit radius `1`
+- K `30–79` = `번개`
+  - `2` yellow electric projectiles
+  - `3` bounces each
+  - same-layer hit radius `1`
+- K `80–149` = `스파크 랜스`
+  - `3` blue electric lances
+  - `3` bounces each
+  - same-layer hit radius `1`
+- K `150–299` = `볼트 스톰` (runtime uses the stable electric split combat path)
   - `2` wall layers
   - composition = `Strong + Armored`
   - electric hit budget must preserve its full intended effective hit count by reallocating into other valid targets if preferred targets are already destroyed
-- K `300–499` = `Electric Split Arrow`
+- K `300–499` = `볼트 스톰`
   - still the same weapon family
   - `2` wall layers
   - composition = `Strong + Armored`
   - electric hit budget must still be preserved through deterministic reallocation
-- K `500–999` = `Piercing Bomb Siege`
+- K `500–2999` = `시즈 캐논` (`Piercing Bomb Siege`)
   - `5` wall layers
   - composition = `Strong + Strong + Normal + Strong + Armored`
   - attack pattern = `7` center-origin spears at `-36° / -24° / -12° / 0° / +12° / +24° / +36°`
   - center spear = `0` bounce, up to `2` pierced collisions, enlarged terminal explosion neighborhood = same layer `{I-2, I-1, I, I+1, I+2}` plus adjacent outer / inner layer centers if present
   - three side spears each side = `0` bounce, `1` pierced collision each, smaller support explosion for readability
-- K `1000` = level transition threshold
+- K `3000` = level transition threshold
   - `current_level` increments; `current_level_k` resets to `0`
   - gameplay loop restarts at the K `0` band of the new level (identical structure)
-  - max level is `100`; reaching Level `100` K `1000` ends the run (GM-04, not yet implemented as of Phase 4.17c)
+  - max level is `100`; reaching Level `100` K `3000` ends the run
 - Overclock / attack-speed buff
   - the existing Overclock effect is reused as the first real attack-speed buff
   - unlock threshold = `K >= 500`
@@ -306,8 +375,8 @@ Main (Node)
 ### Spec / runtime alignment note
 
 - The late-game design spec is locked from K `300` upward in the docs.
-- Runtime code has caught up through Phase `4.17c`: K `500–999` 7-shot siege, 5-layer wall, K `1000` level-loop transition, and shared Overclock at `3x` baseline are all implemented and headless-validated.
-- `data/progression.json` retains the same K thresholds; only the Max Level `100` run-end rule (GM-04) remains pending as of Phase `4.18`.
+- Runtime code has caught up through the original-repo apply branch (`feature/design-rebuild-apply-pass`): the Korean UI pass, single-background tint policy, brick redesign, guardian/core rebuild, tier-aware hit effects, stronger proc VFX, unlock announcements, K `500–2999` 7-shot siege, K `3000` level-loop transition, and Level `100` max-clear rule are all present and headless-validated.
+- `data/progression.json` retains the same K thresholds, but the visible UI uses Korean names and the player-facing `깬 벽돌` terminology.
 
 ---
 
@@ -342,4 +411,4 @@ Main (Node)
 | `Weapon` at bottom of play field while `Core` stayed centered | `Weapon` and `Core` share the center launch/death zone |
 | Ring spawn with fixed small brick count (10 + K scaling) | Segment count derived from current circumference |
 | Wall count fixed after spawn | Active wall count decreases with radius to avoid overlap |
-| Projectile hits only the directly collided segment | Arrow spreads to 3 segments and bounces 3 times; stone spreads to 5 segments |
+| Projectile hits only the directly collided segment | `화살` spreads to 3 same-layer hits and bounces 3 times; `번개` keeps same-layer 3-target electric spread as the Tier 2 runtime rule |

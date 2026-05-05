@@ -6,6 +6,7 @@ extends Node2D
 const BRICK_SCENE := preload("res://scenes/gameplay/brick_instance.tscn")
 const BrickRulesRef := preload("res://scripts/domain/bricks/brick_rules.gd")
 const RingSpawnPlannerRef := preload("res://scripts/application/rings/ring_spawn_planner.gd")
+const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
 const ANGULAR_SPEED := 0.45
 
 signal brick_destroyed(brick_type: int)
@@ -275,6 +276,7 @@ func _on_brick_destroyed(destroyed_brick_type: int, segment_index: int) -> void:
 	var segment: Dictionary = _segments[segment_index]
 	if not bool(segment["alive"]):
 		return
+	_request_brick_break_effect(_segment_world_position(segment_index), destroyed_brick_type)
 	segment["alive"] = false
 	segment["hp"] = 0
 	_segments[segment_index] = segment
@@ -283,16 +285,17 @@ func _on_brick_destroyed(destroyed_brick_type: int, segment_index: int) -> void:
 	_cleanup_if_empty()
 
 
-func apply_projectile_hit(segment_index: int, damage: int, spread_radius: int) -> void:
+func apply_projectile_hit(segment_index: int, damage: int, spread_radius: int, source_tier: int = -1) -> void:
 	if damage <= 0 or _segments.is_empty():
 		return
 	var target_indices: Array = _collect_target_indices(segment_index, spread_radius)
 	for target_variant in target_indices:
-		_damage_segment(int(target_variant), damage)
+		_damage_segment(int(target_variant), damage, source_tier)
+	_apply_active_weapon_choice_for_hit(segment_index, damage, source_tier, target_indices)
 	_cleanup_if_empty()
 
 
-func apply_electric_hit(segment_index: int, damage: int) -> void:
+func apply_electric_hit(segment_index: int, damage: int, source_tier: int = -1) -> void:
 	if damage <= 0 or _segments.is_empty():
 		return
 
@@ -362,22 +365,24 @@ func apply_electric_hit(segment_index: int, damage: int) -> void:
 		var target_ring = target_info.get("ring")
 		var target_index: int = int(target_info.get("index", -1))
 		if target_ring != null and is_instance_valid(target_ring) and target_index >= 0:
-			target_ring._damage_segment(target_index, damage)
+			target_ring._damage_segment(target_index, damage, source_tier)
 			used_targets[target_ring._target_key(target_index)] = true
 
+	_apply_active_weapon_choice_for_hit(segment_index, damage, source_tier, _collect_target_indices(segment_index, 1))
 	_cleanup_if_empty()
 	if sibling_ring != null and is_instance_valid(sibling_ring):
 		sibling_ring._cleanup_if_empty()
 
 
-func apply_piercing_spear_hit(segment_index: int, damage: int) -> void:
+func apply_piercing_spear_hit(segment_index: int, damage: int, source_tier: int = -1) -> void:
 	if damage <= 0 or _segments.is_empty():
 		return
-	_damage_segment(segment_index, damage)
+	_damage_segment(segment_index, damage, source_tier)
+	_apply_active_weapon_choice_for_hit(segment_index, damage, source_tier, [segment_index])
 	_cleanup_if_empty()
 
 
-func apply_terminal_explosion(segment_index: int, damage: int, same_layer_radius: int = 2) -> void:
+func apply_terminal_explosion(segment_index: int, damage: int, same_layer_radius: int = 2, source_tier: int = -1) -> void:
 	if damage <= 0 or _segments.is_empty():
 		return
 
@@ -414,7 +419,7 @@ func apply_terminal_explosion(segment_index: int, damage: int, same_layer_radius
 		var target_ring = target_info.get("ring")
 		var target_index: int = int(target_info.get("index", -1))
 		if target_ring != null and is_instance_valid(target_ring) and target_index >= 0:
-			target_ring._damage_segment(target_index, damage)
+			target_ring._damage_segment(target_index, damage, source_tier)
 
 	_cleanup_if_empty()
 	if outer_ring != null and is_instance_valid(outer_ring):
@@ -434,15 +439,18 @@ func _collect_target_indices(center_index: int, spread_radius: int) -> Array:
 	return target_indices
 
 
-func _damage_segment(segment_index: int, damage: int) -> void:
+func _damage_segment(segment_index: int, damage: int, source_tier: int = -1) -> void:
 	if segment_index < 0 or segment_index >= _segments.size():
 		return
 	var segment: Dictionary = _segments[segment_index]
 	if not bool(segment["alive"]):
 		return
 
+	var world_position := _segment_world_position(segment_index)
 	var next_hp: int = int(segment["hp"]) - damage
+	_request_damage_number(world_position, damage, next_hp <= 0, source_tier)
 	if next_hp <= 0:
+		_request_brick_break_effect(world_position, int(segment["brick_type"]))
 		_remove_brick(segment_index)
 		segment["alive"] = false
 		segment["hp"] = 0
@@ -459,6 +467,78 @@ func _damage_segment(segment_index: int, damage: int) -> void:
 			int(segment["hp"]),
 			int(segment["max_hp"])
 		)
+
+
+func _apply_active_weapon_choice_for_hit(
+	origin_segment_index: int,
+	damage: int,
+	source_tier: int,
+	blocked_indices: Array
+) -> void:
+	match GameState.active_weapon_choice_id:
+		WeaponChoiceRulesRef.CHAIN_LIGHTNING:
+			if GameState.roll_chain_lightning_trigger():
+				_apply_chain_lightning_modifier(origin_segment_index, damage, source_tier, blocked_indices)
+		WeaponChoiceRulesRef.METEOR_CANNON:
+			if GameState.consume_meteor_trigger():
+				_apply_meteor_cannon_modifier(origin_segment_index, damage, source_tier)
+		_:
+			return
+
+
+func _apply_chain_lightning_modifier(
+	origin_segment_index: int,
+	damage: int,
+	source_tier: int,
+	blocked_indices: Array
+) -> void:
+	var origin_world := _segment_world_position(origin_segment_index)
+	var target_index: int = _find_chain_target_index(origin_segment_index, blocked_indices)
+	if target_index >= 0:
+		var target_world := _segment_world_position(target_index)
+		_request_weapon_choice_effect("chain_lightning", origin_world, target_world, source_tier)
+		_play_choice_proc_audio(WeaponChoiceRulesRef.CHAIN_LIGHTNING)
+		_damage_segment(target_index, damage, source_tier)
+		return
+
+	var fallback_world := origin_world + _chain_fallback_offset(origin_segment_index)
+	_request_weapon_choice_effect("chain_lightning", origin_world, fallback_world, source_tier)
+	_play_choice_proc_audio(WeaponChoiceRulesRef.CHAIN_LIGHTNING)
+
+
+func _apply_meteor_cannon_modifier(origin_segment_index: int, damage: int, source_tier: int) -> void:
+	var origin_world := _segment_world_position(origin_segment_index)
+	_request_weapon_choice_effect("meteor_cannon", origin_world, origin_world, source_tier)
+	_play_choice_proc_audio(WeaponChoiceRulesRef.METEOR_CANNON)
+	for target_variant in _collect_target_indices(origin_segment_index, WeaponChoiceRulesRef.METEOR_RADIUS):
+		_damage_segment(int(target_variant), damage, source_tier)
+
+
+func _find_chain_target_index(origin_segment_index: int, blocked_indices: Array) -> int:
+	if _segments.is_empty():
+		return -1
+	var blocked: Dictionary = {}
+	for blocked_variant in blocked_indices:
+		blocked[int(blocked_variant)] = true
+	for offset in [1, -1, 2, -2]:
+		if abs(offset) > WeaponChoiceRulesRef.CHAIN_RANGE:
+			continue
+		var target_index: int = wrapi(origin_segment_index + offset, 0, _segments.size())
+		if blocked.has(target_index):
+			continue
+		var segment: Dictionary = _segments[target_index]
+		if not bool(segment["alive"]):
+			continue
+		return target_index
+	return -1
+
+
+func _chain_fallback_offset(origin_segment_index: int) -> Vector2:
+	var angle := _angle_for_segment(origin_segment_index)
+	var tangent := Vector2(-sin(angle), cos(angle)).normalized()
+	if tangent.length_squared() <= 0.001:
+		tangent = Vector2.RIGHT
+	return tangent * 18.0
 
 
 func _find_adjacent_layer_ring():
@@ -591,6 +671,52 @@ func _ordered_offsets_for_reallocation(preferred_offset: int) -> Array:
 
 func _target_key(segment_index: int) -> String:
 	return "%s:%d" % [str(get_instance_id()), segment_index]
+
+
+func _segment_world_position(segment_index: int) -> Vector2:
+	var brick = _bricks[segment_index]
+	if is_instance_valid(brick):
+		return brick.global_position
+	var angle := _angle_for_segment(segment_index)
+	return to_global(Vector2(cos(angle), sin(angle)) * radius)
+
+
+func _request_damage_number(world_position: Vector2, amount: int, destroyed: bool, source_tier: int) -> void:
+	var roots := get_tree().get_nodes_in_group("game_root")
+	if roots.is_empty():
+		return
+	var root := roots[0]
+	if root != null and is_instance_valid(root) and root.has_method("spawn_damage_number"):
+		root.call_deferred("spawn_damage_number", world_position, amount, destroyed, source_tier)
+
+
+func _request_brick_break_effect(world_position: Vector2, destroyed_brick_type: int) -> void:
+	var roots := get_tree().get_nodes_in_group("game_root")
+	if roots.is_empty():
+		return
+	var root := roots[0]
+	if root != null and is_instance_valid(root) and root.has_method("spawn_brick_break_effect"):
+		root.call_deferred("spawn_brick_break_effect", world_position, destroyed_brick_type)
+
+
+func _request_weapon_choice_effect(
+	effect_id: String,
+	world_position: Vector2,
+	world_target: Vector2,
+	source_tier: int
+) -> void:
+	var roots := get_tree().get_nodes_in_group("game_root")
+	if roots.is_empty():
+		return
+	var root := roots[0]
+	if root != null and is_instance_valid(root) and root.has_method("spawn_weapon_choice_effect"):
+		root.call_deferred("spawn_weapon_choice_effect", effect_id, world_position, world_target, source_tier)
+
+
+func _play_choice_proc_audio(choice_id: String) -> void:
+	if AudioManager == null or not AudioManager.has_method("play_hook"):
+		return
+	AudioManager.play_hook(WeaponChoiceRulesRef.proc_audio_hook_for_id(choice_id))
 
 
 func _remove_brick(segment_index: int) -> void:

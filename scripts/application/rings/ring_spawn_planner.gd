@@ -3,6 +3,7 @@ extends RefCounted
 
 const BrickRulesRef := preload("res://scripts/domain/bricks/brick_rules.gd")
 const JsonConfigLoaderRef := preload("res://scripts/infrastructure/config/json_config_loader.gd")
+const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
 
 const GAME_CONFIG_PATH := "res://data/game_config.json"
 const DEFAULT_SPAWN_RADIUS := 280.0
@@ -64,13 +65,16 @@ func _layers_for_k(k_value: int, outer_radius: float) -> Array:
 
 func _layer_types_for_k(k_value: int) -> Array:
 	if k_value >= 500:
-		return [
+		var base_layers := [
 			BrickRulesRef.BrickType.STRONG,
 			BrickRulesRef.BrickType.STRONG,
 			BrickRulesRef.BrickType.NORMAL,
 			BrickRulesRef.BrickType.STRONG,
 			BrickRulesRef.BrickType.ARMORED,
 		]
+		if k_value >= WeaponChoiceRulesRef.CHOICE_TRIGGER_K and base_layers.size() == 5:
+			return _expand_five_layer_wall(base_layers)
+		return base_layers
 	if k_value >= 150 and k_value < 500:
 		return [
 			BrickRulesRef.BrickType.STRONG,
@@ -95,3 +99,18 @@ func _layer_spacing() -> float:
 	if configured_spacing is float or configured_spacing is int:
 		return maxf(float(configured_spacing), 1.0)
 	return DEFAULT_LAYER_SPACING
+
+
+func _expand_five_layer_wall(base_layers: Array) -> Array:
+	if base_layers.size() != 5:
+		return base_layers.duplicate(true)
+	return [
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.NORMAL,
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.ARMORED,
+	]

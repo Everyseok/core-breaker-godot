@@ -39,6 +39,25 @@ func set_bgm_intensity(level: int) -> void:
 	# Phase 5: swap/crossfade BGM variants per level
 
 
+func play_hook(hook_name: String) -> void:
+	if hook_name == "":
+		return
+	print("[AudioManager] hook → %s" % hook_name)
+	# Future Phase 5: map hook ids to real SFX/BGM cues.
+
+
+func play_ui_impact(impact_name: String) -> void:
+	play_hook(impact_name)
+
+
+func play_weapon_change() -> void:
+	play_ui_impact("weapon_change")
+
+
+func play_weapon_proc(proc_name: String) -> void:
+	play_hook(proc_name)
+
+
 func _apply_mute_state() -> void:
 	var should_mute := _muted_by_background or not _sound_enabled
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), should_mute)

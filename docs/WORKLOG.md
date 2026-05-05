@@ -4,6 +4,947 @@ Entries are append-only. Most recent at top.
 
 ---
 
+## 2026-05-04 — Session 60: Global Korean UI Font Application
+
+**Focus**
+- Apply the user-provided Korean UI font globally without touching gameplay/domain logic and without scattering font loads across many scripts.
+
+**Asset organization**
+- Found user-provided font at `res://game_ui_kr.ttf`
+- Copied it into the canonical UI asset path:
+  - `res://assets/fonts/game_ui_kr.ttf`
+- The root copy remains in the repo as the original supplied file, but the active UI code path now points only to `res://assets/fonts/game_ui_kr.ttf`
+
+**What changed**
+- `scripts/ui/ui_style.gd`
+  - Added `UI_FONT_PATH = "res://assets/fonts/game_ui_kr.ttf"`
+  - Centralized font ownership there
+  - `get_font()` and `get_display_font()` now resolve to the same Korean UI font resource
+  - System-font chains remain only as fallback if the asset cannot be loaded
+- Existing UI components that already use `UiStyle` or `UiStyleRef.get_display_font()` now inherit the new font automatically:
+  - Main Menu
+  - Pause Menu
+  - HUD
+  - Game Over / result
+  - Confirm-exit dialog
+  - Unlock banner
+  - Weapon choice panel
+  - Aim-joystick position/buff buttons
+- No gameplay/domain files were edited for the font pass
+
+**Exceptions**
+- Damage numbers were left unchanged because they are part of the visual/combat feedback layer rather than the Korean UI layer and may not remain readable with the pixel-style font.
+
+**Validation**
+- `git diff --check` passed
+- `jq '.' data/dev_status.json` passed
+- `rg` audit confirmed the canonical path is centralized in `scripts/ui/ui_style.gd`
+- Godot headless project-open smoke test passed with `/Users/junseokism/Downloads/Godot 2.app/Contents/MacOS/Godot`
+- No separate `.godot/imported/game_ui_kr...` artifact appeared; Godot loaded the `.ttf` directly in this setup
+- Automated screenshot generation still failed, so visible success is still not being claimed
+
+**Phase:** 4.21ZK — Global Korean UI font asset integrated; visible screenshot verification still pending
+**Files touched:** `assets/fonts/game_ui_kr.ttf`, `scripts/ui/ui_style.gd`, docs/status files
+
+---
+
+## 2026-05-03 — Session 59: Title Screen + Best-Score + Pause Panel + Font Recovery
+
+**Focus**
+- Apply a narrow recovery pass for four user-reported issues only: duplicate baked-title overlay on the title screen, suspicious best-score binding, pause-panel wrapping failure, and text treatment that still felt too plain.
+
+**Diagnosis**
+- Result: `STRUCTURALLY_CLEAN_NEEDS_NARROW_FIX`
+- Evidence:
+  - `MainMenu` and `PauseMenu` were already scene-owned; no duplicate runtime card builder remained.
+  - `mainbackground.png` was already loading from `res://mainbackground.png`.
+  - The visible title duplication came from `TitleShadow` / `TitleLabel` staying active even when the poster background already contained a baked title/logo.
+  - The best-score problem was not two different save files; it was ambiguous API naming (`best_k` vs `best_total_progress`) and no clearly named authoritative getter/signal for UI consumers.
+  - The pause plate did not actually contain its title/buttons because those nodes were still siblings of `PausePlate`, not children inside it.
+  - No bundled Korean font asset exists in the repo; only system-font chains were available.
+
+**What changed**
+- `scripts/ui/main_menu.gd`
+  - Added conditional title hiding: when the loaded title-screen background file is `mainbackground.png`, `TitleShadow`, `TitleLabel`, and `MenuTrim` are hidden so the baked poster title is not duplicated.
+  - Switched the best-record label to the authoritative SaveManager getter.
+  - Upgraded the best-record label to the display-font chain for a slightly cuter/game-like treatment.
+- `scripts/autoload/save_manager.gd`
+  - Added `best_record_changed(best_value)` signal.
+  - Added `get_best_record_value()` as the explicit source-of-truth getter for UI.
+  - Normalized legacy `best_k` and explicit `best_total_progress` on load so UI does not depend on ambiguous fallback behavior.
+- `scripts/infrastructure/persistence/save_file_repository.gd`
+  - Added default keys for `best_total_progress`, `best_level`, and `best_level_k` so the save contract is explicit instead of half-legacy.
+- `scripts/ui/hud.gd`
+  - Switched the HUD best label to the new authoritative getter and refresh signal.
+  - Moved the HUD best label to the display-font chain for better readability/game feel.
+- `scripts/ui/game_over_screen.gd`
+  - Switched result-screen best-record copy to the same authoritative getter for consistency.
+- `scenes/ui/root_ui.tscn` + `scripts/ui/pause_menu.gd`
+  - Reparented `PauseTrimTop`, `PauseTrimBottom`, `PauseTitleShadow`, `PauseTitle`, `ResumeButton`, `SoundToggleButton`, and `RestartButton` under `PausePlate`.
+  - Expanded/tuned the plate so the title and all three buttons now sit inside one coherent panel with real padding.
+
+**Save / best-record snapshot**
+- Persisted file path:
+  - `/Users/junseokism/Library/Application Support/Godot/app_userdata/game_junseokism.ver1/save.json`
+- Observed persisted record in this environment:
+  - `best_k = 100000`
+  - `best_total_progress = 100000`
+- After this pass, the intended UI metric is explicitly the persisted total-progress record exposed as `SaveManager.get_best_record_value()`.
+
+**Validation**
+- `git diff --check` passed
+- `jq '.' data/dev_status.json` passed
+- `rg` audit confirmed:
+  - no runtime `Panel.new()` / `Button.new()` / `Label.new()` menu builders remain
+  - one `PausePlate` content tree owns the pause title and buttons
+  - UI consumers now reference `get_best_record_value()` / `best_record_changed`
+- Godot binary found at `/Users/junseokism/Downloads/Godot 2.app/Contents/MacOS/Godot`
+- `Godot --headless --scene res://scenes/main/main.tscn --quit-after 5` passed
+- Automated screenshot generation still failed, so visible success is still not being claimed
+
+**Phase:** 4.21ZI — Narrow title/best/pause/font recovery applied; visible screenshot verification still pending
+**Files touched:** `scenes/ui/root_ui.tscn`, `scripts/ui/main_menu.gd`, `scripts/ui/pause_menu.gd`, `scripts/ui/hud.gd`, `scripts/ui/game_over_screen.gd`, `scripts/autoload/save_manager.gd`, `scripts/infrastructure/persistence/save_file_repository.gd`, docs/status files
+
+---
+
+## 2026-05-03 — Session 58: Main Menu / Pause Menu Recovery + Entanglement Diagnosis
+
+**Focus**
+- Diagnose whether the rebuilt title screen / pause menu were structurally tangled or simply visually weak, then recover only the menu presentation without touching gameplay/domain rules.
+
+**Diagnosis**
+- Result: `STRUCTURALLY_CLEAN_BUT_VISUALLY_POOR`
+- Evidence:
+  - `MainMenu` is now scene-owned in `scenes/ui/root_ui.tscn` and no longer builds runtime cards/emblems/stars.
+  - `PauseMenu` is now scene-owned in `scenes/ui/root_ui.tscn` and no longer has `_card` / `_build_card()` / runtime `Panel.new()` builders.
+  - Runtime Godot diagnosis confirmed `res://mainbackground.png` is actually loaded, `BackgroundTexture` is visible, and `BackgroundFallback` is hidden.
+  - Therefore the remaining problem was not duplicate systems or a wrong background path; it was the menu still reading too dark / too heavy visually.
+
+**What changed**
+- Reduced Main Menu overlay strength so the poster background reads more clearly:
+  - `TopOverlay` alpha `0.46 -> 0.18`
+  - `BottomOverlay` alpha `0.58 -> 0.28`
+  - `Left/RightVignette` alpha `0.30 -> 0.14`
+- Tightened Main Menu title/button layout so the title sits higher and the button stack sits lower over the poster.
+- Kept the real UI title/button layer while still allowing the current `mainbackground.png` poster to remain visible.
+- Slimmed Pause Menu so it no longer reads as a giant old card:
+  - dim alpha `0.74 -> 0.58`
+  - smaller `PausePlate` / `PausePlateShadow`
+  - lighter trim lines and lighter menu plate styling
+- Confirmed again that menu behavior remains script-owned while scene nodes own the visible structure.
+
+**Runtime diagnosis snapshot**
+- `loaded_background_path = res://mainbackground.png`
+- `background_texture_visible = true`
+- `background_texture_has_texture = true`
+- `background_fallback_visible = false`
+- `main_menu_visible = true`
+- `pause_menu_visible = false`
+
+**Validation**
+- `git diff --check` passed
+- `jq '.' data/dev_status.json` passed
+- `Godot --headless --scene res://scenes/main/main.tscn --quit-after 5` passed using `/Users/junseokism/Downloads/Godot 2.app/Contents/MacOS/Godot`
+- Screenshot generation was attempted but still failed under automated capture paths, so visible success is still not being claimed
+
+**Phase:** 4.21ZH — Menu recovery applied after entanglement diagnosis; screenshot automation still incomplete
+**Files touched:** `scenes/ui/root_ui.tscn`, `scripts/ui/main_menu.gd`, `scripts/ui/pause_menu.gd`, `scripts/ui/ui_style.gd`, docs/status files
+
+---
+
+## 2026-05-03 — Session 57: Main Menu + Pause Menu Visual Rebuild Pass
+
+**Focus**
+- Rebuild `MainMenu` and `PauseMenu` so they match the newer HUD language instead of using runtime-generated prototype cards / big generic boxes, while cleanly wiring the cinematic `mainbackground.png` hook.
+
+**What changed**
+- Rebuilt `MainMenu` into one scene-owned title-screen tree in `scenes/ui/root_ui.tscn`:
+  - `BackgroundFallback`
+  - `BackgroundTexture`
+  - `TopOverlay` / `BottomOverlay`
+  - `LeftVignette` / `RightVignette`
+  - `TitleShadow` / `TitleLabel`
+  - `MenuTrim`
+  - `BestLabel`
+  - `StartButton`
+  - `RankingButton`
+- Rewrote `scripts/ui/main_menu.gd` so it no longer generates runtime cards, emblem blocks, stars, or border lines.
+- Added clean background loading order for the title screen:
+  - `res://assets/backgrounds/mainbackground.png`
+  - fallback `res://mainbackground.png`
+  - fallback color surface if neither exists
+- Rebuilt `PauseMenu` into one scene-owned overlay tree:
+  - `DimOverlay`
+  - `PausePlateShadow`
+  - `PausePlate`
+  - `PauseTrimTop`
+  - `PauseTrimBottom`
+  - `PauseTitleShadow`
+  - `PauseTitle`
+  - `ResumeButton`
+  - `SoundToggleButton`
+  - `RestartButton`
+- Rewrote `scripts/ui/pause_menu.gd` so it no longer creates a runtime `_card` panel or header line.
+- Extended `scripts/ui/ui_style.gd` with shared menu language helpers and constants:
+  - menu surface / trim colors
+  - arcade button styles
+  - menu title treatment
+  - dedicated `apply_menu_plate()` helper
+
+**Validation**
+- Static duplicate-button / stale-panel audits run successfully
+- Gameplay/domain rule owners were not edited in this pass
+- Fresh Godot screenshot/runtime capture is still blocked until a working Godot binary path is available again
+
+**Phase:** 4.21ZG — Main Menu + Pause Menu visual rebuild applied; runtime screenshot pending
+**Files touched:** `scenes/ui/root_ui.tscn`, `scripts/ui/main_menu.gd`, `scripts/ui/pause_menu.gd`, `scripts/ui/ui_style.gd`, docs/status files
+
+---
+
+## 2026-05-03 — Session 56: Reference-Match Top HUD Visual Rebuild Pass
+
+**Focus**
+- Remove the remaining small-box / prototype-panel feeling from the top HUD and rebuild it as one wide reference-style top band without touching gameplay math or progression rules.
+
+**What changed**
+- Rebuilt the HUD scene structure in `scenes/ui/root_ui.tscn` so the active top HUD is now one explicit tree:
+  - `HudBand`
+  - `LevelGauge` + centered `LevelLabel`
+  - `ThresholdWeaponModule`
+  - `MainNumberShadowLabel` + `MainNumberLabel`
+  - `PauseButton` with explicit pause bars
+  - `Divider`
+  - `CurrentWeaponModule`
+  - `BestKLabel`
+  - `WeaponFlash` / `WeaponImpactLabel`
+- Rewrote `scripts/ui/hud.gd` to consume that scene-owned tree instead of dynamically building another boxed HUD on top of it
+- Removed the old boxed/prototype look by design:
+  - no threshold panel box
+  - no current-weapon box panel
+  - no center-number card
+  - no nested small colored boxes around the main HUD elements
+- The center number is now layered arcade text:
+  - cyan/sky-blue shadow label
+  - white main label
+  - dark outline
+  - no visible rectangle behind it
+- The threshold-band info above the divider is now a compact icon/text group with a thin accent line, not a form-field-like box
+- The current weapon row below the divider is now a compact accent line + label, not a big colored rectangle
+- The pause button is now a dedicated rounded button with explicit pause-bar subnodes instead of label text `II`
+- Grouped the HUD geometry into constants in `hud.gd`, and kept weapon color/name/icon data sourced from `WeaponProfile`
+- Added a runtime cleanup pass in `hud.gd` that frees old legacy dynamic HUD nodes if they appear
+
+**Validation**
+- `git diff --check`: passed
+- `jq '.' data/dev_status.json`: passed
+- Stale HUD-label grep: no matches for:
+  - `NextUnlockLabel`
+  - `CountCaptionLabel`
+  - `WeaponCaptionLabel`
+  - `SupportStrip`
+  - `ProgressTextLabel`
+  - `StageLabel`
+  - `TurnLabel`
+- Duplicate-role grep confirms one active scene-owned set of:
+  - `LevelGauge`
+  - `ThresholdWeaponModule`
+  - `MainNumberLabel`
+  - `PauseButton`
+  - `CurrentWeaponModule`
+- `scripts/ui/hud.gd` still has no references to `DamageRules`, `BrickRules`, damage application, or wall-spawn ownership
+- Godot screenshot/extra runtime validation was attempted, but the previously used Godot binary path became unavailable during this pass, so no fresh capture was produced
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- The required screenshot attempt was made, but no PNG was generated because the Godot binary path was unavailable at capture time
+- Final visual judgment still needs a real Godot/editor visible pass
+
+---
+
+## 2026-05-03 — Session 55: Strict Reference Top HUD Correction Pass
+
+**Focus**
+- Replace the still-too-boxed top HUD with a reference-like wide top band: top striped level gauge, left threshold-band module, huge center number, right pause button, divider, and a below-divider current-weapon row.
+
+**What changed**
+- Rebuilt `scripts/ui/hud.gd` again around a near-full-width top shell instead of the previous compact centered-card feel
+- The top HUD now uses:
+  - a wide striped `Lv.X` gauge across the top
+  - a compact threshold-band module on the left above the divider
+  - a large center number-only broken-brick display with no `깬 벽돌` label and no `K`
+  - a thick rounded pause button at the far right
+  - a full-width divider
+  - a below-divider current-weapon row and a compact best-record label
+- Tightened the layout to fit `390x844` more safely:
+  - narrower threshold chip
+  - slightly smaller but still dominant center number
+  - pause button pushed farther right
+- Kept the threshold/current-weapon meaning split intact:
+  - above divider = current progression band
+  - below divider = actual current weapon
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- `/private/tmp/design_strict_top_hud_validation.gd`: passed
+  - shell width is now near full viewport width
+  - top level gauge exists and is wide
+  - threshold module is above divider on the left
+  - center number is number-only
+  - pause button is on the far right
+  - current weapon row is below divider
+- Existing progression validation `/tmp/design_progression_choice_validation.gd`: passed
+- `git diff --check`: passed
+- `jq '.' data/dev_status.json`: passed
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- No reliable screenshot was produced from headless runtime
+- The final premium feel still needs a real Godot/editor visible check
+
+---
+
+## 2026-05-03 — Session 54: Final Top HUD + Electric Arc Visibility Pass
+
+**Focus**
+- Rebuild the top HUD around the final reference structure:
+  striped top level gauge, threshold-band module, center number-only display, divider, and a below-divider current-weapon module.
+- Make electric chain/arc VFX obviously visible without touching damage/progression math.
+
+**What changed**
+- Rebuilt `scripts/ui/hud.gd` again into the final compact structure:
+  - top striped level gauge with centered `Lv.X`
+  - left current-band threshold module (`0+ 화살`, `30+ 번개`, etc.)
+  - center number-only current broken-brick display
+  - right rounded pause button
+  - horizontal divider
+  - below-divider current weapon module
+  - small best-record label on the right
+- Removed the previous HUD behaviors that made the top area feel too label-heavy:
+  - no `깬 벽돌` text around the center number
+  - no top-left `단계` block
+  - no active next-unlock HUD row
+- Added narrow read-only progression getters in `scripts/autoload/game_state.gd` so the HUD can read the active band threshold/name without duplicating threshold constants
+- Strengthened electric-arc readability in:
+  - `scripts/visual/combat_proc_effect.gd`
+  - `scripts/visual/hit_effect_burst.gd`
+- `combat_proc_effect.gd` now renders chain lightning with:
+  - thicker cyan/sky-blue/white arcs
+  - multi-layer glow/core lines
+  - more jagged points across long distances
+  - larger endpoint flashes and spark clusters
+- `hit_effect_burst.gd` now renders stronger local electric/storm contact arcs for:
+  - `번개`
+  - `연쇄 번개`
+  - `볼트 스톰`
+- `scripts/ui/ui_style.gd` display-font chain remains the central HUD font owner; no new bundled font asset was added in this pass
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- `/tmp/design_top_hud_final_layout_validation.gd`: passed
+  - top level gauge exists
+  - stripe pattern exists
+  - `Lv.` text centered inside gauge
+  - threshold module exists above divider
+  - center number is number-only
+  - current-weapon module exists below divider
+  - old next-unlock HUD row is gone
+- `/tmp/design_electric_arc_visibility_validation.gd`: passed
+  - chain effect spawns multiple thick blue/cyan lines
+  - long-distance arc uses enough jagged points
+  - endpoint flashes/sparks exist
+  - thunder/storm impacts now spawn thicker electric arcs
+- Existing progression validation `/tmp/design_progression_choice_validation.gd`: passed
+- Existing weapon-constitution validation `/tmp/design_weapon_constitution_validation.gd`: passed
+- `git diff --check`: passed
+- `jq '.' data/dev_status.json`: passed
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- No reliable screenshot was produced from headless runtime
+- Final judgment on the HUD’s boldness and the chain-lightning readability still needs a visible playtest
+
+---
+
+## 2026-05-03 — Session 53: Top HUD Full Redesign Pass
+
+**Focus**
+- Replace the previous top HUD arrangement with a much bolder information hierarchy and a more game-like font feel without changing gameplay/progression math.
+
+**What changed**
+- Rebuilt `scripts/ui/hud.gd` into a new top-deck arrangement:
+  - fixed outer shell
+  - top row level chip
+  - large broken-brick count card
+  - separate progress row with `current / max`
+  - separate weapon card
+  - small support strip for next unlock + best record
+- The main `깬 벽돌` card is now the most visually prominent status element
+- The weapon card now shows the current weapon name more cleanly while keeping the weapon-only dynamic color rule
+- Added distinct internal HUD nodes for:
+  - `CountCard`
+  - `CountCaptionLabel`
+  - `WeaponCaptionLabel`
+  - `ProgressTextLabel`
+  - `SupportStrip`
+- Updated `scripts/ui/ui_style.gd` with a dedicated display-font chain that prefers cute/retro/pixel-like Korean-capable system fonts if available:
+  - `NeoDunggeunmo`
+  - `DungGeunMo`
+  - `Galmuri`
+  - `CookieRun`
+  - `NanumSquareRound`
+  - then safe Korean-capable fallbacks
+- The top HUD now uses the display-font chain for the level chip, main broken-brick count, weapon card, and short impact text
+- Compact support copy remains Korean and secondary:
+  - `다음 해금: ...`
+  - `최고 ...개`
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- Existing HUD/control validation `/tmp/design_hud_polish_validation.gd`: passed
+- New top-HUD redesign validation `/tmp/design_top_hud_redesign_validation.gd`: passed
+  - new shell/count/support/progress/weapon-caption nodes exist
+  - main count is larger than the weapon label
+  - weapon label is larger than support labels
+  - display font is applied to the main count and weapon label
+  - level chip / pause, count / weapon, and next / best do not overlap
+  - outer shell remains fixed while the weapon card recolors
+- `git diff --check`: passed
+- `jq '.' data/dev_status.json`: passed
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- No screenshot could be reliably generated in headless mode
+- Final judgment on the new top-HUD boldness and the font feel still needs a visible Godot playtest
+
+---
+
+## 2026-05-03 — Session 52: Global Weapon Visual Constitution Pass
+
+**Focus**
+- Unify all player-facing weapon families under one clean visual constitution:
+  `화살`, `번개`, `스파크 랜스`, `볼트 스톰`, `시즈 캐논`, plus the evolution choices `연쇄 번개`, `프리즘 랜스`, `메테오 캐논`.
+- Improve the fixed guardian and per-weapon presentation without touching stable damage/progression/wall rules.
+
+**What changed**
+- Replaced `scripts/visual/weapon_profile.gd` with a fuller centralized visual owner that now maps:
+  - base tiers
+  - evolution choices
+  - legacy/internal ids
+  - display names
+  - icon styles
+  - guardian module styles
+  - projectile style ids
+  - hit/proc VFX styles
+  - muzzle flash scale / muzzle reach
+  - recoil category
+  - audio hook ids
+- Added:
+  - `scripts/visual/weapon_module_factory.gd`
+  - `scripts/visual/projectile_visual_factory.gd`
+- `weapon_module_factory.gd` now owns guardian-mounted weapon silhouettes and muzzle-flash construction for:
+  - `화살`
+  - `번개`
+  - `스파크 랜스`
+  - `볼트 스톰`
+  - `시즈 캐논`
+  - `연쇄 번개`
+  - `프리즘 랜스`
+  - `메테오 캐논`
+- `projectile_visual_factory.gd` now owns projectile-body silhouettes so the active projectile scripts no longer carry their own inline shape tables
+- `scripts/gameplay/core.gd` now delegates weapon-module and muzzle-flash building to the new visual factory while keeping:
+  - fixed guardian identity
+  - aim-follow
+  - recoil
+  - center-origin launch ownership
+- `scripts/gameplay/weapon.gd` now injects the active projectile visual style id into spawned projectiles and keeps the aim-line colors in sync with the active tier/evolution profile
+- Active projectile scripts now stay thin:
+  - each keeps movement / collision / hit logic
+  - each resolves its projectile visual style through `WeaponProfile`
+  - each asks `ProjectileVisualFactory` to build its body
+  - each passes the resolved visual style id into hit-effect configuration
+- `scripts/visual/hit_effect_burst.gd` now resolves its impact family by visual profile rather than just tier number, so choice/evolution weapons can show their own impact language:
+  - `연쇄 번개` chain-electric impact
+  - `프리즘 랜스` prism flare impact
+  - `메테오 캐논` hotter meteor burst
+- `scripts/visual/combat_proc_effect.gd` now also pulls colors from `WeaponProfile` instead of duplicating visual fields in the domain layer
+- `scripts/domain/combat/weapon_choice_rules.gd` had visual-only fields removed; it now keeps only choice ids, copy, trigger constants, and proc/balance constants
+- `scripts/ui/weapon_choice_panel.gd` now gets choice-card colors/icons from `WeaponProfile`, so the domain layer no longer owns presentation color data
+- `scripts/ui/hud.gd` and `scripts/ui/unlock_announcement.gd` now show the selected evolution weapon as the current visible weapon family using the same centralized visual profile
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- `/tmp/design_weapon_constitution_validation.gd`: passed
+  - all 8 player-facing weapon profiles resolve
+  - legacy/internal ids map correctly
+  - siege still fires 7 shots
+  - evolution choices switch the HUD label
+  - evolution choices inject the correct projectile visual style id
+- Previous VFX validation `/private/tmp/design_weapon_vfx_validation.gd`: passed
+- Previous progression/layout validation `/tmp/design_progression_choice_validation.gd`: passed
+- `git diff --check`: passed
+- `jq '.' data/dev_status.json`: passed
+- grep/audit checks confirmed:
+  - no `GameState.add_k()` or hit/damage application calls inside `scripts/visual`
+  - no stale `weapon_choice_proc_effect` or `spawn_weapon_choice_effect` runtime references
+  - no active `stone_projectile` runtime references
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- The guardian/weapon premium feel and the distinction between `볼트 스톰`, `시즈 캐논`, and `메테오 캐논` still need a real on-screen playtest
+- `AudioManager` remains hook-only; no production weapon SFX assets were added
+
+---
+
+## 2026-05-03 — Session 51: Targeted Weapon VFX + Guardian Polish Pass
+
+**Focus**
+- Make electric / lance / storm / cannon combat feedback much more legible and satisfying without touching damage math, thresholds, or wall rules.
+- Upgrade the center guardian and visible weapon module so they look more intentional, distinct by tier, and more premium in motion.
+
+**What changed**
+- Expanded `scripts/visual/weapon_profile.gd` so it now also centralizes:
+  - VFX family id (`arrow / electric / lance / storm / cannon`)
+  - muzzle reach
+  - muzzle flash scale
+  - recoil distance
+- Rebuilt `scripts/visual/hit_effect_burst.gd` into clear per-family impact builders:
+  - `화살`: modest gold streak / flash
+  - `번개`: blue-white / cyan crackle with electric spark bursts
+  - `스파크 랜스`: sharper blue-violet lance flares and prism glints
+  - `볼트 스톰`: richer storm-energy arcs plus plasma ring
+  - `시즈 캐논`: heavier flash / shock ring / fragment / smoke burst
+- Replaced the old choice-proc effect owner with:
+  - `scenes/vfx/combat_proc_effect.tscn`
+  - `scripts/visual/combat_proc_effect.gd`
+- `combat_proc_effect.gd` now owns:
+  - `연쇄 번개` chain arcs between origin and target
+  - `프리즘 랜스` center flare + split energy rays
+  - `메테오 캐논` / cannon-impact explosion bursts
+- `scripts/gameplay/game_root.gd` now uses `spawn_combat_effect(...)` as the active narrow proc-VFX spawn path
+- `scripts/gameplay/ring_instance.gd` now requests the centralized proc VFX and audio hooks for:
+  - chain-lightning jumps
+  - meteor impacts
+  - cannon-style terminal explosions
+- `scripts/gameplay/weapon.gd` now:
+  - adds a faint aim glow line behind the existing aim line
+  - requests prism proc VFX through the centralized spawn path
+  - forwards visual-only fire feedback to the guardian/core
+- `scripts/gameplay/core.gd` now owns the guardian presentation more explicitly:
+  - fixed base body identity preserved
+  - tier-specific weapon module silhouette swaps
+  - aim-follow preserved
+  - short recoil offset on fire
+  - tier-aware muzzle flash near the weapon tip
+- `scripts/autoload/audio_manager.gd` now exposes `play_weapon_proc(...)` as a clean no-op/future hook for proc-style combat effects
+- `scripts/visual/game_background.gd` remains on the simplified single-background policy:
+  - only `basicbackground.png`
+  - subtle level-based tint shift
+  - no weapon-specific background switching
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- Targeted VFX/guardian validation `/private/tmp/design_weapon_vfx_validation.gd`: passed
+  - guardian module exists for all tiers
+  - muzzle flash spawns for all tiers
+  - `hit_effect_burst` builds for all tiers
+  - `combat_proc_effect` builds for `chain_lightning / prism_lance / meteor_cannon / cannon_impact`
+  - `GameRoot.spawn_combat_effect(...)` instantiates the new proc effect path
+- Existing progression/layout validation `/tmp/design_progression_choice_validation.gd`: passed after updating it to the new proc-effect owner
+- Existing HUD/control validation `/tmp/design_hud_polish_validation.gd`: passed
+- Existing single-background validation `/tmp/design_single_background_validation.gd`: passed
+- `git diff --check`: passed
+- `jq '.' data/dev_status.json`: passed
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- The new electric/explosion spectacle still needs an actual on-screen playtest for final readability judgment
+- `AudioManager.play_weapon_proc(...)` is still a hook only; no production SFX asset was added
+
+---
+
+## 2026-05-03 — Session 50: Additional Joystick Visual Design Block
+
+**Focus**
+- Upgrade the lowered virtual stick into a cute retro pseudo-3D arcade lever without changing what it controls.
+
+**What changed**
+- Rebuilt `scripts/ui/aim_joystick.gd` around an arcade-stick visual structure:
+  - `BaseShadow`
+  - `BasePlate`
+  - `BaseInner`
+  - `BaseHighlightTop`
+  - `BaseHighlightLeft`
+  - `BaseLowlightBottom`
+  - `SocketShadow`
+  - `Socket`
+  - `ShaftShadow`
+  - `Shaft`
+  - `KnobShadow`
+  - `Knob`
+  - `KnobShine`
+  - `KnobSpec`
+- Replaced the old flat cross-pad look with:
+  - a beveled dark base plate
+  - a metallic-looking shaft
+  - a bright red ball-top knob
+- Kept the lower control dock position unchanged from the previous pass
+- The red knob now visibly moves with current drag direction
+- The shaft visually follows the knob through a live `Line2D` tilt path
+- When the player releases the input, the knob now smoothly returns to center visually while gameplay aim logic remains unchanged
+- Side left/right placement buttons were restyled to match the arcade family better
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- Targeted joystick validation `/tmp/design_arcade_joystick_validation.gd`: passed
+  - joystick stayed in the lowered bottom zone
+  - buff button stayed in the lowered zone
+  - knob moved in response to aim input
+  - shaft endpoint followed the knob
+  - release returned the knob toward center
+  - left/right placement buttons still moved the control dock
+- Previous HUD/control validation `/tmp/design_hud_polish_validation.gd`: still passed
+- Previous progression/layout validation `/tmp/design_progression_choice_validation.gd`: still passed
+
+**Limits / honest gap**
+- No true rendered GUI observation was performed in-session
+- Final thumb readability and the exact pseudo-3D feel still need a visible playtest
+
+---
+
+## 2026-05-03 — Session 49: Targeted HUD / Control Polish Pass
+
+**Focus**
+- Address the latest visible-playtest UI complaints without touching gameplay/progression math:
+  - move the lower control dock much farther down
+  - remove the top-HUD overlap
+  - keep the outer HUD shell fixed while only the weapon display changes color
+  - make weapon changes hit with a short, punchy Korean feedback moment
+
+**What changed**
+- Lowered the entire joystick control dock much further in `scripts/ui/aim_joystick.gd`
+  - bottom-control margin moved from `46` to `6`
+  - divider/buff gaps tightened so the buff button also moves downward with the joystick
+- Rebuilt the top HUD layout in `scripts/ui/hud.gd`
+  - fixed shell panel remains a constant dark navy frame
+  - current level chip, progress bar, broken-brick row, weapon chip, next-unlock row, and best-record row now use separate bands
+  - created a dedicated `NextUnlockLabel` instead of overloading one multiline `WeaponLabel`
+- Kept weapon color changes isolated to the weapon chip only through `WeaponProfile`
+- Added a short weapon-change chip punch/flash in `scripts/ui/hud.gd`
+  - chip briefly scales/pops
+  - flash overlay bursts over the chip
+  - small `쾅!` impact text pops and fades
+- Updated `scripts/ui/unlock_announcement.gd` so tier changes now announce:
+  - `번개 장착!`
+  - `스파크 랜스 장착!`
+  - `볼트 스톰 장착!`
+  - `시즈 캐논 장착!`
+- Added a narrow audio hook in `scripts/autoload/audio_manager.gd`
+  - `play_weapon_change()`
+  - still a no-op/future hook, no real SFX asset imported
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- Targeted HUD/control validation `/tmp/design_hud_polish_validation.gd`: passed
+  - joystick center lowered to `772`
+  - buff button center lowered to `660`
+  - HUD labels no longer overlap structurally
+  - outer HUD shell color stays fixed across tier changes
+  - weapon chip color changes by tier
+  - weapon-change impact feedback and audio hook both trigger structurally
+- Broad progression/layout validation `/tmp/design_progression_choice_validation.gd`: passed again
+  - `3000` level size preserved
+  - `2000` choice trigger preserved
+  - `5 -> 8` wall escalation preserved
+  - DamageRules and BrickRules stayed unchanged
+
+**Limits / honest gap**
+- No true rendered GUI observation was performed in-session
+- The new lower thumb feel and the top-HUD readability still need one real on-screen portrait playtest
+
+---
+
+## 2026-05-03 — Session 48: Targeted Progression + Layout Pass
+
+**Focus**
+- Apply the user’s narrow visible-playtest requests without doing another broad redesign:
+  - lower the bottom controls
+  - make damage text slightly smaller
+  - expand one level to `3000`
+  - add a `2000` weapon-evolution choice event
+  - escalate the late 5-layer wall plan to 8 layers from `2000+`
+
+**What changed**
+- Lowered the joystick + buff button area further downward in `scripts/ui/aim_joystick.gd`
+- Tuned `scripts/visual/damage_number.gd` slightly smaller while keeping the same `3K/4K/5K/...` formatting
+- Changed `data/progression.json` so the active siege tier now spans `500–2999`
+- `ProgressionService.loop_length()` now resolves to `3000`
+- `GameState` now owns:
+  - once-per-level weapon-choice trigger state
+  - active selected choice id
+  - prism volley counter
+  - meteor hit counter
+  - `weapon_choice_requested` / `weapon_choice_selected` signals
+- Added centralized choice definitions/constants in:
+  - `scripts/domain/combat/weapon_choice_rules.gd`
+- Added the new paused Korean choice UI:
+  - `scenes/ui/weapon_choice_panel.tscn`
+  - `scripts/ui/weapon_choice_panel.gd`
+- Implemented the three choices:
+  - `연쇄 번개`
+  - `프리즘 랜스`
+  - `메테오 캐논`
+- Added choice-specific procedural VFX:
+  - `scenes/vfx/weapon_choice_proc_effect.tscn`
+  - `scripts/visual/weapon_choice_proc_effect.gd`
+- Added prism side-ray projectile support:
+  - `scenes/gameplay/prism_side_ray_projectile.tscn`
+  - `scripts/gameplay/prism_side_ray_projectile.gd`
+- `RingSpawnPlanner` now escalates the late `5`-layer wall plan to `8` real layers once `current_level_k >= 2000`
+- Updated `SaveManager` fallback best-level math to derive the current loop length from progression data instead of assuming `1000`
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- Targeted progression/layout validation `/tmp/design_progression_choice_validation.gd`: passed
+  - `3000` level size
+  - `2000` choice trigger
+  - Korean choice panel
+  - choice selection + resume
+  - chain/prism/meteor modifier behavior
+  - `2000+` 5→8 wall escalation
+  - Level `100` max clear under the new `3000` rule
+- `git diff --check`: passed
+- `jq '.' data/progression.json` and `jq '.' data/dev_status.json`: passed
+- `rg` confirmed `2000` trigger centralization in `weapon_choice_rules.gd`
+
+**Limits / honest gap**
+- No true visible GUI observation was performed in-session
+- The lower controls and choice-panel “dopamine feel” still need a real on-screen playtest
+
+---
+
+## 2026-05-02 — Session 47: Targeted Combat Feedback Pass
+
+**Focus**
+- Add a real numeric damage/HP model and make brick destruction read as local impact feedback instead of vague absorption.
+
+**What changed**
+- Added centralized weapon damage rules in:
+  - `scripts/domain/combat/damage_rules.gd`
+- Converted brick HP in `scripts/domain/bricks/brick_rules.gd` from the old `1 / 2 / 3` model to:
+  - `Normal = 3000`
+  - `Strong = 6000`
+  - `Armored = 9000`
+- Updated all active projectile scripts to query centralized per-tier damage instead of pushing hardcoded `1` damage values:
+  - `화살 = 3000`
+  - `번개 = 4000`
+  - `스파크 랜스 = 5000`
+  - `볼트 스톰 = 6000`
+  - `시즈 캐논 = 9000`
+- Upgraded `scripts/visual/damage_number.gd` to format compact arcade values such as `3K`, `4K`, `5K`, `9K`, and `11.3K`
+- Added brick-type-specific in-place destruction feedback in:
+  - `scripts/visual/brick_break_effect.gd`
+  - `scenes/vfx/brick_break_effect.tscn`
+- Extended `game_root.gd` with a narrow `spawn_brick_break_effect(...)` helper
+- Updated `ring_instance.gd` / `brick_instance.gd` so damage popups and break effects spawn at the damaged brick position
+- Confirmed the active runtime does not contain a brick-death fly-to-core / absorb tween path
+- Kept spread/bounce/siege behaviors intact while switching to numeric damage
+
+**Validation**
+- `git diff --check`: passed
+- `jq '.' data/progression.json` and `jq '.' data/dev_status.json`: passed
+- Godot 4.6.2 headless targeted combat-feedback validation `/tmp/design_combat_feedback_validation.gd`: passed
+  - brick HP table
+  - weapon damage table
+  - `3K/4K/5K/9K/11.3K` formatting
+  - in-place brick break effect spawning
+  - normal brick dies to one `화살` hit
+  - strong/armored survive a single `화살` hit with expected remaining HP
+- Broad regression validation `/tmp/design_rebuild_apply_validation.gd`: passed
+  - MainMenu / Start / Ranking path
+  - Korean UI
+  - tier progression
+  - K `500–999` siege
+  - K `1000` level transition
+  - Level `100` max clear
+- `rg` checks confirmed:
+  - no active runtime `stone_projectile` references
+  - no duplicate damage-number system
+  - no duplicate brick-break-effect system
+  - projectile scripts now read centralized `DamageRules`
+
+**Limits / honest gap**
+- No true rendered GUI observation was performed in-session
+- The pass is structurally and headless-validated, but the feel of the new popups/break effects still needs a visible playtest
+
+---
+
+## 2026-05-02 — Session 46: Targeted Visible-Playtest Fix Pass
+
+**Focus**
+- Address the first real visible playtest complaints in the original `/Volumes` repo without changing gameplay math or platform flow.
+
+**What changed**
+- Added layered floating damage numbers in:
+  - `scripts/visual/damage_number.gd`
+  - `scenes/vfx/damage_number.tscn`
+- Hooked damage popups into confirmed brick-damage paths through `ring_instance.gd`, `brick_instance.gd`, and `game_root.gd`
+- Lowered the active playfield by moving `GameRoot` down in `scenes/game/game_root.tscn`
+- Removed the old bottom square buff slot from `scenes/ui/root_ui.tscn`
+- Deleted the now-unused:
+  - `scripts/ui/skill_slot.gd`
+  - `scripts/ui/skill_slot.gd.uid`
+- Redesigned the joystick with layered base/knob depth and kept the single buff button above it
+- Fixed the top level chip so `LevelLabel` visibly renders over the dark-blue plate
+- Added guardian aim-follow / lean behavior in `core.gd`
+- Added subtle aim-based background parallax and stronger brick bevel/shadow treatment
+
+**Validation**
+- `git diff --check`: passed
+- `jq '.' data/progression.json` and `jq '.' data/dev_status.json`: passed
+- `rg` confirmed no active `SkillBar`, `OverclockSlot`, or `stone_projectile` runtime references remain
+- Godot 4.6.2 headless smoke test on the original repo: passed
+- Targeted validation script `/tmp/design_visible_fix_validation.gd`: passed
+  - level chip text visible in Korean
+  - bottom square buff slot removed
+  - joystick-area buff button retained
+  - joystick layered redesign nodes present
+  - playfield lowered below HUD structurally
+  - damage numbers spawn on confirmed brick hit
+  - guardian follows aim direction structurally
+  - center launch origin preserved
+- Broad regression script `/tmp/design_rebuild_apply_validation.gd`: passed
+  - MainMenu / Start / Ranking path
+  - Korean UI
+  - `번개` / `스파크 랜스`
+  - K `500–999` seven-shot siege
+  - K `1000` level transition
+  - Level `100` max clear
+
+**Limits / honest gap**
+- No true rendered GUI observation was performed in-session
+- Cute/game-feel tuning still needs a human visible playtest in the editor or on device
+
+---
+
+## 2026-05-02 — Session 45: Original Repo Partial Apply + Stronger Visible Design Pass
+
+**Branch / safety**
+- Target repo: `/Volumes/junseokism_usb3.0/game/game_junseokism.ver1`
+- Saved the dirty original worktree before branch work:
+  - safety patch: `/tmp/game_junseokism_original_pre_apply_20260502.patch`
+  - safety stash: `pre-apply-2026-05-02-original-repo-safety`
+- Created `feature/design-rebuild-apply-pass` from `88d0ffe` in the original repo instead of continuing on the dirty Session 43 branch
+
+**What was ported selectively from the temp rebuild**
+- Korean player-facing UI strings
+- Visible `K → 깬 벽돌` terminology replacement
+- Tier ladder/presentation data:
+  - `화살`
+  - `번개`
+  - `스파크 랜스`
+  - `볼트 스톰`
+  - `시즈 캐논`
+- `번개` / `스파크 랜스` projectile scene+script paths
+- `WeaponProfile`, `ui_style`, `unlock_announcement`, procedural background, guardian/core, and brick presentation hooks
+
+**What was intentionally strengthened instead of blindly copied**
+- MainMenu rebuilt with a larger pixel-card composition, emblem, accent bars, and stronger Korean hierarchy
+- HUD rebuilt with panel framing, tier-colored weapon plate, and clearer portrait-safe label treatment
+- Pause / result panels given stronger game-like framing instead of plain prototype text blocks
+- Hit effects made more visible than the temp version with larger flashes, longer shard/beam silhouettes, and slightly longer fade windows
+- Guardian/core silhouette and aura enlarged for clearer tier identity
+- Brick type treatment (`Normal` / `Strong` / `Armored`) made more readable in motion with stronger shape contrast
+
+**Cleanup**
+- Removed active runtime Stone resources:
+  - `scripts/gameplay/stone_projectile.gd`
+  - `scenes/gameplay/stone_projectile.tscn`
+- Confirmed the original repo now contains the applied Korean UI and tier-presentation structure
+
+**Validation**
+- `git diff --check`: passed
+- `jq '.' data/progression.json`: passed
+- `jq '.' data/dev_status.json`: passed
+- Godot 4.6.2 headless project-open smoke test on the original `/Volumes` repo: passed
+- Headless scripted runtime validation on the original `/Volumes` repo: passed
+  - MainMenu launch path
+  - Start Game path
+  - Ranking path non-crash behavior
+  - Korean menu/HUD/pause/result text
+  - Tier hit-effect scene loading
+  - Tier projectile spawn counts and progression thresholds
+  - K `500–999` seven-shot siege preserved
+  - K `1000` level transition preserved
+  - Level `100` max clear preserved
+
+**Limits / honest gap**
+- No actual visible GUI/editor observation was performed in-session
+- The pass is structurally and headless-validated in the original repo, but visible game-feel still needs a real on-screen playtest
+
+---
+
+## 2026-05-02 — Session 44: Clean Design Rebuild from Session 42 Base
+
+**Branch / base**
+- Preserved the dirty original worktree and created a clean rebuild worktree/branch from `88d0ffe`
+- New clean branch: `feature/design-rebuild-clean-pass`
+- Session 43 (`1d1bffc`) was inspected by diff only and **not** used as the implementation base
+
+**What was intentionally discarded**
+- The Session 43 visual implementation as the active base
+- The old Stone presentation in the active runtime
+- English-first placeholder UI presentation
+
+**What was rebuilt**
+- Added `docs/design_constitution.md` as the new visual source of truth
+- Rebuilt weapon presentation around:
+  - `화살`
+  - `번개`
+  - `스파크 랜스`
+  - `볼트 스톰`
+  - `시즈 캐논`
+- Added `scripts/visual/weapon_profile.gd` to centralize names/colors/unlock copy/guardian silhouettes
+- Added `scripts/visual/game_background.gd` for procedural portrait background atmosphere
+- Added `scripts/visual/hit_effect_burst.gd` + `scenes/vfx/hit_effect_burst.tscn` for tier-aware visual-only hit bursts
+- Added `scripts/ui/unlock_announcement.gd` for Korean unlock banners
+- Added `scripts/ui/ui_style.gd` for Korean-friendly UI styling and shared panel/button/label rules
+- Rebuilt the center guardian/core presentation in `core.gd`
+- Rebuilt brick visuals in `brick_instance.gd`
+- Rebuilt menu/HUD/pause/result presentation and Korean player-facing copy
+
+**Gameplay/platform rules preserved**
+- MainMenu launch flow
+- `PlatformBridge.open_leaderboard()` ranking path
+- K `500–999` seven-shot siege behavior
+- Overclock / `가속` = `3x` baseline
+- K `1000` level transition
+- Level `100` K `1000` max clear
+- Existing leaderboard / user-key wrappers and App-in-Toss scaffolding
+
+**Cleanup**
+- Removed `scripts/gameplay/stone_projectile.gd`
+- Removed `scenes/gameplay/stone_projectile.tscn`
+- Confirmed no active runtime references remain to the deleted Stone projectile resources
+
+**Validation**
+- Godot 4.6.2 headless project-open smoke test: passed
+- Headless scripted runtime validation: passed
+  - MainMenu visible on launch
+  - Start Game path
+  - Ranking button non-crash path
+  - Korean UI labels
+  - tier hit-effect scene instantiation
+  - tier projectile spawn counts
+  - unlock banner thresholds
+  - K `1000` level transition
+  - Level `100` max clear
+
+**Notes**
+- The QA helper was created outside the repo in `/private/tmp` and was not committed
+- Remaining work is visible interactive validation and polish, not another broad systems rewrite
+
+---
+
 ## 2026-05-01 — Session 42: Phase 4.20 — Ads Integration Planning (docs only, no code)
 
 **Outcome: Official App-in-Toss ad APIs confirmed. Placement policy locked. Prerequisites documented. No code implemented.**
@@ -1414,3 +2355,120 @@ Official source: `https://developers-apps-in-toss.toss.im/`
 **Files touched:** `docs/00_product_spec.md`, `docs/01_toss_release_checklist.md`, `docs/02_technical_architecture.md`, `docs/03_implementation_plan.md`, `docs/STATUS.md`
 
 ---
+## 2026-05-04 — Phase 4.23 Dual Platform Bridge + Google Play Readiness Audit
+
+- Confirmed the original repo is `/Volumes/junseokism_usb3.0/game/game_junseokism.ver1` and the expected starting branch is `feature/design-rebuild-apply-pass`.
+- Verified Git push safety blockers before any branch/push work:
+  - `git remote -v` returned no remote.
+  - `gh auth status` showed an invalid GitHub token.
+  - Result: local work allowed, private push not allowed.
+- Re-audited current repo architecture:
+  - `PlatformBridge` is still strongly App-in-Toss/Toss-JS specific.
+  - UI directly opens rankings via `PlatformBridge.open_leaderboard()`.
+  - `GameRoot` owns score-submit timing, which is still the correct owner.
+  - gameplay/domain files do not directly call Toss APIs.
+- Rechecked current export/build evidence:
+  - historical `exports/toss_web_dry_run` exists and measures `36M`
+  - largest file is `index.wasm` at roughly `36 MB`
+  - no Android/AAB export output exists
+- Official-source research performed for Google Play, AdMob, Play Games, and Godot Android export/plugin requirements.
+- Created two new docs:
+  - `docs/GOOGLE_PLAY_RELEASE_MASTER_CHECKLIST.md`
+  - `docs/DUAL_PLATFORM_BRIDGE_AUDIT.md`
+- Added minimal no-op architecture skeletons only:
+  - `scripts/platform/*`
+  - `scripts/platform/ads/*`
+  - `scripts/platform/leaderboard/*`
+  - `scripts/application/layout/playfield_layout_service.gd`
+- Intentionally did not wire the new skeletons into runtime yet.
+- Intentionally did not change gameplay math, wall rules, projectile behavior, progression thresholds, TossBridge behavior, or monetization runtime.
+## 2026-05-05 — Phase 4.24 Android Debug APK Artifact + Dual Platform Readiness
+
+- Reconfirmed the repo still starts on `feature/design-rebuild-apply-pass`.
+- Reconfirmed push is blocked:
+  - no `origin` remote exists
+  - `gh auth status` is invalid
+- Reconfirmed Browser Use was not callable in this VS Code turn, so official-source fallback research was used.
+- Used the GitHub plugin to search for an already-installed repo named `game_junseokism.ver1`; none was found.
+- Re-audited current platform collision points:
+  - `PlatformBridge` remains Toss-specific
+  - `MainMenu` and `PauseMenu` call `PlatformBridge.open_leaderboard()`
+  - `GameRoot` owns score-submit timing only
+- Rechecked platform skeleton state:
+  - `scripts/platform/*` exists
+  - skeletons are still not wired into runtime
+  - `scripts/application/layout/playfield_layout_service.gd` exists and is still skeleton-only
+- Rechecked Android readiness:
+  - `export_presets.cfg` still contains only the Toss Web preset
+  - no Android export preset exists
+  - local Godot export templates detect only Web templates, not Android templates
+- Added a draft GitHub Actions workflow:
+  - `.github/workflows/android-debug-apk.yml`
+  - purpose: private debug APK artifact only
+  - artifact name: `core-breaker-debug-apk`
+  - expected path: `exports/android_debug/core_breaker_debug.apk`
+  - intentionally fails early if the Android Debug APK preset is missing
+- Added phone artifact instructions:
+  - `docs/ANDROID_PHONE_TEST_FROM_GITHUB.md`
+- Updated status docs to distinguish:
+  - APK artifact testing
+  - AAB store submission later
+  - Google Play still `NOT READY`
+
+## 2026-05-05 — Phase 4.25 Android Debug APK Pipeline Remediation
+
+- Reconfirmed local push safety blockers:
+  - no GitHub remote is configured
+  - `gh auth status` is invalid
+  - private visibility cannot be verified
+  - result: no commit and no push
+- Browser Use was callable in this turn; opened the official Godot Android export docs through the in-app browser and used official-source fallback for the broader source list.
+- Added `.gitignore` release/secret hygiene for:
+  - keystores
+  - `google-services.json`
+  - service-account JSON
+  - local `.env`
+  - Android/Gradle local outputs
+  - debug APK/AAB export outputs
+- Hardened platform skeleton readiness:
+  - Android is now only a candidate runtime, not proof of AdMob or Play Games readiness.
+  - Web is now only a candidate runtime, not proof of App-in-Toss, Toss Ads, or Game Center readiness.
+  - AdMob, Toss Ads, Play Games, and Toss Game Center skeletons return `false` until real SDK/bridge/console/device validation exists.
+- Added the first debug-only Android export preset:
+  - preset: `Android Debug APK`
+  - output: `exports/android_debug/core_breaker_debug.apk`
+  - temporary package: `com.junseokism.corebreaker.debug`
+  - no production signing, AAB, AdMob, Play Games, or Toss Ads added
+- Hardened `.github/workflows/android-debug-apk.yml`:
+  - separates GitHub release tag `4.6.2-stable` from Godot template directory `4.6.2.stable`
+  - installs/checks Android SDK packages
+  - creates a CI-only debug keystore
+  - installs export templates into the expected Godot template directory
+  - uploads artifact `core-breaker-debug-apk`
+- Updated docs/status to reflect that the Android Debug APK preset now exists, while production Google Play readiness remains `NOT READY`.
+
+## 2026-05-05 — Android Debug APK Final Sanity Loop
+
+- Re-ran the private push safety gate:
+  - no GitHub remote is configured
+  - `gh auth status` is still invalid
+  - private visibility cannot be verified
+  - result: no commit and no push
+- Rechecked actual docs/data/preset/workflow/skeleton files instead of diff previews.
+- Confirmed platform skeletons do not claim AdMob, Toss Ads, Play Games, or Toss Game Center readiness from `OS.has_feature(...)`.
+- Confirmed the `Android Debug APK` preset is launcher-visible with temporary debug package `com.junseokism.corebreaker.debug`.
+- Strengthened the GitHub Actions workflow:
+  - renamed the stale draft-warning step to a debug artifact notice
+  - aligned CI Android SDK package installation with Godot Android export requirements, including `build-tools;35.0.1`, CMake, NDK, and command-line tools
+- Confirmed no gameplay/domain changes were made by this final sanity loop.
+
+## 2026-05-05 — Senior Release Agent Loop Scope Clarification
+
+- Reconfirmed the release-pipeline branch cannot be pushed yet:
+  - no GitHub remote is configured
+  - `gh auth status` is invalid
+- Reconfirmed the worktree is dirty outside this release loop, including gameplay/domain/scene/asset paths from prior work.
+- Updated status docs to make the staging rule explicit:
+  - do not use `git add .`
+  - stage only reviewed release-pipeline/docs/platform-skeleton files once private GitHub safety gates pass
+- No gameplay/domain/source-balance files were edited by this clarification loop.
