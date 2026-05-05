@@ -157,6 +157,8 @@ jobs:
 
       - name: Import Godot assets before Android export
         run: |
+          rm -rf .godot/imported
+          rm -f .godot/editor/filesystem_cache*
           ".ci-tools/godot/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64" \
             --headless \
             --editor \
