@@ -108,6 +108,20 @@ jobs:
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey" >> "$GITHUB_ENV"
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android" >> "$GITHUB_ENV"
 
+      - name: Write CI Godot editor settings for Android export
+        run: |
+          mkdir -p "$HOME/.config/godot-ci"
+          cat > "$HOME/.config/godot-ci/editor_settings-4.6.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          _export_preset_advanced_mode = false
+          export/android/debug_keystore = "${GODOT_ANDROID_KEYSTORE_DEBUG_PATH}"
+          export/android/debug_keystore_pass = "${GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD}"
+          export/android/java_sdk_path = "${JAVA_HOME}"
+          export/android/android_sdk_path = "${ANDROID_SDK_ROOT}"
+          EOF
+
       - name: Download official Godot editor
         run: |
           mkdir -p .ci-tools/godot
@@ -134,6 +148,7 @@ jobs:
           mkdir -p exports/android_debug
           ".ci-tools/godot/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64" \
             --headless \
+            --editor-settings-path "$HOME/.config/godot-ci" \
             --path "$GITHUB_WORKSPACE" \
             --export-debug "${EXPORT_PRESET_NAME}" "${APK_OUTPUT}"
           test -f "${APK_OUTPUT}"
