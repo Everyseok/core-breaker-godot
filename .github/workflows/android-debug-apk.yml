@@ -123,6 +123,17 @@ jobs:
           export/android/android_sdk_path = "${ANDROID_SDK_ROOT}"
           EOF
 
+      - name: Patch CI Android export preset credentials
+        run: |
+          sed -i \
+            -e "s|^keystore/debug=.*|keystore/debug=\"${GODOT_ANDROID_KEYSTORE_DEBUG_PATH}\"|" \
+            -e "s|^keystore/debug_user=.*|keystore/debug_user=\"${GODOT_ANDROID_KEYSTORE_DEBUG_USER}\"|" \
+            -e "s|^keystore/debug_password=.*|keystore/debug_password=\"${GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD}\"|" \
+            export_presets.cfg
+          test -f "${GODOT_ANDROID_KEYSTORE_DEBUG_PATH}"
+          grep -n '^keystore/debug=' export_presets.cfg
+          grep -n '^keystore/debug_user=' export_presets.cfg
+
       - name: Download official Godot editor
         run: |
           mkdir -p .ci-tools/godot
@@ -148,6 +159,7 @@ jobs:
         run: |
           mkdir -p exports/android_debug
           ".ci-tools/godot/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64" \
+            --verbose \
             --headless \
             --editor-settings-path "$HOME/.config/godot-ci" \
             --path "$GITHUB_WORKSPACE" \
