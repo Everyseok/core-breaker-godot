@@ -4,6 +4,10 @@ extends Node2D
 
 const VIEWPORT_W := 390.0
 const VIEWPORT_H := 844.0
+const BACKGROUND_CANDIDATES := [
+	"res://assets/backgrounds/basicbackground.png",
+	"res://basicbackground.png",
+]
 
 const EARLY_LEVEL_TINT := Color(0.96, 0.98, 1.0, 1.0)
 const LATE_LEVEL_TINT := Color(0.74, 0.80, 0.90, 1.0)
@@ -67,8 +71,11 @@ func _refresh_for_level(level: int, animate: bool) -> void:
 
 
 func _load_background_texture() -> Texture2D:
-	var image := Image.load_from_file(ProjectSettings.globalize_path("res://basicbackground.png"))
-	if image == null or image.is_empty():
-		push_warning("basicbackground.png could not be loaded")
-		return null
-	return ImageTexture.create_from_image(image)
+	for path in BACKGROUND_CANDIDATES:
+		if not ResourceLoader.exists(path):
+			continue
+		var texture := ResourceLoader.load(path) as Texture2D
+		if texture != null:
+			return texture
+	push_warning("basicbackground.png could not be loaded from packaged resources")
+	return null

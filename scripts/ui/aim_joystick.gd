@@ -18,9 +18,9 @@ const DIVIDER_SIZE: Vector2 = Vector2(196.0, 4.0)
 const DIVIDER_GAP: float = 10.0
 const BUFF_BUTTON_SIZE: Vector2 = Vector2(104.0, 48.0)
 const BUFF_BUTTON_GAP: float = 8.0
-const INPUT_RADIUS: float = 38.0
-const VISUAL_RADIUS: float = 22.0
-const DEADZONE_RADIUS: float = 8.0
+const INPUT_RADIUS: float = 46.0
+const VISUAL_RADIUS: float = 24.0
+const DEADZONE_RADIUS: float = 5.0
 const RETURN_SPEED: float = 220.0
 const SHAFT_WIDTH: float = 11.0
 const SHAFT_SHADOW_WIDTH: float = 13.0
@@ -277,22 +277,21 @@ func _on_joystick_area_gui_input(event: InputEvent) -> void:
 	elif event is InputEventScreenTouch:
 		if event.pressed:
 			_active_touch_index = event.index
-			_update_aim_from_global_position(event.position)
+			_update_aim_from_local_position(event.position)
 		elif event.index == _active_touch_index:
 			_active_touch_index = -1
 	elif event is InputEventScreenDrag:
 		if event.index == _active_touch_index:
-			_update_aim_from_global_position(event.position)
+			_update_aim_from_local_position(event.position)
 
 
 func _update_aim_from_global_position(global_position: Vector2) -> void:
-	var area_rect: Rect2 = _joystick_area.get_global_rect()
-	var local_position: Vector2 = global_position - area_rect.position
+	var local_position: Vector2 = _joystick_area.get_global_transform_with_canvas().affine_inverse() * global_position
 	_update_aim_from_local_position(local_position)
 
 
 func _update_aim_from_local_position(local_position: Vector2) -> void:
-	var center: Vector2 = JOYSTICK_SIZE * 0.5
+	var center: Vector2 = KNOB_NEUTRAL_CENTER
 	var raw_offset: Vector2 = local_position - center
 	var clamped_offset: Vector2 = raw_offset.limit_length(INPUT_RADIUS)
 	if clamped_offset.length() < DEADZONE_RADIUS:
