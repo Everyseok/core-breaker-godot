@@ -89,7 +89,7 @@ func apply_selected_buff(buff_id: String) -> bool:
 		return false
 	roll_in_progress = false
 	active_buff_id = buff_id
-	active_time_remaining = _duration_for_buff(buff_id)
+	active_time_remaining = BuffRulesRef.duration_for_buff(buff_id)
 	if buff_id == BuffRulesRef.BUFF_OVERCLOCK:
 		_request_current_weapon_overclock()
 	buff_applied.emit(buff_id, get_buff_display_name(buff_id))
@@ -208,15 +208,3 @@ func _tick_cooldown(delta: float) -> void:
 	var current_seconds := get_cooldown_time_remaining_ceil()
 	if cooldown_time_remaining <= 0.0 or current_seconds != previous_seconds:
 		buff_state_changed.emit()
-
-
-func _duration_for_buff(buff_id: String) -> float:
-	match buff_id:
-		BuffRulesRef.BUFF_PROJECTILE_COUNT_X2:
-			return BuffRulesRef.PROJECTILE_COUNT_DURATION
-		BuffRulesRef.BUFF_DAMAGE_X15:
-			return BuffRulesRef.DAMAGE_DURATION
-		BuffRulesRef.BUFF_OVERCLOCK:
-			return BuffRulesRef.OVERCLOCK_DURATION
-		_:
-			return 0.0

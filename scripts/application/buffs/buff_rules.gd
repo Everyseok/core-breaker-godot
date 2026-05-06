@@ -38,3 +38,15 @@ static func is_valid_buff_id(buff_id: String) -> bool:
 
 static func display_name_for(buff_id: String) -> String:
 	return String(BUFF_DISPLAY_NAMES.get(buff_id, "사용됨"))
+
+
+static func duration_for_buff(buff_id: String) -> float:
+	match buff_id:
+		BUFF_PROJECTILE_COUNT_X2:
+			return PROJECTILE_COUNT_DURATION
+		BUFF_DAMAGE_X15:
+			return DAMAGE_DURATION
+		BUFF_OVERCLOCK:
+			return OVERCLOCK_DURATION
+		_:
+			return 0.0

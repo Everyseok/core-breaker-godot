@@ -4,6 +4,8 @@ extends Node
 const ProgressionServiceRef := preload("res://scripts/application/progression/progression_service.gd")
 const JsonConfigLoaderRef := preload("res://scripts/infrastructure/config/json_config_loader.gd")
 const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
+const EndlessScoreRulesRef := preload("res://scripts/application/score/endless_score_rules.gd")
+const WeaponChoiceScheduleRef := preload("res://scripts/application/weapon_choice/weapon_choice_schedule.gd")
 
 const MAX_LEVEL: int = 100
 const DEFAULT_SCORE_GAUGE_MAX: int = 2000
@@ -49,8 +51,10 @@ var revive_used_this_run: bool = false
 var _level_size_k: int = 3000
 var active_weapon_choice_id: String = WeaponChoiceRulesRef.NO_CHOICE
 var _weapon_choice_panel_open: bool = false
-var _next_weapon_choice_score: int = FIRST_REPEATED_WEAPON_CHOICE_SCORE
-var _weapon_choice_deferred_due_to_open: bool = false
+var _weapon_choice_schedule := WeaponChoiceScheduleRef.new(
+	FIRST_REPEATED_WEAPON_CHOICE_SCORE,
+	WEAPON_CHOICE_REPEAT_SCORE
+)
 var _weapon_choice_volley_count: int = 0
 var _weapon_choice_hit_count: int = 0
 var _weapon_choice_rng := RandomNumberGenerator.new()
@@ -230,11 +234,16 @@ func get_level_size_k() -> int:
 
 
 func get_score_gauge_max() -> int:
-	return maxi(SaveManager.get_best_record_value(), DEFAULT_SCORE_GAUGE_MAX)
+	return EndlessScoreRulesRef.gauge_max(SaveManager.get_best_record_value(), DEFAULT_SCORE_GAUGE_MAX)
 
 
 func get_score_gauge_progress() -> float:
-	return clampf(float(total_progress) / maxf(float(get_score_gauge_max()), 1.0), 0.0, 1.0)
+	return EndlessScoreRulesRef.gauge_progress(total_progress, get_score_gauge_max())
+
+
+func get_score_gauge_display_text(score: int = -1) -> String:
+	var display_score := total_progress if score < 0 else score
+	return EndlessScoreRulesRef.display_text(display_score, get_score_gauge_max())
 
 
 func get_tier_threshold(tier: int) -> int:
@@ -246,7 +255,7 @@ func get_tier_display_name(tier: int) -> String:
 
 
 func get_weapon_choice_threshold() -> int:
-	return FIRST_REPEATED_WEAPON_CHOICE_SCORE
+	return _weapon_choice_schedule.first_score
 
 
 func get_weapon_choice_options() -> Array:
@@ -262,7 +271,7 @@ func get_active_weapon_choice_display_name() -> String:
 
 
 func has_weapon_choice_this_level() -> bool:
-	return _next_weapon_choice_score > FIRST_REPEATED_WEAPON_CHOICE_SCORE
+	return _weapon_choice_schedule.get_next_score() > _weapon_choice_schedule.first_score
 
 
 func is_weapon_choice_panel_open() -> bool:
@@ -277,7 +286,7 @@ func select_weapon_choice(choice_id: String) -> void:
 	_weapon_choice_volley_count = 0
 	_weapon_choice_hit_count = 0
 	weapon_choice_selected.emit(choice_id, WeaponChoiceRulesRef.display_name_for_id(choice_id))
-	if _weapon_choice_deferred_due_to_open or current_level_k >= _next_weapon_choice_score:
+	if _weapon_choice_schedule.should_trigger_deferred(current_level_k, _weapon_choice_panel_open):
 		_queue_deferred_weapon_choice_check()
 
 
@@ -321,25 +330,18 @@ func _emit_progression_display() -> void:
 
 
 func _should_request_weapon_choice(previous_score: int, new_score: int) -> bool:
-	if previous_score >= _next_weapon_choice_score or new_score < _next_weapon_choice_score:
-		return false
-	if _weapon_choice_panel_open:
-		_weapon_choice_deferred_due_to_open = true
-		return false
-	return true
+	return _weapon_choice_schedule.should_trigger(previous_score, new_score, _weapon_choice_panel_open)
 
 
 func _request_weapon_choice() -> void:
 	_weapon_choice_panel_open = true
-	_weapon_choice_deferred_due_to_open = false
-	_next_weapon_choice_score += WEAPON_CHOICE_REPEAT_SCORE
+	_weapon_choice_schedule.mark_triggered()
 	weapon_choice_requested.emit(get_weapon_choice_options())
 
 
 func _reset_weapon_choice_state(clear_selection: bool) -> void:
 	_weapon_choice_panel_open = false
-	_weapon_choice_deferred_due_to_open = false
-	_next_weapon_choice_score = FIRST_REPEATED_WEAPON_CHOICE_SCORE
+	_weapon_choice_schedule.reset()
 	_weapon_choice_volley_count = 0
 	_weapon_choice_hit_count = 0
 	if clear_selection:
@@ -358,5 +360,5 @@ func _queue_deferred_weapon_choice_check() -> void:
 func _request_deferred_weapon_choice_if_needed() -> void:
 	if not is_playing or _weapon_choice_panel_open:
 		return
-	if current_level_k >= _next_weapon_choice_score:
+	if _weapon_choice_schedule.should_trigger_deferred(current_level_k, _weapon_choice_panel_open):
 		_request_weapon_choice()
