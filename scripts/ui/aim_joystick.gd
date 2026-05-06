@@ -18,6 +18,8 @@ const DIVIDER_SIZE: Vector2 = Vector2(196.0, 4.0)
 const DIVIDER_GAP: float = 10.0
 const BUFF_BUTTON_SIZE: Vector2 = Vector2(104.0, 48.0)
 const BUFF_BUTTON_GAP: float = 8.0
+const LOCK_BADGE_SIZE: Vector2 = Vector2(32.0, 32.0)
+const LOCK_BODY_SIZE: Vector2 = Vector2(20.0, 16.0)
 const INPUT_RADIUS: float = 46.0
 const VISUAL_RADIUS: float = 24.0
 const DEADZONE_RADIUS: float = 5.0
@@ -54,6 +56,12 @@ var _left_button: Button
 var _right_button: Button
 var _divider: ColorRect
 var _buff_button: Button
+var _buff_lock_badge: Control
+var _buff_lock_shadow: Panel
+var _buff_lock_shackle: Line2D
+var _buff_lock_body: Panel
+var _buff_lock_keyhole: ColorRect
+var _buff_lock_spark: ColorRect
 
 
 func _ready() -> void:
@@ -190,6 +198,43 @@ func _build_ui() -> void:
 	_buff_button.pressed.connect(_on_buff_button_pressed)
 	add_child(_buff_button)
 
+	_buff_lock_badge = Control.new()
+	_buff_lock_badge.name = "BuffLockBadge"
+	_buff_lock_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_buff_lock_badge.visible = false
+	_buff_lock_badge.z_index = 5
+	add_child(_buff_lock_badge)
+
+	_buff_lock_shadow = _build_panel("LockShadow")
+	_buff_lock_badge.add_child(_buff_lock_shadow)
+
+	_buff_lock_shackle = Line2D.new()
+	_buff_lock_shackle.name = "LockShackle"
+	_buff_lock_shackle.width = 4.0
+	_buff_lock_shackle.default_color = Color(1.0, 0.96, 0.68, 1.0)
+	_buff_lock_shackle.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_buff_lock_shackle.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_buff_lock_shackle.joint_mode = Line2D.LINE_JOINT_ROUND
+	_buff_lock_shackle.add_point(Vector2(9.0, 17.0))
+	_buff_lock_shackle.add_point(Vector2(9.0, 9.0))
+	_buff_lock_shackle.add_point(Vector2(16.0, 5.0))
+	_buff_lock_shackle.add_point(Vector2(23.0, 9.0))
+	_buff_lock_shackle.add_point(Vector2(23.0, 17.0))
+	_buff_lock_badge.add_child(_buff_lock_shackle)
+
+	_buff_lock_body = _build_panel("LockBody")
+	_buff_lock_badge.add_child(_buff_lock_body)
+
+	_buff_lock_keyhole = ColorRect.new()
+	_buff_lock_keyhole.name = "LockKeyhole"
+	_buff_lock_keyhole.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_buff_lock_badge.add_child(_buff_lock_keyhole)
+
+	_buff_lock_spark = ColorRect.new()
+	_buff_lock_spark.name = "LockSpark"
+	_buff_lock_spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_buff_lock_badge.add_child(_buff_lock_spark)
+
 
 func _build_panel(node_name: String) -> Panel:
 	var panel := Panel.new()
@@ -224,6 +269,7 @@ func _apply_visual_style() -> void:
 	_apply_arcade_button_style(_left_button)
 	_apply_arcade_button_style(_right_button)
 	UiStyleRef.apply_button(_buff_button, Color(0.18, 0.42, 0.30), Color(0.62, 0.94, 0.76), Color.WHITE, 16)
+	_apply_lock_badge_style()
 
 
 func _apply_arcade_button_style(button: Button) -> void:
@@ -262,6 +308,13 @@ func _apply_panel_box(
 	box.content_margin_right = 0.0
 	box.content_margin_bottom = 0.0
 	panel.add_theme_stylebox_override("panel", box)
+
+
+func _apply_lock_badge_style() -> void:
+	_apply_panel_box(_buff_lock_shadow, Color(0.00, 0.02, 0.06, 0.32), Color(0.00, 0.02, 0.06, 0.0), 7, 0, 0, 0, 0)
+	_apply_panel_box(_buff_lock_body, Color(1.0, 0.72, 0.22, 1.0), Color(1.0, 0.94, 0.48, 1.0), 6, 2, 2, 2, 3)
+	_buff_lock_keyhole.color = Color(0.22, 0.16, 0.12, 0.90)
+	_buff_lock_spark.color = Color(1.0, 0.98, 0.72, 0.92)
 
 
 func _on_joystick_area_gui_input(event: InputEvent) -> void:
@@ -384,10 +437,24 @@ func _update_layout() -> void:
 		_divider.position.y - BUFF_BUTTON_GAP - BUFF_BUTTON_SIZE.y
 	)
 	_buff_button.size = BUFF_BUTTON_SIZE
+	_update_buff_lock_badge_layout()
 
 	_update_arcade_visuals()
 	_update_button_state()
 	_update_buff_button_state()
+
+
+func _update_buff_lock_badge_layout() -> void:
+	_buff_lock_badge.position = _buff_button.position + Vector2(BUFF_BUTTON_SIZE.x - 20.0, -11.0)
+	_buff_lock_badge.size = LOCK_BADGE_SIZE
+	_buff_lock_shadow.position = Vector2(6.0, 11.0)
+	_buff_lock_shadow.size = LOCK_BODY_SIZE
+	_buff_lock_body.position = Vector2(5.0, 10.0)
+	_buff_lock_body.size = LOCK_BODY_SIZE
+	_buff_lock_keyhole.position = Vector2(14.0, 17.0)
+	_buff_lock_keyhole.size = Vector2(4.0, 7.0)
+	_buff_lock_spark.position = Vector2(23.0, 7.0)
+	_buff_lock_spark.size = Vector2(4.0, 4.0)
 
 
 func _update_arcade_visuals() -> void:
@@ -446,22 +513,32 @@ func _update_buff_button_state() -> void:
 	if not GameState.is_playing:
 		_buff_button.disabled = true
 		_buff_button.text = "--"
+		_set_buff_lock_visible(false)
 		return
 
 	if BuffManager.is_roll_in_progress():
 		_buff_button.disabled = true
 		_buff_button.text = "선택중"
+		_set_buff_lock_visible(false)
 		return
 
 	if BuffManager.buff_used_this_run:
 		_buff_button.disabled = true
 		_buff_button.text = BuffManager.get_active_buff_display_name()
+		_set_buff_lock_visible(false)
 		return
 
 	if not BuffManager.is_buff_unlocked(GameState.current_level_k):
 		_buff_button.disabled = true
 		_buff_button.text = "버프\n%d개" % BuffManager.get_unlock_k()
+		_set_buff_lock_visible(true)
 		return
 
 	_buff_button.disabled = not BuffManager.can_open_buff(GameState.current_level_k)
 	_buff_button.text = "버프"
+	_set_buff_lock_visible(false)
+
+
+func _set_buff_lock_visible(is_visible: bool) -> void:
+	if _buff_lock_badge != null:
+		_buff_lock_badge.visible = is_visible
