@@ -6,6 +6,9 @@ const JsonConfigLoaderRef := preload("res://scripts/infrastructure/config/json_c
 const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
 
 const MAX_LEVEL: int = 100
+const DEFAULT_SCORE_GAUGE_MAX: int = 2000
+const FIRST_REPEATED_WEAPON_CHOICE_SCORE: int = 2000
+const WEAPON_CHOICE_REPEAT_SCORE: int = 1000
 
 signal k_changed(new_k: int)
 signal tier_changed(new_tier: int)
@@ -45,8 +48,9 @@ var revive_prompt_pending: bool = false
 var revive_used_this_run: bool = false
 var _level_size_k: int = 3000
 var active_weapon_choice_id: String = WeaponChoiceRulesRef.NO_CHOICE
-var _weapon_choice_shown_this_level: bool = false
 var _weapon_choice_panel_open: bool = false
+var _next_weapon_choice_score: int = FIRST_REPEATED_WEAPON_CHOICE_SCORE
+var _weapon_choice_deferred_due_to_open: bool = false
 var _weapon_choice_volley_count: int = 0
 var _weapon_choice_hit_count: int = 0
 var _weapon_choice_rng := RandomNumberGenerator.new()
@@ -84,30 +88,17 @@ func add_k(amount: int) -> void:
 		return
 	if not is_playing:
 		return
-	var previous_level_k: int = current_level_k
+	var previous_score: int = current_level_k
 	var previous_progression_tier: int = current_progression_tier
 	current_level_k += amount
-	var did_level_transition: bool = false
-	if current_level_k >= _level_size_k:
-		if current_level >= MAX_LEVEL:
-			# Level 100 K3000 — max level clear; cap progress and end run.
-			current_level_k = _level_size_k
-			_sync_progress_values()
-			trigger_max_level_clear()
-			return
-		current_level += 1
-		current_level_k = 0
-		_reset_weapon_choice_state(true)
-		did_level_transition = true
 	_sync_progress_values()
 	k_changed.emit(k)
-	current_progression_tier = _progression.tier_for_k(current_level_k)
-	_set_tier(_progression.implemented_tier_for_k(current_level_k))
-	_refresh_unlock_progress(-1 if did_level_transition else previous_progression_tier)
-	if not did_level_transition and _should_request_weapon_choice(previous_level_k, current_level_k):
+	var progression_lookup_k := _progression_lookup_k()
+	current_progression_tier = _progression.tier_for_k(progression_lookup_k)
+	_set_tier(_progression.implemented_tier_for_k(progression_lookup_k))
+	_refresh_unlock_progress(previous_progression_tier)
+	if _should_request_weapon_choice(previous_score, current_level_k):
 		_request_weapon_choice()
-	if did_level_transition:
-		level_transitioned.emit(current_level)
 
 
 func trigger_game_over() -> void:
@@ -175,8 +166,8 @@ func _load_progression() -> void:
 	overclock_unlock_threshold = _progression.threshold_for_tier(4)
 	_reset_weapon_choice_state(true)
 	_sync_progress_values()
-	current_progression_tier = _progression.tier_for_k(current_level_k)
-	_set_tier(_progression.implemented_tier_for_k(current_level_k))
+	current_progression_tier = _progression.tier_for_k(_progression_lookup_k())
+	_set_tier(_progression.implemented_tier_for_k(_progression_lookup_k()))
 	_refresh_unlock_progress(-1)
 
 
@@ -203,7 +194,7 @@ func _refresh_unlock_progress(previous_progression_tier: int) -> void:
 
 
 func get_progression_display_state() -> Dictionary:
-	var next_tier: Dictionary = _progression.next_tier_after_k(current_level_k)
+	var next_tier: Dictionary = _progression.next_tier_after_k(_progression_lookup_k())
 	var ready_unlock_name: String = ""
 	if current_progression_tier > current_projectile_tier:
 		ready_unlock_name = _progression.display_name_for_tier(current_progression_tier)
@@ -211,11 +202,9 @@ func get_progression_display_state() -> Dictionary:
 	var next_unlock_threshold: int = int(next_tier.get("k_min", -1))
 	var max_spec_tier_reached: bool = false
 	if next_tier.is_empty():
-		if current_level >= MAX_LEVEL:
-			next_unlock_name = "최고 단계 돌파"
-		else:
-			next_unlock_name = "%d단계" % (current_level + 1)
-		next_unlock_threshold = _level_size_k
+		next_unlock_name = "기록 갱신"
+		next_unlock_threshold = -1
+		max_spec_tier_reached = true
 	return {
 		"current_level": current_level,
 		"current_k": current_level_k,
@@ -240,6 +229,14 @@ func get_level_size_k() -> int:
 	return _level_size_k
 
 
+func get_score_gauge_max() -> int:
+	return maxi(SaveManager.get_best_record_value(), DEFAULT_SCORE_GAUGE_MAX)
+
+
+func get_score_gauge_progress() -> float:
+	return clampf(float(total_progress) / maxf(float(get_score_gauge_max()), 1.0), 0.0, 1.0)
+
+
 func get_tier_threshold(tier: int) -> int:
 	return _progression.threshold_for_tier(tier)
 
@@ -249,7 +246,7 @@ func get_tier_display_name(tier: int) -> String:
 
 
 func get_weapon_choice_threshold() -> int:
-	return WeaponChoiceRulesRef.CHOICE_TRIGGER_K
+	return FIRST_REPEATED_WEAPON_CHOICE_SCORE
 
 
 func get_weapon_choice_options() -> Array:
@@ -265,7 +262,7 @@ func get_active_weapon_choice_display_name() -> String:
 
 
 func has_weapon_choice_this_level() -> bool:
-	return _weapon_choice_shown_this_level
+	return _next_weapon_choice_score > FIRST_REPEATED_WEAPON_CHOICE_SCORE
 
 
 func is_weapon_choice_panel_open() -> bool:
@@ -280,6 +277,8 @@ func select_weapon_choice(choice_id: String) -> void:
 	_weapon_choice_volley_count = 0
 	_weapon_choice_hit_count = 0
 	weapon_choice_selected.emit(choice_id, WeaponChoiceRulesRef.display_name_for_id(choice_id))
+	if _weapon_choice_deferred_due_to_open or current_level_k >= _next_weapon_choice_score:
+		_queue_deferred_weapon_choice_check()
 
 
 func consume_prism_volley_trigger() -> bool:
@@ -304,7 +303,7 @@ func consume_meteor_trigger() -> bool:
 
 func _sync_progress_values() -> void:
 	k = current_level_k
-	total_progress = ((current_level - 1) * _level_size_k) + current_level_k
+	total_progress = current_level_k
 
 
 func _emit_progression_display() -> void:
@@ -321,23 +320,43 @@ func _emit_progression_display() -> void:
 	)
 
 
-func _should_request_weapon_choice(previous_level_k: int, new_level_k: int) -> bool:
-	if _weapon_choice_shown_this_level or _weapon_choice_panel_open:
+func _should_request_weapon_choice(previous_score: int, new_score: int) -> bool:
+	if previous_score >= _next_weapon_choice_score or new_score < _next_weapon_choice_score:
 		return false
-	var threshold: int = get_weapon_choice_threshold()
-	return previous_level_k < threshold and new_level_k >= threshold
+	if _weapon_choice_panel_open:
+		_weapon_choice_deferred_due_to_open = true
+		return false
+	return true
 
 
 func _request_weapon_choice() -> void:
-	_weapon_choice_shown_this_level = true
 	_weapon_choice_panel_open = true
+	_weapon_choice_deferred_due_to_open = false
+	_next_weapon_choice_score += WEAPON_CHOICE_REPEAT_SCORE
 	weapon_choice_requested.emit(get_weapon_choice_options())
 
 
 func _reset_weapon_choice_state(clear_selection: bool) -> void:
-	_weapon_choice_shown_this_level = false
 	_weapon_choice_panel_open = false
+	_weapon_choice_deferred_due_to_open = false
+	_next_weapon_choice_score = FIRST_REPEATED_WEAPON_CHOICE_SCORE
 	_weapon_choice_volley_count = 0
 	_weapon_choice_hit_count = 0
 	if clear_selection:
 		active_weapon_choice_id = WeaponChoiceRulesRef.NO_CHOICE
+
+
+func _progression_lookup_k() -> int:
+	return mini(current_level_k, maxi(_level_size_k - 1, 0))
+
+
+func _queue_deferred_weapon_choice_check() -> void:
+	var timer := get_tree().create_timer(0.0)
+	timer.timeout.connect(_request_deferred_weapon_choice_if_needed)
+
+
+func _request_deferred_weapon_choice_if_needed() -> void:
+	if not is_playing or _weapon_choice_panel_open:
+		return
+	if current_level_k >= _next_weapon_choice_score:
+		_request_weapon_choice()

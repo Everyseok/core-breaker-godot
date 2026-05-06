@@ -417,9 +417,9 @@ func _on_pause_pressed() -> void:
 
 
 func _update_level_progress(current_level: int, current_k: int) -> void:
-	var level_size: float = maxf(float(GameState.get_level_size_k()), 1.0)
-	var normalized_progress: float = clampf(float(current_k) / level_size, 0.0, 1.0)
-	_level_label.text = "Lv.%d" % current_level
+	var gauge_max: int = GameState.get_score_gauge_max()
+	var normalized_progress: float = clampf(float(current_k) / maxf(float(gauge_max), 1.0), 0.0, 1.0)
+	_level_label.text = "%d/%d" % [current_k, gauge_max]
 	_level_gauge.max_value = 1.0
 	_level_gauge.value = normalized_progress
 	var full_fill_width := maxf(_level_gauge.size.x - 8.0, 0.0)
@@ -592,10 +592,8 @@ func _format_next_goal_label() -> String:
 	var progression_state: Dictionary = GameState.get_progression_display_state()
 	var next_name := String(progression_state.get("next_unlock_name", ""))
 	var next_threshold := int(progression_state.get("next_unlock_threshold", -1))
-	if next_threshold >= GameState.get_level_size_k():
-		if GameState.current_level >= GameState.MAX_LEVEL:
-			return "다음: 최고 단계!"
-		return "다음: Lv.%d -> Lv.%d" % [GameState.current_level, GameState.current_level + 1]
+	if bool(progression_state.get("max_spec_tier_reached", false)) or next_threshold < 0:
+		return "다음: 기록 갱신"
 	if next_name == "":
 		return "다음: 준비 중"
 	return "다음: %s" % next_name

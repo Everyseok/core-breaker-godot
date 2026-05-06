@@ -1,7 +1,7 @@
 # Project Status
 
-**Date:** 2026-05-05
-**Phase:** 4.25 — Android Debug APK Pipeline Remediation
+**Date:** 2026-05-06
+**Phase:** 4.29 — Endless Score Model Pass 1
 **Master source-of-truth:** [`docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md`](APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
 **Breadth audit:** [`docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md`](APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
 **Dual-platform audit:** [`docs/DUAL_PLATFORM_BRIDGE_AUDIT.md`](DUAL_PLATFORM_BRIDGE_AUDIT.md)
@@ -14,7 +14,7 @@
 |---|---|
 | Can submit App-in-Toss today? | **No** |
 | Can submit Google Play today? | **No** |
-| Can push this pass to GitHub? | **No — no remote configured, `gh` auth invalid** |
+| Can push this pass to GitHub? | **Yes — private remote is configured; use path-specific staging only** |
 | Can build Android debug APK artifact today? | **Closer — debug preset and workflow exist; private GitHub push/run is still blocked** |
 | Top banner | `USER_DESIRED_BUT_REQUIRES_LAYOUT_REDESIGN_AND_OFFICIAL_ADS_QA` |
 | Death/game-over ad | Post-run interstitial or rewarded continue candidates only; do not implement now |
@@ -24,7 +24,7 @@
 
 | Area | Current State |
 |---|---|
-| Branch | `feature/design-rebuild-apply-pass` |
+| Branch | `feature/android-debug-apk-artifact` |
 | Main flow | MainMenu starts the app; gameplay starts only on user action |
 | Save source of truth | `SaveManager.get_best_record_value()` |
 | Platform owner today | `PlatformBridge` owns Toss lifecycle, user key, leaderboard submit/open, and future ad wrapper concerns |
@@ -38,12 +38,13 @@
 | Console state | App is not registered yet; console-dependent work stays `NEEDS_CONSOLE_ACCESS` |
 | Ads state | `NOT_IMPLEMENTED / FUTURE`; no placeholder slots, no fake ad UI |
 | Developer Center breadth | All first-column categories are now mapped; many marketing/API/revenue items are future-stage rather than current blockers |
-| GitHub push safety | Blocked until private remote exists and `gh` auth is healthy |
+| GitHub push safety | Private remote is configured; keep using path-specific staging and do not stage `.godot` cache files |
 | Buff System MVP | Implemented and manually smoke-tested |
+| Endless score model | Pass 1 implemented: score no longer resets by level; HUD gauge uses `max(best, 2000)`; weapon choice repeats at `2000 + 1000n` |
 
 ## Highest-Priority Blockers
 
-1. There is no verified private GitHub remote and `gh` auth is invalid, so this pass cannot be pushed safely.
+1. A fresh Android artifact/device install validation is still needed after the latest gameplay changes.
 2. Toss console registration and QR/device validation are not complete.
 3. Google Play has no production AAB preset, signing path, or Play Console setup.
 4. Public title/icon/logo are not fully locked for store registration.
