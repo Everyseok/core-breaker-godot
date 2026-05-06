@@ -15,6 +15,7 @@ const AdLayoutRef := preload("res://scripts/ui/ad_layout.gd")
 @onready var _damage_number_layer: Node2D = $DamageNumberLayer
 
 var _background: Node2D
+var _level_reset_pending: bool = false
 
 
 func _ready() -> void:
@@ -149,6 +150,14 @@ func _on_max_level_cleared() -> void:
 
 func _on_level_transitioned(_new_level: int) -> void:
 	AudioEvents.level_transition()
+	if _level_reset_pending:
+		return
+	_level_reset_pending = true
+	call_deferred("_reset_active_level_state_deferred")
+
+
+func _reset_active_level_state_deferred() -> void:
+	_level_reset_pending = false
 	_reset_active_level_state()
 
 
