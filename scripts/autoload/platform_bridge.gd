@@ -5,6 +5,8 @@ extends Node
 # Minimum Toss app versions for platform APIs (TQA-02)
 const MIN_VERSION_LEADERBOARD: String = "5.221.0"   # submitGameCenterLeaderBoardScore, openGameCenterLeaderboard
 const MIN_VERSION_USER_KEY: String = "5.232.0"       # getUserKeyForGame
+const MIN_VERSION_IN_APP_ADS_2_V2: String = "5.247.0" # loadFullScreenAd/showFullScreenAd
+const REWARDED_REVIVE_AD_GROUP_ID_SETTING := "application/config/rewarded_revive_ad_group_id"
 
 signal exit_requested()
 signal user_id_received(id: String)
@@ -12,6 +14,7 @@ signal game_user_key_received(key_hash: String)
 signal game_user_key_failed(reason: String)
 signal leaderboard_score_submitted(success: bool)
 signal leaderboard_open_failed(message: String)
+signal rewarded_revive_ad_completed(success: bool, reason: String)
 
 var _is_web: bool = false
 var _js_callbacks: Array = []
@@ -19,6 +22,8 @@ var _js_callbacks: Array = []
 var _score_submitted_this_run: bool = false
 # Track whether we paused the tree on background so we restore correctly (C-27, GC-02)
 var _paused_for_background: bool = false
+var _rewarded_revive_ad_in_flight: bool = false
+var _last_rewarded_revive_ad_error: String = ""
 
 
 func _ready() -> void:
@@ -285,9 +290,48 @@ func open_leaderboard() -> bool:
 			return _emit_leaderboard_open_failure("현재 환경에서는 순위를 열 수 없어요.")
 
 
+func request_rewarded_revive_ad() -> bool:
+	# Rewarded revive is intentionally official-doc-gated.
+	# Official Apps-in-Toss docs expose loadFullScreenAd/showFullScreenAd through
+	# @apps-in-toss/web-framework, but this Godot Web export has no verified
+	# module binding yet. Until that bridge is confirmed in Toss QR testing, fail
+	# gracefully instead of guessing a window.* API name.
+	if _rewarded_revive_ad_in_flight:
+		_last_rewarded_revive_ad_error = "IN_FLIGHT"
+		return false
+	if not _is_web:
+		_last_rewarded_revive_ad_error = "NOT_WEB"
+		push_warning("[PlatformBridge] rewarded revive ad unavailable: non-Web runtime")
+		return false
+	var ad_group_id := get_rewarded_revive_ad_group_id()
+	if ad_group_id == "":
+		_last_rewarded_revive_ad_error = "MISSING_AD_GROUP_ID"
+		push_warning("[PlatformBridge] rewarded revive ad unavailable: missing ad group ID")
+		return false
+	_last_rewarded_revive_ad_error = "WEB_FRAMEWORK_BINDING_UNVERIFIED"
+	push_warning("[PlatformBridge] rewarded revive ad unavailable: official Godot Web binding not verified")
+	return false
+
+
+func get_rewarded_revive_ad_group_id() -> String:
+	return String(ProjectSettings.get_setting(REWARDED_REVIVE_AD_GROUP_ID_SETTING, "")).strip_edges()
+
+
+func get_last_rewarded_revive_ad_error() -> String:
+	return _last_rewarded_revive_ad_error
+
+
+func _emit_rewarded_revive_ad_completed(success: bool, reason: String) -> void:
+	_rewarded_revive_ad_in_flight = false
+	_last_rewarded_revive_ad_error = reason
+	rewarded_revive_ad_completed.emit(success, reason)
+
+
 func _on_game_started() -> void:
 	# GM-02 / GC-03: reset per-run submission gate when a new run begins
 	_score_submitted_this_run = false
+	_rewarded_revive_ad_in_flight = false
+	_last_rewarded_revive_ad_error = ""
 
 
 func _emit_leaderboard_open_failure(message: String) -> bool:

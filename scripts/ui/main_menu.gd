@@ -30,6 +30,7 @@ func _ready() -> void:
 	_start_btn.pressed.connect(_on_start_pressed)
 	_ranking_btn.pressed.connect(_on_ranking_pressed)
 	GameState.game_started.connect(_on_game_started)
+	GameState.game_over.connect(_on_game_over)
 	visibility_changed.connect(_on_visibility_changed)
 	if not SaveManager.best_record_changed.is_connected(_on_best_record_changed):
 		SaveManager.best_record_changed.connect(_on_best_record_changed)
@@ -127,6 +128,13 @@ func _on_ranking_pressed() -> void:
 
 func _on_game_started() -> void:
 	visible = false
+
+
+func _on_game_over() -> void:
+	visible = true
+	_update_best_label()
+	_clear_ranking_feedback()
+	AudioEvents.bgm_set_state(&"title", 0.0)
 
 
 func _on_leaderboard_open_failed(message: String) -> void:

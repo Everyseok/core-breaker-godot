@@ -26,6 +26,8 @@ signal game_over()
 signal game_started()
 signal level_transitioned(new_level: int)
 signal max_level_cleared()
+signal revive_prompt_requested()
+signal revive_granted()
 signal weapon_choice_requested(options: Array)
 signal weapon_choice_selected(choice_id: String, display_name: String)
 
@@ -39,6 +41,8 @@ var current_progression_tier: int = 0
 var stone_unlock_threshold: int = -1
 var overclock_unlock_threshold: int = -1
 var stone_unlocked: bool = false
+var revive_prompt_pending: bool = false
+var revive_used_this_run: bool = false
 var _level_size_k: int = 3000
 var active_weapon_choice_id: String = WeaponChoiceRulesRef.NO_CHOICE
 var _weapon_choice_shown_this_level: bool = false
@@ -64,6 +68,8 @@ func start_run() -> void:
 func reset() -> void:
 	current_level = 1
 	current_level_k = 0
+	revive_prompt_pending = false
+	revive_used_this_run = false
 	_reset_weapon_choice_state(true)
 	_sync_progress_values()
 	is_playing = false
@@ -107,12 +113,39 @@ func add_k(amount: int) -> void:
 func trigger_game_over() -> void:
 	if not is_playing:
 		return
+	_finalize_game_over()
+
+
+func can_offer_rewarded_revive() -> bool:
+	return is_playing and not revive_prompt_pending and not revive_used_this_run
+
+
+func begin_revive_pending() -> bool:
+	if not can_offer_rewarded_revive():
+		return false
 	is_playing = false
-	var previous_best := SaveManager.get_best_record_value()
-	SaveManager.record_run_result(total_progress, current_level, current_level_k)
-	if total_progress > previous_best:
-		AudioEvents.high_score()
-	game_over.emit()
+	revive_prompt_pending = true
+	revive_used_this_run = true
+	revive_prompt_requested.emit()
+	return true
+
+
+func grant_revive() -> bool:
+	if not revive_prompt_pending:
+		return false
+	revive_prompt_pending = false
+	is_playing = true
+	_emit_progression_display()
+	revive_granted.emit()
+	return true
+
+
+func finalize_game_over_after_revive_decline() -> void:
+	if not revive_prompt_pending:
+		if is_playing:
+			trigger_game_over()
+		return
+	_finalize_game_over()
 
 
 func trigger_max_level_clear() -> void:
@@ -124,6 +157,16 @@ func trigger_max_level_clear() -> void:
 	if total_progress > previous_best:
 		AudioEvents.high_score()
 	max_level_cleared.emit()
+
+
+func _finalize_game_over() -> void:
+	is_playing = false
+	revive_prompt_pending = false
+	var previous_best := SaveManager.get_best_record_value()
+	SaveManager.record_run_result(total_progress, current_level, current_level_k)
+	if total_progress > previous_best:
+		AudioEvents.high_score()
+	game_over.emit()
 
 
 func _load_progression() -> void:

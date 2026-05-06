@@ -99,7 +99,34 @@ func _on_brick_destroyed(_brick_type: int) -> void:
 
 
 func _on_core_breached() -> void:
+	handle_core_breached()
+
+
+func handle_core_breached() -> void:
+	if GameState.can_offer_rewarded_revive():
+		_ring_spawner.stop()
+		_clear_runtime_layers()
+		DangerManager.reset()
+		AudioEvents.ui_menu_open()
+		if GameState.begin_revive_pending():
+			return
 	GameState.trigger_game_over()
+
+
+func revive_after_reward() -> void:
+	if not GameState.grant_revive():
+		return
+	_ring_spawner.stop()
+	_clear_runtime_layers()
+	DangerManager.reset()
+	AudioEvents.ui_confirm()
+	AudioEvents.bgm_set_state(&"run", float(GameState.current_level_k))
+	if GameState.is_playing:
+		_ring_spawner.start()
+
+
+func finalize_game_over_after_decline_or_ad_failure() -> void:
+	GameState.finalize_game_over_after_revive_decline()
 
 
 func _on_game_over() -> void:
