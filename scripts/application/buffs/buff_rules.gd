@@ -14,6 +14,8 @@ const PROJECTILE_COUNT_DURATION: float = 10.0
 const DAMAGE_DURATION: float = 10.0
 const OVERCLOCK_DURATION: float = 3.0
 const COOLDOWN_DURATION: float = 30.0
+const LATE_GAME_COOLDOWN_DURATION: float = 10.0
+const LATE_GAME_COOLDOWN_SCORE: int = 2000
 
 const BUFF_IDS := [
 	BUFF_PROJECTILE_COUNT_X2,
@@ -50,3 +52,9 @@ static func duration_for_buff(buff_id: String) -> float:
 			return OVERCLOCK_DURATION
 		_:
 			return 0.0
+
+
+static func cooldown_for_score(score: int) -> float:
+	if score >= LATE_GAME_COOLDOWN_SCORE:
+		return LATE_GAME_COOLDOWN_DURATION
+	return COOLDOWN_DURATION

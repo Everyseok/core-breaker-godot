@@ -9,6 +9,8 @@ const GAME_CONFIG_PATH := "res://data/game_config.json"
 const DEFAULT_SPAWN_RADIUS := 280.0
 const DEFAULT_SHRINK_SPEED := 30.0
 const DEFAULT_LAYER_SPACING := 18.0
+const ROTATION_CLOCKWISE := "clockwise"
+const ROTATION_ALTERNATING_1S := "alternating_1s"
 
 
 func build_spawn_spec(k_value: int) -> Dictionary:
@@ -21,6 +23,7 @@ func build_spawn_spec(k_value: int) -> Dictionary:
 		"segment_size": BrickRulesRef.SEGMENT_SIZE,
 		"brick_type": brick_type_for_k(k_value),
 		"layers": layers,
+		"rotation_mode": _rotation_mode_for_k(k_value),
 	}
 
 
@@ -43,6 +46,12 @@ func brick_type_for_k(k_value: int) -> int:
 func _shrink_speed_for_k(k_value: int) -> float:
 	# Rings shrink slightly faster with progression to maintain difficulty.
 	return DEFAULT_SHRINK_SPEED + minf(k_value * 0.10, 20.0)
+
+
+func _rotation_mode_for_k(k_value: int) -> String:
+	if k_value >= 2000 and k_value < 3000:
+		return ROTATION_ALTERNATING_1S
+	return ROTATION_CLOCKWISE
 
 
 func _spawn_radius() -> float:
@@ -110,6 +119,8 @@ func _expand_five_layer_wall(base_layers: Array) -> Array:
 		BrickRulesRef.BrickType.STRONG,
 		BrickRulesRef.BrickType.NORMAL,
 		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.STRONG,
+		BrickRulesRef.BrickType.ARMORED,
 		BrickRulesRef.BrickType.STRONG,
 		BrickRulesRef.BrickType.STRONG,
 		BrickRulesRef.BrickType.ARMORED,

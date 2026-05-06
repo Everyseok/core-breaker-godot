@@ -20,11 +20,13 @@ var segment_size: float = BrickRulesRef.SEGMENT_SIZE
 var wall_group_id: int = -1
 var wall_layer_index: int = 0
 var wall_layer_count: int = 1
+var rotation_mode: String = RingSpawnPlannerRef.ROTATION_CLOCKWISE
 
 var _bricks: Array = []
 var _angles: Array = []
 var _segments: Array = []
 var _rotation_offset: float = 0.0
+var _rotation_phase_time: float = 0.0
 
 
 func setup(
@@ -35,7 +37,8 @@ func setup(
 	p_segment_size: float = BrickRulesRef.SEGMENT_SIZE,
 	p_wall_group_id: int = -1,
 	p_wall_layer_index: int = 0,
-	p_wall_layer_count: int = 1
+	p_wall_layer_count: int = 1,
+	p_rotation_mode: String = RingSpawnPlannerRef.ROTATION_CLOCKWISE
 ) -> void:
 	radius = p_radius
 	shrink_speed = p_speed
@@ -45,6 +48,7 @@ func setup(
 	wall_group_id = p_wall_group_id
 	wall_layer_index = p_wall_layer_index
 	wall_layer_count = p_wall_layer_count
+	rotation_mode = p_rotation_mode
 
 
 func _ready() -> void:
@@ -62,7 +66,9 @@ func _process(delta: float) -> void:
 	if not GameState.is_playing:
 		return
 	radius -= shrink_speed * delta
-	_rotation_offset = fposmod(_rotation_offset + (ANGULAR_SPEED * delta), TAU)
+	_rotation_phase_time += delta
+	var rotation_direction := _rotation_direction_for_mode()
+	_rotation_offset = fposmod(_rotation_offset + (ANGULAR_SPEED * rotation_direction * delta), TAU)
 	var target_count: int = RingSpawnPlannerRef.segment_count_for_radius(radius, segment_size)
 	if target_count < _segments.size():
 		_retile_segments(target_count)
@@ -83,6 +89,15 @@ func get_wall_layer_index() -> int:
 
 func get_wall_layer_count() -> int:
 	return wall_layer_count
+
+
+func _rotation_direction_for_mode() -> float:
+	match rotation_mode:
+		RingSpawnPlannerRef.ROTATION_ALTERNATING_1S:
+			var phase_second := int(floor(_rotation_phase_time))
+			return 1.0 if phase_second % 2 == 1 else -1.0
+		_:
+			return 1.0
 
 
 func get_segment_hit_key(segment_index: int) -> String:

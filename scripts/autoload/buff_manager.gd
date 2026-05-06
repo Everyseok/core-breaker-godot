@@ -198,7 +198,7 @@ func _tick_active_buff(delta: float) -> void:
 			buff_state_changed.emit()
 		return
 	active_buff_id = BuffRulesRef.BUFF_NONE
-	cooldown_time_remaining = BuffRulesRef.COOLDOWN_DURATION
+	cooldown_time_remaining = BuffRulesRef.cooldown_for_score(GameState.current_level_k)
 	buff_state_changed.emit()
 
 

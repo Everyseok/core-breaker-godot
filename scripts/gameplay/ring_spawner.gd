@@ -42,6 +42,10 @@ func _spawn_ring() -> void:
 	var spawn_spec := _planner.build_spawn_spec(GameState.current_level_k)
 	var wall_group_id: int = _wall_group_sequence
 	_wall_group_sequence += 1
+	var rotation_mode: String = String(spawn_spec.get(
+		"rotation_mode",
+		RingSpawnPlannerRef.ROTATION_CLOCKWISE
+	))
 	var layer_specs: Array = spawn_spec.get("layers", [])
 	if layer_specs.is_empty():
 		layer_specs = [{
@@ -76,7 +80,8 @@ func _spawn_ring() -> void:
 			float(spawn_spec.get("segment_size", BrickRulesRef.SEGMENT_SIZE)),
 			wall_group_id,
 			layer_index,
-			layer_specs.size()
+			layer_specs.size(),
+			rotation_mode
 		)
 		ring.brick_destroyed.connect(_on_ring_brick_destroyed)
 		_ring_layer.add_child(ring)
