@@ -71,11 +71,13 @@ func start_buff_roll() -> bool:
 
 
 func roll_random_buff_id() -> String:
+	var ids := _available_buff_ids()
 	if BuffRulesRef.is_valid_buff_id(_debug_forced_buff_id):
 		var forced := _debug_forced_buff_id
 		_debug_forced_buff_id = BuffRulesRef.BUFF_NONE
-		return forced
-	var ids := BuffRulesRef.all_buff_ids()
+		if ids.has(forced):
+			return forced
+		push_warning("[BuffManager] Forced buff '%s' is unavailable; falling back to available candidates." % forced)
 	if ids.is_empty():
 		return BuffRulesRef.BUFF_NONE
 	return String(ids[_rng.randi_range(0, ids.size() - 1)])
@@ -88,10 +90,13 @@ func apply_selected_buff(buff_id: String) -> bool:
 		_cancel_roll()
 		return false
 	roll_in_progress = false
+	if buff_id == BuffRulesRef.BUFF_OVERCLOCK and not _request_current_weapon_overclock():
+		active_buff_id = BuffRulesRef.BUFF_NONE
+		active_time_remaining = 0.0
+		buff_state_changed.emit()
+		return false
 	active_buff_id = buff_id
 	active_time_remaining = BuffRulesRef.duration_for_buff(buff_id)
-	if buff_id == BuffRulesRef.BUFF_OVERCLOCK:
-		_request_current_weapon_overclock()
 	buff_applied.emit(buff_id, get_buff_display_name(buff_id))
 	buff_state_changed.emit()
 	return true
@@ -149,7 +154,7 @@ func get_buff_display_name(buff_id: String) -> String:
 
 func get_available_buff_display_names() -> Array:
 	var names: Array = []
-	for buff_id in BuffRulesRef.all_buff_ids():
+	for buff_id in _available_buff_ids():
 		names.append(get_buff_display_name(String(buff_id)))
 	return names
 
@@ -163,13 +168,39 @@ func debug_force_next_buff(buff_id: String) -> bool:
 	return true
 
 
-func _request_current_weapon_overclock() -> bool:
+func _available_buff_ids() -> Array:
+	var ids := BuffRulesRef.all_buff_ids()
+	if not _can_current_weapon_activate_overclock():
+		ids.erase(BuffRulesRef.BUFF_OVERCLOCK)
+	return ids
+
+
+func _can_current_weapon_activate_overclock() -> bool:
+	var weapon = _get_current_weapon()
+	if weapon == null or not weapon.has_method("can_activate_overclock"):
+		return false
+	return bool(weapon.call("can_activate_overclock"))
+
+
+func _get_current_weapon():
 	var weapons := get_tree().get_nodes_in_group("weapon")
 	if weapons.is_empty():
+		return null
+	var weapon = weapons[0]
+	if weapon == null or not is_instance_valid(weapon):
+		return null
+	return weapon
+
+
+func _request_current_weapon_overclock() -> bool:
+	var weapon = _get_current_weapon()
+	if weapon == null:
 		push_warning("[BuffManager] Overclock buff selected, but no weapon node exists.")
 		return false
-	var weapon = weapons[0]
-	if weapon == null or not is_instance_valid(weapon) or not weapon.has_method("activate_overclock"):
+	if not weapon.has_method("can_activate_overclock") or not bool(weapon.call("can_activate_overclock")):
+		push_warning("[BuffManager] Overclock buff selected, but weapon overclock is unavailable.")
+		return false
+	if not weapon.has_method("activate_overclock"):
 		push_warning("[BuffManager] Overclock buff selected, but weapon cannot activate overclock.")
 		return false
 	weapon.call("activate_overclock")

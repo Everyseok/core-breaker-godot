@@ -196,7 +196,10 @@ func _on_aim_changed(direction: Vector2) -> void:
 	_target_aim_angle = direction.angle() + (PI * 0.5)
 
 
-func _on_brick_entered(_area: Area2D) -> void:
+func _on_brick_entered(area: Area2D) -> void:
+	if area != null and area.has_method("is_airborne_for_core_breach"):
+		if bool(area.call("is_airborne_for_core_breach")):
+			return
 	core_breached.emit()
 
 
