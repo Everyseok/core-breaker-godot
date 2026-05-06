@@ -1,7 +1,7 @@
 # Project Status
 
 **Date:** 2026-05-07
-**Phase:** 4.32 — Late-Game Pattern Pass 5A
+**Phase:** 4.33 — Late-Game Pattern Pass 5B QA
 **Master source-of-truth:** [`docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md`](APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
 **Breadth audit:** [`docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md`](APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
 **Dual-platform audit:** [`docs/DUAL_PLATFORM_BRIDGE_AUDIT.md`](DUAL_PLATFORM_BRIDGE_AUDIT.md)
@@ -43,6 +43,7 @@
 | Endless score model | Pass 1 implemented: score no longer resets by level; HUD gauge uses `max(best, 2000)`; weapon choice repeats at `2000 + 1000n` |
 | Stabilization refactor | Pass 1 extracted pure endless-score gauge rules and repeated weapon-choice schedule rules without gameplay balance changes |
 | Late-game pattern | Pass 5A implemented: K 2000~2999 alternating wall rotation, K 2000+ buff cooldown 10s, max wall remains 8 layers |
+| Late-game pattern Pass 5B | Jumping monster pattern implemented and manually QA-verified |
 
 ## Highest-Priority Blockers
 

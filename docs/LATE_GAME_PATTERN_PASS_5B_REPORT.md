@@ -60,19 +60,20 @@
 - No monster jumping behavior was placed in `RingSpawner`; it stays a thin adapter.
 
 ## Manual QA Checklist
-- [ ] K < 2000: normal/previous behavior.
-- [ ] K 2000~2999: alternating rotation works.
-- [ ] K 3000~3999: some bricks jump randomly.
-- [ ] During jump, attacks do not damage the airborne brick.
-- [ ] During jump, the airborne brick does not cause unavoidable death.
-- [ ] After landing, the brick can be damaged again.
-- [ ] Ring continues shrinking while jump happens.
-- [ ] K 4000~4999: alternating rotation returns.
-- [ ] K 5000~5999: jumping monster returns.
-- [ ] Buff cooldown at 2000+ remains 10s.
-- [ ] Score/gauge/repeated weapon choice still works.
-- [ ] No duplicate weapon choice panels.
-- [ ] Revive/pause/game over still work.
+- [x] K < 2000: normal/previous behavior: OK.
+- [x] K 2000~2999: alternating rotation works: OK.
+- [x] K 3000~3999: jumping monster bricks appear randomly: OK.
+- [x] During jump, attacks do not damage the airborne brick: OK.
+- [x] During jump, airborne brick does not cause unavoidable death / core breach: OK.
+- [x] After landing, brick can be damaged again: OK.
+- [x] Ring continues shrinking while jump happens: OK.
+- [x] K 4000~4999: alternating rotation returns: OK.
+- [x] K 5000~5999: jumping monster pattern returns: OK.
+- [x] Buff cooldown at 2000+ remains 10s: OK.
+- [x] Score/gauge/repeated weapon choice still works: OK.
+- [x] No duplicate weapon choice panels: OK.
+- [x] Revive/pause/game over still work: OK.
+- [x] Max wall remains 8 layers: OK.
 
 ## Implementation Risk
 - Core-breach immunity is implemented by disabling the airborne brick Area2D collision/monitorable state rather than editing `Core`. This keeps the change localized, but should be verified on device because Godot Area2D overlap timing can vary when collision is re-enabled while already overlapping.
