@@ -123,6 +123,7 @@ func can_offer_rewarded_revive() -> bool:
 func begin_revive_pending() -> bool:
 	if not can_offer_rewarded_revive():
 		return false
+	# Revive pending is not final game-over. Do not save, submit, or emit game_over here.
 	is_playing = false
 	revive_prompt_pending = true
 	revive_used_this_run = true
@@ -142,8 +143,6 @@ func grant_revive() -> bool:
 
 func finalize_game_over_after_revive_decline() -> void:
 	if not revive_prompt_pending:
-		if is_playing:
-			trigger_game_over()
 		return
 	_finalize_game_over()
 

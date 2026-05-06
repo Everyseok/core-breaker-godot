@@ -8,6 +8,7 @@ This pass adds a rewarded-revive decision flow without guessing an unverified Ap
 - Runtime Toss ad call: intentionally stubbed and fails gracefully until a verified Godot Web binding for `@apps-in-toss/web-framework` is available.
 - Current local/non-Toss behavior: tapping `예 (광고 보기)` shows a clear unavailable message; tapping `아니오` finalizes game over, saves the run, submits leaderboard through the existing path, and returns to MainMenu.
 - MVP rule: one rewarded revive attempt per run.
+- State-machine guard: `GameState.begin_revive_pending()` only pauses the active run and emits `revive_prompt_requested`; it does not save the run, emit `game_over`, play high-score audio, submit leaderboard, or show MainMenu.
 
 ## Official App-in-Toss Docs Checked
 
@@ -56,8 +57,9 @@ flowchart TD
     A["Core breached"] --> B{"Revive used this run?"}
     B -- "No" --> C["Stop spawner and clear runtime danger"]
     C --> D["GameState.begin_revive_pending()"]
-    D --> E["RevivePrompt: 부활하시겠습니까?"]
-    E --> F{"User choice"}
+    D --> E["RevivePrompt only; no save/game_over/leaderboard"]
+    E --> Q["부활하시겠습니까?"]
+    Q --> F{"User choice"}
     F -- "아니오" --> G["GameState.finalize_game_over_after_revive_decline()"]
     G --> H["SaveManager.record_run_result()"]
     H --> I["PlatformBridge.submit_leaderboard_score() existing path"]
@@ -83,6 +85,8 @@ flowchart TD
 ## Behavior Implemented
 
 - Core breach no longer immediately finalizes the first death if revive is available.
+- `GameState.begin_revive_pending()` never calls `SaveManager.record_run_result()`, never emits `game_over`, and never reaches leaderboard submission.
+- `GameState.finalize_game_over_after_revive_decline()` only finalizes while `revive_prompt_pending` is true; stale or duplicate calls return without saving/submitting.
 - Gameplay danger is stopped and runtime layers are cleared before showing the prompt.
 - Revive prompt text:
   - `부활하시겠습니까?`
