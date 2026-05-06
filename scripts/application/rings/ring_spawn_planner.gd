@@ -33,16 +33,16 @@ static func segment_count_for_radius(
 
 
 func brick_type_for_k(k_value: int) -> int:
-	if k_value >= 80:
+	if k_value >= 40:
 		return BrickRulesRef.BrickType.ARMORED
-	if k_value >= 30:
+	if k_value >= 15:
 		return BrickRulesRef.BrickType.STRONG
 	return BrickRulesRef.BrickType.NORMAL
 
 
 func _shrink_speed_for_k(k_value: int) -> float:
 	# Rings shrink slightly faster with progression to maintain difficulty.
-	return DEFAULT_SHRINK_SPEED + minf(k_value * 0.05, 20.0)
+	return DEFAULT_SHRINK_SPEED + minf(k_value * 0.10, 20.0)
 
 
 func _spawn_radius() -> float:
@@ -64,7 +64,7 @@ func _layers_for_k(k_value: int, outer_radius: float) -> Array:
 
 
 func _layer_types_for_k(k_value: int) -> Array:
-	if k_value >= 500:
+	if k_value >= 250:
 		var base_layers := [
 			BrickRulesRef.BrickType.STRONG,
 			BrickRulesRef.BrickType.STRONG,
@@ -75,7 +75,7 @@ func _layer_types_for_k(k_value: int) -> Array:
 		if k_value >= WeaponChoiceRulesRef.CHOICE_TRIGGER_K and base_layers.size() == 5:
 			return _expand_five_layer_wall(base_layers)
 		return base_layers
-	if k_value >= 150 and k_value < 500:
+	if k_value >= 75 and k_value < 250:
 		return [
 			BrickRulesRef.BrickType.STRONG,
 			BrickRulesRef.BrickType.ARMORED,

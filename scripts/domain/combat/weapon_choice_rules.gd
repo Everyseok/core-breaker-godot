@@ -6,7 +6,7 @@ const CHAIN_LIGHTNING := "chain_lightning"
 const PRISM_LANCE := "prism_lance"
 const METEOR_CANNON := "meteor_cannon"
 
-const CHOICE_TRIGGER_K: int = 2000
+const CHOICE_TRIGGER_K: int = 1000
 const CHAIN_CHANCE: float = 0.35
 const CHAIN_RANGE: int = 2
 const PRISM_VOLLEY_INTERVAL: int = 4
