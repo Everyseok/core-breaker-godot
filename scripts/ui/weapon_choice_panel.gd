@@ -4,6 +4,8 @@ const UiStyleRef := preload("res://scripts/ui/ui_style.gd")
 const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
 const WeaponProfileRef := preload("res://scripts/visual/weapon_profile.gd")
 
+const PANEL_SIZE: Vector2 = Vector2(344.0, 374.0)
+
 var _dim_overlay: ColorRect
 var _panel: Panel
 var _title_label: Label
@@ -18,6 +20,11 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	_build_ui()
+	_center_panel()
+	if not resized.is_connected(_center_panel):
+		resized.connect(_center_panel)
+	if not get_viewport().size_changed.is_connected(_center_panel):
+		get_viewport().size_changed.connect(_center_panel)
 	GameState.weapon_choice_requested.connect(_on_weapon_choice_requested)
 	GameState.game_started.connect(_force_close)
 	GameState.game_over.connect(_force_close)
@@ -46,14 +53,8 @@ func _build_ui() -> void:
 	add_child(_dim_overlay)
 
 	_panel = Panel.new()
-	_panel.anchor_left = 0.5
-	_panel.anchor_top = 0.5
-	_panel.anchor_right = 0.5
-	_panel.anchor_bottom = 0.5
-	_panel.offset_left = -172.0
-	_panel.offset_top = -196.0
-	_panel.offset_right = 172.0
-	_panel.offset_bottom = 178.0
+	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_panel.size = PANEL_SIZE
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_panel)
 	UiStyleRef.apply_panel(_panel, Color(0.06, 0.09, 0.18, 0.96), Color(0.54, 0.74, 1.0))
@@ -235,6 +236,7 @@ func _open_panel(options: Array) -> void:
 	if visible:
 		return
 	_resolving_selection = false
+	_center_panel()
 	_title_label.text = "무기 진화 선택!"
 	_subtitle_label.text = "하나만 골라줘!"
 	_refresh_cards(options)
@@ -263,6 +265,30 @@ func _open_panel(options: Array) -> void:
 		tween.tween_interval(0.03)
 		tween.parallel().tween_property(button, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tween.parallel().tween_property(button, "modulate:a", 1.0, 0.10).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+func _center_panel() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		viewport_size = Vector2(390.0, 844.0)
+	anchor_left = 0.0
+	anchor_top = 0.0
+	anchor_right = 0.0
+	anchor_bottom = 0.0
+	offset_left = 0.0
+	offset_top = 0.0
+	offset_right = viewport_size.x
+	offset_bottom = viewport_size.y
+	_dim_overlay.anchor_left = 0.0
+	_dim_overlay.anchor_top = 0.0
+	_dim_overlay.anchor_right = 0.0
+	_dim_overlay.anchor_bottom = 0.0
+	_dim_overlay.offset_left = 0.0
+	_dim_overlay.offset_top = 0.0
+	_dim_overlay.offset_right = viewport_size.x
+	_dim_overlay.offset_bottom = viewport_size.y
+	_panel.size = PANEL_SIZE
+	_panel.position = ((viewport_size - PANEL_SIZE) * 0.5).floor()
 
 
 func _refresh_cards(options: Array) -> void:
