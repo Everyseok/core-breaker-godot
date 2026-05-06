@@ -522,9 +522,18 @@ func _update_buff_button_state() -> void:
 		_set_buff_lock_visible(false)
 		return
 
-	if BuffManager.buff_used_this_run:
+	if BuffManager.is_buff_active():
 		_buff_button.disabled = true
-		_buff_button.text = BuffManager.get_active_buff_display_name()
+		_buff_button.text = "%s\n%d초" % [
+			BuffManager.get_active_buff_display_name(),
+			BuffManager.get_active_time_remaining_ceil()
+		]
+		_set_buff_lock_visible(false)
+		return
+
+	if BuffManager.is_in_cooldown():
+		_buff_button.disabled = true
+		_buff_button.text = "대기\n%d" % BuffManager.get_cooldown_time_remaining_ceil()
 		_set_buff_lock_visible(false)
 		return
 

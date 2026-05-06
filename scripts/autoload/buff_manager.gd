@@ -1,5 +1,5 @@
 extends Node
-# BuffManager — owns one-run MVP random buff state.
+# BuffManager — owns timed random buff state and cooldown.
 
 const BuffRulesRef := preload("res://scripts/application/buffs/buff_rules.gd")
 
@@ -7,25 +7,40 @@ signal buff_roll_requested()
 signal buff_state_changed()
 signal buff_applied(buff_id: String, display_name: String)
 
-var buff_used_this_run: bool = false
 var active_buff_id: String = BuffRulesRef.BUFF_NONE
+var active_time_remaining: float = 0.0
+var cooldown_time_remaining: float = 0.0
+var roll_in_progress: bool = false
 
-var _roll_in_progress: bool = false
 var _rng := RandomNumberGenerator.new()
 var _debug_forced_buff_id: String = BuffRulesRef.BUFF_NONE
 
 
 func _ready() -> void:
 	_rng.randomize()
+	set_process(true)
 	GameState.game_started.connect(reset_on_game_started)
-	GameState.game_over.connect(_cancel_roll)
-	GameState.max_level_cleared.connect(_cancel_roll)
+	GameState.game_over.connect(_cancel_runtime_state)
+	GameState.max_level_cleared.connect(_cancel_runtime_state)
+
+
+func _process(delta: float) -> void:
+	if not GameState.is_playing or get_tree().paused:
+		return
+	if roll_in_progress:
+		return
+	if active_buff_id != BuffRulesRef.BUFF_NONE:
+		_tick_active_buff(delta)
+		return
+	if cooldown_time_remaining > 0.0:
+		_tick_cooldown(delta)
 
 
 func reset_on_game_started() -> void:
-	buff_used_this_run = false
 	active_buff_id = BuffRulesRef.BUFF_NONE
-	_roll_in_progress = false
+	active_time_remaining = 0.0
+	cooldown_time_remaining = 0.0
+	roll_in_progress = false
 	_debug_forced_buff_id = BuffRulesRef.BUFF_NONE
 	buff_state_changed.emit()
 
@@ -36,19 +51,20 @@ func is_buff_unlocked(current_level_k: int) -> bool:
 
 func can_open_buff(current_level_k: int) -> bool:
 	return (
-		GameState.is_playing
-		and not get_tree().paused
-		and is_buff_unlocked(current_level_k)
-		and not buff_used_this_run
-		and not _roll_in_progress
-	)
+			GameState.is_playing
+			and not get_tree().paused
+			and is_buff_unlocked(current_level_k)
+			and active_buff_id == BuffRulesRef.BUFF_NONE
+			and cooldown_time_remaining <= 0.0
+			and not roll_in_progress
+		)
 
 
 func start_buff_roll() -> bool:
 	if not can_open_buff(GameState.current_level_k):
 		buff_state_changed.emit()
 		return false
-	_roll_in_progress = true
+	roll_in_progress = true
 	buff_state_changed.emit()
 	buff_roll_requested.emit()
 	return true
@@ -66,14 +82,14 @@ func roll_random_buff_id() -> String:
 
 
 func apply_selected_buff(buff_id: String) -> bool:
-	if not _roll_in_progress:
+	if not roll_in_progress:
 		return false
 	if not BuffRulesRef.is_valid_buff_id(buff_id):
 		_cancel_roll()
 		return false
-	_roll_in_progress = false
-	buff_used_this_run = true
+	roll_in_progress = false
 	active_buff_id = buff_id
+	active_time_remaining = _duration_for_buff(buff_id)
 	if buff_id == BuffRulesRef.BUFF_OVERCLOCK:
 		_request_current_weapon_overclock()
 	buff_applied.emit(buff_id, get_buff_display_name(buff_id))
@@ -82,13 +98,13 @@ func apply_selected_buff(buff_id: String) -> bool:
 
 
 func get_projectile_count_multiplier() -> int:
-	if active_buff_id == BuffRulesRef.BUFF_PROJECTILE_COUNT_X2:
+	if active_buff_id == BuffRulesRef.BUFF_PROJECTILE_COUNT_X2 and active_time_remaining > 0.0:
 		return BuffRulesRef.PROJECTILE_COUNT_MULTIPLIER
 	return 1
 
 
 func get_damage_multiplier() -> float:
-	if active_buff_id == BuffRulesRef.BUFF_DAMAGE_X15:
+	if active_buff_id == BuffRulesRef.BUFF_DAMAGE_X15 and active_time_remaining > 0.0:
 		return BuffRulesRef.DAMAGE_MULTIPLIER
 	return 1.0
 
@@ -98,7 +114,7 @@ func apply_damage_multiplier(base_damage: int) -> int:
 
 
 func is_roll_in_progress() -> bool:
-	return _roll_in_progress
+	return roll_in_progress
 
 
 func get_unlock_k() -> int:
@@ -107,8 +123,24 @@ func get_unlock_k() -> int:
 
 func get_active_buff_display_name() -> String:
 	if active_buff_id == BuffRulesRef.BUFF_NONE:
-		return "사용됨"
+		return ""
 	return get_buff_display_name(active_buff_id)
+
+
+func is_buff_active() -> bool:
+	return active_buff_id != BuffRulesRef.BUFF_NONE and active_time_remaining > 0.0
+
+
+func is_in_cooldown() -> bool:
+	return cooldown_time_remaining > 0.0
+
+
+func get_active_time_remaining_ceil() -> int:
+	return int(ceil(maxf(active_time_remaining, 0.0)))
+
+
+func get_cooldown_time_remaining_ceil() -> int:
+	return int(ceil(maxf(cooldown_time_remaining, 0.0)))
 
 
 func get_buff_display_name(buff_id: String) -> String:
@@ -145,5 +177,46 @@ func _request_current_weapon_overclock() -> bool:
 
 
 func _cancel_roll() -> void:
-	_roll_in_progress = false
+	roll_in_progress = false
 	buff_state_changed.emit()
+
+
+func _cancel_runtime_state() -> void:
+	active_buff_id = BuffRulesRef.BUFF_NONE
+	active_time_remaining = 0.0
+	cooldown_time_remaining = 0.0
+	roll_in_progress = false
+	buff_state_changed.emit()
+
+
+func _tick_active_buff(delta: float) -> void:
+	var previous_seconds := get_active_time_remaining_ceil()
+	active_time_remaining = maxf(active_time_remaining - delta, 0.0)
+	var current_seconds := get_active_time_remaining_ceil()
+	if active_time_remaining > 0.0:
+		if current_seconds != previous_seconds:
+			buff_state_changed.emit()
+		return
+	active_buff_id = BuffRulesRef.BUFF_NONE
+	cooldown_time_remaining = BuffRulesRef.COOLDOWN_DURATION
+	buff_state_changed.emit()
+
+
+func _tick_cooldown(delta: float) -> void:
+	var previous_seconds := get_cooldown_time_remaining_ceil()
+	cooldown_time_remaining = maxf(cooldown_time_remaining - delta, 0.0)
+	var current_seconds := get_cooldown_time_remaining_ceil()
+	if cooldown_time_remaining <= 0.0 or current_seconds != previous_seconds:
+		buff_state_changed.emit()
+
+
+func _duration_for_buff(buff_id: String) -> float:
+	match buff_id:
+		BuffRulesRef.BUFF_PROJECTILE_COUNT_X2:
+			return BuffRulesRef.PROJECTILE_COUNT_DURATION
+		BuffRulesRef.BUFF_DAMAGE_X15:
+			return BuffRulesRef.DAMAGE_DURATION
+		BuffRulesRef.BUFF_OVERCLOCK:
+			return BuffRulesRef.OVERCLOCK_DURATION
+		_:
+			return 0.0

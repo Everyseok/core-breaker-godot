@@ -10,6 +10,10 @@ const BUFF_DAMAGE_X15 := "damage_x15"
 
 const DAMAGE_MULTIPLIER: float = 1.5
 const PROJECTILE_COUNT_MULTIPLIER: int = 2
+const PROJECTILE_COUNT_DURATION: float = 10.0
+const DAMAGE_DURATION: float = 10.0
+const OVERCLOCK_DURATION: float = 3.0
+const COOLDOWN_DURATION: float = 30.0
 
 const BUFF_IDS := [
 	BUFF_PROJECTILE_COUNT_X2,

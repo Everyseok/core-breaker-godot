@@ -1,10 +1,11 @@
 # Buff System MVP Report
 
 ## Summary
-- Added an MVP one-roll random buff system.
+- Historical report for the original MVP one-roll random buff system.
+- Current behavior is superseded by [`BUFF_TIMED_COOLDOWN_REPORT.md`](BUFF_TIMED_COOLDOWN_REPORT.md).
 - Scope intentionally excludes endless-run/progress-gauge redesign, level logic changes, best-record gauge changes, weapon-choice timing changes, ads, leaderboard, and rewarded revive changes.
 - Buff unlock is `current_level_k >= 500`.
-- One buff selection is allowed per run; buffs do not stack.
+- Original MVP allowed one buff selection per run; the current implementation allows repeat use after timed duration and cooldown.
 
 ## Files Changed
 - `project.godot`: registers `BuffManager` autoload.
@@ -95,7 +96,7 @@
 - Buff cannot be selected a second time in the same run.
 - PauseMenu and RevivePrompt still work.
 
-## Manual QA Result
+## Historical Manual QA Result
 - K < 500 locked: OK
 - K >= 500 enabled: OK
 - Roulette pauses gameplay: OK

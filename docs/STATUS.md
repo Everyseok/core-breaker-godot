@@ -1,7 +1,7 @@
 # Project Status
 
-**Date:** 2026-05-06
-**Phase:** 4.29 — Endless Score Model Pass 1
+**Date:** 2026-05-07
+**Phase:** 4.30 — Timed Cooldown Buff Pass
 **Master source-of-truth:** [`docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md`](APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
 **Breadth audit:** [`docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md`](APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
 **Dual-platform audit:** [`docs/DUAL_PLATFORM_BRIDGE_AUDIT.md`](DUAL_PLATFORM_BRIDGE_AUDIT.md)
@@ -39,7 +39,7 @@
 | Ads state | `NOT_IMPLEMENTED / FUTURE`; no placeholder slots, no fake ad UI |
 | Developer Center breadth | All first-column categories are now mapped; many marketing/API/revenue items are future-stage rather than current blockers |
 | GitHub push safety | Private remote is configured; keep using path-specific staging and do not stage `.godot` cache files |
-| Buff System MVP | Implemented and manually smoke-tested |
+| Buff System MVP | Timed cooldown pass implemented: projectile x2 and damage x1.5 now expire after 10 seconds, then enter 30-second cooldown |
 | Endless score model | Pass 1 implemented: score no longer resets by level; HUD gauge uses `max(best, 2000)`; weapon choice repeats at `2000 + 1000n` |
 
 ## Highest-Priority Blockers
