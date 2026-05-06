@@ -42,7 +42,7 @@
 | Buff System MVP | Timed cooldown pass implemented: projectile x2 and damage x1.5 now expire after 10 seconds, then enter 30-second cooldown |
 | Endless score model | Pass 1 implemented: score no longer resets by level; HUD gauge uses `max(best, 2000)`; weapon choice repeats at `2000 + 1000n` |
 | Stabilization refactor | Pass 1 extracted pure endless-score gauge rules and repeated weapon-choice schedule rules without gameplay balance changes |
-| Late-game pattern | Pass 5A implemented: K 2000~2999 alternating wall rotation, K 2000+ buff cooldown 10s, max wall expansion 10 layers |
+| Late-game pattern | Pass 5A implemented: K 2000~2999 alternating wall rotation, K 2000+ buff cooldown 10s, max wall remains 8 layers |
 
 ## Highest-Priority Blockers
 

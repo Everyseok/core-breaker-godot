@@ -4,7 +4,7 @@
 - Added the first late-game wall pattern pass without monster or jumping bricks.
 - K `2000` to `2999` now uses alternating wall rotation direction every `1.0` second.
 - K `2000+` buff cooldown now becomes `10.0` seconds after the active buff ends.
-- The max wall expansion now returns `10` layers instead of `8`.
+- The max wall expansion stays at `8` layers for this pass.
 
 ## Buff Cooldown Scaling
 - `BuffRules.COOLDOWN_DURATION` remains the default `30.0` second cooldown.
@@ -16,7 +16,7 @@
 - `BuffManager` starts cooldown with `BuffRules.cooldown_for_score(GameState.current_level_k)` only after the active buff timer reaches zero.
 
 ## Max Wall Layer Sequence
-The expanded late wall now uses this `10`-layer sequence:
+The expanded wall remains this `8`-layer sequence:
 
 1. `STRONG`
 2. `STRONG`
@@ -24,10 +24,8 @@ The expanded late wall now uses this `10`-layer sequence:
 4. `NORMAL`
 5. `STRONG`
 6. `STRONG`
-7. `ARMORED`
-8. `STRONG`
-9. `STRONG`
-10. `ARMORED`
+7. `STRONG`
+8. `ARMORED`
 
 No brick HP values, brick enum values, segment sizing, layer spacing, or retile behavior were changed.
 
@@ -77,7 +75,7 @@ No brick HP values, brick enum values, segment sizing, layer spacing, or retile 
 - Below K `2000`, wall rotation behaves like before.
 - K `2000~2999`, wall direction flips every `1` second.
 - K `3000+` does not add monster/jumping behavior in this pass.
-- K `1000+` max wall uses `10` layers.
+- Expanded max wall remains `8` layers.
 - Buff cooldown below K `2000` is about `30` seconds.
 - Buff cooldown at/above K `2000` is about `10` seconds.
 - Score/gauge/repeated weapon choice still works.
@@ -85,4 +83,4 @@ No brick HP values, brick enum values, segment sizing, layer spacing, or retile 
 
 ## Implementation Risk
 - Static validation did not show scene rewiring or parser risk.
-- Real device QA is still required to judge whether the 10-layer wall feels visually stable on phone screens.
+- Real device QA is still required to judge the alternating rotation feel on phone screens.

@@ -120,8 +120,6 @@ func _expand_five_layer_wall(base_layers: Array) -> Array:
 		BrickRulesRef.BrickType.NORMAL,
 		BrickRulesRef.BrickType.STRONG,
 		BrickRulesRef.BrickType.STRONG,
-		BrickRulesRef.BrickType.ARMORED,
-		BrickRulesRef.BrickType.STRONG,
 		BrickRulesRef.BrickType.STRONG,
 		BrickRulesRef.BrickType.ARMORED,
 	]
