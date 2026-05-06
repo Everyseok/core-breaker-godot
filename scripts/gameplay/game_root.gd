@@ -192,3 +192,12 @@ func spawn_combat_effect(
 	if effect_node != null:
 		effect_node.global_position = world_position
 	effect.call("configure", effect_id, world_target, source_tier)
+
+
+func spawn_weapon_choice_effect(
+	effect_id: String,
+	world_position: Vector2,
+	world_target: Vector2,
+	source_tier: int = -1
+) -> void:
+	spawn_combat_effect(effect_id, world_position, world_target, source_tier)

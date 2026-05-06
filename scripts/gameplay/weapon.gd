@@ -5,6 +5,7 @@ extends Node2D
 
 const WeaponProfileRef := preload("res://scripts/visual/weapon_profile.gd")
 const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
+const WeaponFirePatternRef := preload("res://scripts/application/combat/weapon_fire_pattern.gd")
 
 const ARROW_SCENE  := preload("res://scenes/gameplay/arrow_projectile.tscn")
 const THUNDER_SCENE := preload("res://scenes/gameplay/thunder_bolt_projectile.tscn")
@@ -17,7 +18,6 @@ const BASE_FIRE_INTERVAL  := 0.35
 const OVERCLOCK_MULTIPLIER := 1.0 / 3.0
 const OVERCLOCK_DURATION  := 3.0
 const OVERCLOCK_COOLDOWN := 15.0
-const SIEGE_VOLLEY_ANGLES := [-36, -24, -12, 0, 12, 24, 36]
 
 var _projectile_layer: Node2D
 var _hit_effect_layer: Node2D
@@ -119,56 +119,47 @@ func _process(delta: float) -> void:
 func _fire() -> void:
 	if not GameState.is_playing or _projectile_layer == null:
 		return
-	match _current_tier:
-		0: _fire_arrow()
-		1: _fire_thunder()
-		2: _fire_spark_lances()
-		3: _fire_volt_storm()
-		4: _fire_siege_cannon()
-		_: _fire_arrow()
+	for spec_variant in WeaponFirePatternRef.specs_for_tier(_current_tier):
+		var spec: Dictionary = spec_variant
+		_fire_projectile_spec(spec)
 	_play_fire_feedback()
 	if GameState.consume_prism_volley_trigger():
 		_fire_prism_side_rays()
 
 
-func _fire_arrow() -> void:
-	var p = ARROW_SCENE.instantiate()
-	p.direction = InputHandler.aim_direction
-	_attach_projectile(p)
+func _fire_projectile_spec(spec: Dictionary) -> void:
+	var projectile_key := String(spec.get("projectile_key", WeaponFirePatternRef.PROJECTILE_ARROW))
+	var projectile := _instantiate_projectile(projectile_key)
+	if projectile == null:
+		return
+	var angle_offset_degrees := float(spec.get("angle_offset_degrees", 0.0))
+	var direction := InputHandler.aim_direction
+	if projectile_key != WeaponFirePatternRef.PROJECTILE_ARROW or not is_zero_approx(angle_offset_degrees):
+		direction = Vector2.from_angle(InputHandler.aim_direction.angle() + deg_to_rad(angle_offset_degrees))
+	projectile.set("direction", direction)
+	var max_pierce_collisions: int = int(spec.get("max_pierce_collisions", 0))
+	if max_pierce_collisions > 0:
+		projectile.set("max_pierce_collisions", max_pierce_collisions)
+	var explosion_same_layer_radius: int = int(spec.get("explosion_same_layer_radius", 0))
+	if explosion_same_layer_radius > 0:
+		projectile.set("explosion_same_layer_radius", explosion_same_layer_radius)
+	_attach_projectile(projectile)
 
 
-func _fire_thunder() -> void:
-	for deg in [-8, 8]:
-		var p = THUNDER_SCENE.instantiate()
-		p.direction = Vector2.from_angle(InputHandler.aim_direction.angle() + deg_to_rad(deg))
-		_attach_projectile(p)
-
-
-func _fire_spark_lances() -> void:
-	for deg in [-15, 0, 15]:
-		var p = SPARK_LANCE_SCENE.instantiate()
-		p.direction = Vector2.from_angle(InputHandler.aim_direction.angle() + deg_to_rad(deg))
-		_attach_projectile(p)
-
-
-func _fire_volt_storm() -> void:
-	for deg in [-15, 0, 15]:
-		var p = ELECTRIC_BOLT_SCENE.instantiate()
-		p.direction = Vector2.from_angle(InputHandler.aim_direction.angle() + deg_to_rad(deg))
-		_attach_projectile(p)
-
-
-func _fire_siege_cannon() -> void:
-	for deg in SIEGE_VOLLEY_ANGLES:
-		var p = PIERCING_BOMB_SPEAR_SCENE.instantiate()
-		p.direction = Vector2.from_angle(InputHandler.aim_direction.angle() + deg_to_rad(deg))
-		if deg == 0:
-			p.max_pierce_collisions = 2
-			p.explosion_same_layer_radius = 2
-		else:
-			p.max_pierce_collisions = 1
-			p.explosion_same_layer_radius = 1
-		_attach_projectile(p)
+func _instantiate_projectile(projectile_key: String) -> Node2D:
+	match projectile_key:
+		WeaponFirePatternRef.PROJECTILE_ARROW:
+			return ARROW_SCENE.instantiate() as Node2D
+		WeaponFirePatternRef.PROJECTILE_THUNDER:
+			return THUNDER_SCENE.instantiate() as Node2D
+		WeaponFirePatternRef.PROJECTILE_SPARK_LANCE:
+			return SPARK_LANCE_SCENE.instantiate() as Node2D
+		WeaponFirePatternRef.PROJECTILE_ELECTRIC_BOLT:
+			return ELECTRIC_BOLT_SCENE.instantiate() as Node2D
+		WeaponFirePatternRef.PROJECTILE_PIERCING_BOMB_SPEAR:
+			return PIERCING_BOMB_SPEAR_SCENE.instantiate() as Node2D
+		_:
+			return ARROW_SCENE.instantiate() as Node2D
 
 
 func _fire_prism_side_rays() -> void:

@@ -6,6 +6,7 @@ extends Node2D
 const BRICK_SCENE := preload("res://scenes/gameplay/brick_instance.tscn")
 const BrickRulesRef := preload("res://scripts/domain/bricks/brick_rules.gd")
 const RingSpawnPlannerRef := preload("res://scripts/application/rings/ring_spawn_planner.gd")
+const CombatProcResolverRef := preload("res://scripts/application/combat/combat_proc_resolver.gd")
 const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
 const ANGULAR_SPEED := 0.45
 
@@ -429,14 +430,7 @@ func apply_terminal_explosion(segment_index: int, damage: int, same_layer_radius
 
 
 func _collect_target_indices(center_index: int, spread_radius: int) -> Array:
-	var unique_targets: Dictionary = {}
-	for offset in range(-spread_radius, spread_radius + 1):
-		var wrapped_index: int = wrapi(center_index + offset, 0, _segments.size())
-		unique_targets[wrapped_index] = true
-	var target_indices: Array = []
-	for index_variant in unique_targets.keys():
-		target_indices.append(int(index_variant))
-	return target_indices
+	return CombatProcResolverRef.collect_target_indices(center_index, spread_radius, _segments.size())
 
 
 func _damage_segment(segment_index: int, damage: int, source_tier: int = -1) -> void:
@@ -494,52 +488,33 @@ func _apply_chain_lightning_modifier(
 	blocked_indices: Array
 ) -> void:
 	var origin_world := _segment_world_position(origin_segment_index)
-	var target_index: int = _find_chain_target_index(origin_segment_index, blocked_indices)
-	if target_index >= 0:
+	var chain_result: Dictionary = CombatProcResolverRef.resolve_chain_lightning(
+		origin_segment_index,
+		blocked_indices,
+		_segments,
+		_angle_for_segment(origin_segment_index)
+	)
+	if bool(chain_result.get("has_damage_target", false)):
+		var target_index: int = int(chain_result.get("target_index", -1))
 		var target_world := _segment_world_position(target_index)
-		_request_weapon_choice_effect("chain_lightning", origin_world, target_world, source_tier)
+		_request_weapon_choice_effect(String(chain_result.get("effect_id", "chain_lightning")), origin_world, target_world, source_tier)
 		_play_choice_proc_audio(WeaponChoiceRulesRef.CHAIN_LIGHTNING)
 		_damage_segment(target_index, damage, source_tier)
 		return
 
-	var fallback_world := origin_world + _chain_fallback_offset(origin_segment_index)
-	_request_weapon_choice_effect("chain_lightning", origin_world, fallback_world, source_tier)
+	var fallback_offset: Vector2 = chain_result.get("fallback_offset", Vector2.RIGHT * 18.0)
+	var fallback_world: Vector2 = origin_world + fallback_offset
+	_request_weapon_choice_effect(String(chain_result.get("effect_id", "chain_lightning")), origin_world, fallback_world, source_tier)
 	_play_choice_proc_audio(WeaponChoiceRulesRef.CHAIN_LIGHTNING)
 
 
 func _apply_meteor_cannon_modifier(origin_segment_index: int, damage: int, source_tier: int) -> void:
 	var origin_world := _segment_world_position(origin_segment_index)
-	_request_weapon_choice_effect("meteor_cannon", origin_world, origin_world, source_tier)
+	var meteor_result: Dictionary = CombatProcResolverRef.resolve_meteor_cannon(origin_segment_index, _segments.size())
+	_request_weapon_choice_effect(String(meteor_result.get("effect_id", "meteor_cannon")), origin_world, origin_world, source_tier)
 	_play_choice_proc_audio(WeaponChoiceRulesRef.METEOR_CANNON)
-	for target_variant in _collect_target_indices(origin_segment_index, WeaponChoiceRulesRef.METEOR_RADIUS):
+	for target_variant in meteor_result.get("target_indices", []):
 		_damage_segment(int(target_variant), damage, source_tier)
-
-
-func _find_chain_target_index(origin_segment_index: int, blocked_indices: Array) -> int:
-	if _segments.is_empty():
-		return -1
-	var blocked: Dictionary = {}
-	for blocked_variant in blocked_indices:
-		blocked[int(blocked_variant)] = true
-	for offset in [1, -1, 2, -2]:
-		if abs(offset) > WeaponChoiceRulesRef.CHAIN_RANGE:
-			continue
-		var target_index: int = wrapi(origin_segment_index + offset, 0, _segments.size())
-		if blocked.has(target_index):
-			continue
-		var segment: Dictionary = _segments[target_index]
-		if not bool(segment["alive"]):
-			continue
-		return target_index
-	return -1
-
-
-func _chain_fallback_offset(origin_segment_index: int) -> Vector2:
-	var angle := _angle_for_segment(origin_segment_index)
-	var tangent := Vector2(-sin(angle), cos(angle)).normalized()
-	if tangent.length_squared() <= 0.001:
-		tangent = Vector2.RIGHT
-	return tangent * 18.0
 
 
 func _find_adjacent_layer_ring():
