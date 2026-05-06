@@ -416,10 +416,10 @@ func _on_pause_pressed() -> void:
 		menus[0].show_menu()
 
 
-func _update_level_progress(current_level: int, current_k: int) -> void:
+func _update_level_progress(_current_level: int, current_k: int) -> void:
 	var gauge_max: int = GameState.get_score_gauge_max()
-	var normalized_progress: float = clampf(float(current_k) / maxf(float(gauge_max), 1.0), 0.0, 1.0)
-	_level_label.text = "%d/%d" % [current_k, gauge_max]
+	var normalized_progress: float = GameState.get_score_gauge_progress()
+	_level_label.text = GameState.get_score_gauge_display_text(current_k)
 	_level_gauge.max_value = 1.0
 	_level_gauge.value = normalized_progress
 	var full_fill_width := maxf(_level_gauge.size.x - 8.0, 0.0)

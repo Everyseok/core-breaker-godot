@@ -31,6 +31,7 @@
 - `GameState.add_k()` still increments `current_level_k` and syncs `k` / `total_progress` to the same continuous score.
 - `level_transitioned` is not emitted during normal scoring.
 - Gauge max still resolves as `max(SaveManager.get_best_record_value(), 2000)`, now through `EndlessScoreRules`.
+- HUD gauge text and normalized progress are routed through `GameState` helper methods backed by `EndlessScoreRules`.
 - Repeated weapon choice still starts at `2000` and advances by `1000` through `WeaponChoiceSchedule`.
 - If the weapon choice panel is already open, the schedule marks the trigger deferred and does not open a duplicate panel.
 - Buff active/cooldown runtime ownership stays in `BuffManager`.
