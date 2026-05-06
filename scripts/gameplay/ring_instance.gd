@@ -9,6 +9,25 @@ const RingSpawnPlannerRef := preload("res://scripts/application/rings/ring_spawn
 const CombatProcResolverRef := preload("res://scripts/application/combat/combat_proc_resolver.gd")
 const WeaponChoiceRulesRef := preload("res://scripts/domain/combat/weapon_choice_rules.gd")
 const ANGULAR_SPEED := 0.45
+const JUMP_STATE_IDLE := "idle"
+const JUMP_STATE_WARNING := "warning"
+const JUMP_STATE_AIRBORNE := "airborne"
+const JUMP_STATE_RECOVERY := "recovery"
+const JUMPER_RATIO := 0.10
+const JUMPER_MIN_SEGMENT_COUNT := 10
+const JUMP_WARNING_DURATION_MIN := 0.20
+const JUMP_WARNING_DURATION_MAX := 0.30
+const JUMP_AIRBORNE_DURATION_MIN := 0.50
+const JUMP_AIRBORNE_DURATION_MAX := 0.60
+const JUMP_RECOVERY_DURATION_MIN := 0.30
+const JUMP_RECOVERY_DURATION_MAX := 0.40
+const JUMP_DELAY_MIN := 3.0
+const JUMP_DELAY_MAX := 4.5
+const JUMP_OUTWARD_OFFSET_MIN := 18.0
+const JUMP_OUTWARD_OFFSET_MAX := 26.0
+const JUMP_SCALE_MIN := 1.08
+const JUMP_SCALE_MAX := 1.15
+const JUMP_MIN_RADIUS := 90.0
 
 signal brick_destroyed(brick_type: int)
 
@@ -21,12 +40,14 @@ var wall_group_id: int = -1
 var wall_layer_index: int = 0
 var wall_layer_count: int = 1
 var rotation_mode: String = RingSpawnPlannerRef.ROTATION_CLOCKWISE
+var wall_pattern: String = RingSpawnPlannerRef.PATTERN_NORMAL
 
 var _bricks: Array = []
 var _angles: Array = []
 var _segments: Array = []
 var _rotation_offset: float = 0.0
 var _rotation_phase_time: float = 0.0
+var _rng := RandomNumberGenerator.new()
 
 
 func setup(
@@ -38,7 +59,8 @@ func setup(
 	p_wall_group_id: int = -1,
 	p_wall_layer_index: int = 0,
 	p_wall_layer_count: int = 1,
-	p_rotation_mode: String = RingSpawnPlannerRef.ROTATION_CLOCKWISE
+	p_rotation_mode: String = RingSpawnPlannerRef.ROTATION_CLOCKWISE,
+	p_wall_pattern: String = RingSpawnPlannerRef.PATTERN_NORMAL
 ) -> void:
 	radius = p_radius
 	shrink_speed = p_speed
@@ -49,10 +71,12 @@ func setup(
 	wall_layer_index = p_wall_layer_index
 	wall_layer_count = p_wall_layer_count
 	rotation_mode = p_rotation_mode
+	wall_pattern = p_wall_pattern
 
 
 func _ready() -> void:
 	DangerManager.register_ring(self)
+	_rng.randomize()
 	_segments = _build_initial_segments(brick_count, brick_type)
 	_angles = _build_initial_angles(_segments.size())
 	_rebuild_bricks()
@@ -66,6 +90,7 @@ func _process(delta: float) -> void:
 	if not GameState.is_playing:
 		return
 	radius -= shrink_speed * delta
+	_update_jumper_states(delta)
 	_rotation_phase_time += delta
 	var rotation_direction := _rotation_direction_for_mode()
 	_rotation_offset = fposmod(_rotation_offset + (ANGULAR_SPEED * rotation_direction * delta), TAU)
@@ -91,6 +116,10 @@ func get_wall_layer_count() -> int:
 	return wall_layer_count
 
 
+func is_segment_airborne(segment_index: int) -> bool:
+	return _is_segment_airborne(segment_index)
+
+
 func _rotation_direction_for_mode() -> float:
 	match rotation_mode:
 		RingSpawnPlannerRef.ROTATION_ALTERNATING_1S:
@@ -98,6 +127,164 @@ func _rotation_direction_for_mode() -> float:
 			return 1.0 if phase_second % 2 == 1 else -1.0
 		_:
 			return 1.0
+
+
+func _is_jumping_pattern() -> bool:
+	return wall_pattern == RingSpawnPlannerRef.PATTERN_JUMPING_MONSTER
+
+
+func _apply_jumper_metadata(segments: Array) -> void:
+	for i in range(segments.size()):
+		var segment: Dictionary = segments[i]
+		_set_jumper_metadata(segment, false, JUMP_STATE_IDLE)
+		segments[i] = segment
+
+	if not _is_jumping_pattern() or segments.size() < JUMPER_MIN_SEGMENT_COUNT:
+		return
+
+	var candidate_count: int = maxi(1, int(round(float(segments.size()) * JUMPER_RATIO)))
+	var available_indices: Array = range(segments.size())
+	for _i in range(candidate_count):
+		if available_indices.is_empty():
+			return
+		var pick_position: int = _rng.randi_range(0, available_indices.size() - 1)
+		var segment_index: int = int(available_indices[pick_position])
+		available_indices.remove_at(pick_position)
+		var segment: Dictionary = segments[segment_index]
+		_set_jumper_metadata(segment, true, JUMP_STATE_IDLE)
+		segments[segment_index] = segment
+
+
+func _set_jumper_metadata(segment: Dictionary, is_jumper: bool, state: String) -> void:
+	segment["is_jumper"] = is_jumper
+	segment["jump_state"] = state if is_jumper else JUMP_STATE_IDLE
+	segment["jump_offset"] = _random_jump_offset() if is_jumper else 0.0
+	segment["jump_scale"] = _random_jump_scale() if is_jumper else 1.0
+	var duration := _jump_duration_for_state(String(segment["jump_state"]))
+	segment["jump_timer"] = duration
+	segment["jump_duration"] = duration
+	segment["next_jump_delay"] = duration if segment["jump_state"] == JUMP_STATE_IDLE else 0.0
+
+
+func _copy_jump_metadata(source: Dictionary, target: Dictionary) -> void:
+	target["is_jumper"] = bool(source.get("is_jumper", false))
+	target["jump_state"] = String(source.get("jump_state", JUMP_STATE_IDLE))
+	target["jump_timer"] = float(source.get("jump_timer", 0.0))
+	target["jump_duration"] = float(source.get("jump_duration", 0.0))
+	target["next_jump_delay"] = float(source.get("next_jump_delay", 0.0))
+	target["jump_offset"] = float(source.get("jump_offset", 0.0))
+	target["jump_scale"] = float(source.get("jump_scale", 1.0))
+
+
+func _update_jumper_states(delta: float) -> void:
+	if not _is_jumping_pattern():
+		return
+	for i in range(_segments.size()):
+		var segment: Dictionary = _segments[i]
+		if not bool(segment.get("alive", false)) or not bool(segment.get("is_jumper", false)):
+			continue
+		_advance_jumper_segment(segment, delta)
+		_segments[i] = segment
+
+
+func _advance_jumper_segment(segment: Dictionary, delta: float) -> void:
+	var state := String(segment.get("jump_state", JUMP_STATE_IDLE))
+	if state == JUMP_STATE_IDLE and radius <= JUMP_MIN_RADIUS:
+		return
+
+	var remaining_time := float(segment.get("jump_timer", 0.0)) - delta
+	if remaining_time > 0.0:
+		segment["jump_timer"] = remaining_time
+		return
+
+	match state:
+		JUMP_STATE_IDLE:
+			_enter_jump_state(segment, JUMP_STATE_WARNING)
+		JUMP_STATE_WARNING:
+			_enter_jump_state(segment, JUMP_STATE_AIRBORNE)
+		JUMP_STATE_AIRBORNE:
+			_enter_jump_state(segment, JUMP_STATE_RECOVERY)
+		JUMP_STATE_RECOVERY:
+			_enter_jump_state(segment, JUMP_STATE_IDLE)
+		_:
+			_enter_jump_state(segment, JUMP_STATE_IDLE)
+
+
+func _enter_jump_state(segment: Dictionary, state: String) -> void:
+	segment["jump_state"] = state
+	var duration := _jump_duration_for_state(state)
+	segment["jump_timer"] = duration
+	segment["jump_duration"] = duration
+	if state == JUMP_STATE_WARNING:
+		segment["jump_offset"] = _random_jump_offset()
+		segment["jump_scale"] = _random_jump_scale()
+	if state == JUMP_STATE_IDLE:
+		segment["next_jump_delay"] = duration
+
+
+func _jump_duration_for_state(state: String) -> float:
+	match state:
+		JUMP_STATE_WARNING:
+			return _rng.randf_range(JUMP_WARNING_DURATION_MIN, JUMP_WARNING_DURATION_MAX)
+		JUMP_STATE_AIRBORNE:
+			return _rng.randf_range(JUMP_AIRBORNE_DURATION_MIN, JUMP_AIRBORNE_DURATION_MAX)
+		JUMP_STATE_RECOVERY:
+			return _rng.randf_range(JUMP_RECOVERY_DURATION_MIN, JUMP_RECOVERY_DURATION_MAX)
+		_:
+			return _random_jump_delay()
+
+
+func _random_jump_delay() -> float:
+	return _rng.randf_range(JUMP_DELAY_MIN, JUMP_DELAY_MAX)
+
+
+func _random_jump_offset() -> float:
+	return _rng.randf_range(JUMP_OUTWARD_OFFSET_MIN, JUMP_OUTWARD_OFFSET_MAX)
+
+
+func _random_jump_scale() -> float:
+	return _rng.randf_range(JUMP_SCALE_MIN, JUMP_SCALE_MAX)
+
+
+func _segment_value(segment_index: int, key: String, default_value: Variant) -> Variant:
+	if segment_index < 0 or segment_index >= _segments.size():
+		return default_value
+	var segment: Dictionary = _segments[segment_index]
+	return segment.get(key, default_value)
+
+
+func _is_segment_airborne(segment_index: int) -> bool:
+	return String(_segment_value(segment_index, "jump_state", JUMP_STATE_IDLE)) == JUMP_STATE_AIRBORNE
+
+
+func _jump_visual_offset_for_segment(segment_index: int) -> float:
+	var state := String(_segment_value(segment_index, "jump_state", JUMP_STATE_IDLE))
+	var offset := float(_segment_value(segment_index, "jump_offset", 0.0))
+	var progress := _jump_state_progress(segment_index)
+	match state:
+		JUMP_STATE_WARNING:
+			return offset * 0.15 * progress
+		JUMP_STATE_AIRBORNE:
+			return offset * sin(progress * PI)
+		JUMP_STATE_RECOVERY:
+			return offset * 0.15 * (1.0 - progress)
+		_:
+			return 0.0
+
+
+func _jump_visual_scale_for_segment(segment_index: int) -> float:
+	if not _is_segment_airborne(segment_index):
+		return 1.0
+	var progress := _jump_state_progress(segment_index)
+	var peak := sin(progress * PI)
+	var target_scale := float(_segment_value(segment_index, "jump_scale", 1.0))
+	return lerpf(1.0, target_scale, peak)
+
+
+func _jump_state_progress(segment_index: int) -> float:
+	var duration := maxf(float(_segment_value(segment_index, "jump_duration", 1.0)), 0.001)
+	var remaining := clampf(float(_segment_value(segment_index, "jump_timer", 0.0)), 0.0, duration)
+	return clampf(1.0 - (remaining / duration), 0.0, 1.0)
 
 
 func get_segment_hit_key(segment_index: int) -> String:
@@ -129,6 +316,7 @@ func _build_initial_segments(count: int, segment_brick_type: int) -> Array:
 			"hp": max_hp,
 			"max_hp": max_hp,
 		})
+	_apply_jumper_metadata(segments)
 	return segments
 
 
@@ -176,8 +364,19 @@ func _update_brick_transforms() -> void:
 		if not is_instance_valid(brick):
 			continue
 		var angle: float = fposmod(float(_angles[i]) + _rotation_offset, TAU)
-		brick.position = Vector2(cos(angle), sin(angle)) * radius
+		var radial_direction := Vector2(cos(angle), sin(angle))
+		var visual_offset: float = _jump_visual_offset_for_segment(i)
+		brick.position = radial_direction * (radius + visual_offset)
 		brick.rotation = angle + PI / 2.0
+		brick.scale = Vector2.ONE * _jump_visual_scale_for_segment(i)
+		if brick.has_method("set_airborne_collision_disabled"):
+			brick.call("set_airborne_collision_disabled", _is_segment_airborne(i))
+		if brick.has_method("set_jump_visual_state"):
+			brick.call(
+				"set_jump_visual_state",
+				String(_segment_value(i, "jump_state", JUMP_STATE_IDLE)),
+				bool(_segment_value(i, "is_jumper", false))
+			)
 
 
 func _snapshot_segments() -> Array:
@@ -190,12 +389,14 @@ func _snapshot_segments() -> Array:
 
 		var brick = _bricks[i]
 		if is_instance_valid(brick):
-			snapshot.append({
+			var snapshot_segment := {
 				"alive": true,
 				"brick_type": int(brick.brick_type),
 				"hp": int(brick.hp),
 				"max_hp": int(brick.max_hp),
-			})
+			}
+			_copy_jump_metadata(segment, snapshot_segment)
+			snapshot.append(snapshot_segment)
 		else:
 			snapshot.append(segment.duplicate(true))
 	return snapshot
@@ -267,9 +468,15 @@ func _merge_bucket(bucket: Array) -> Dictionary:
 	var chosen_type: int = brick_type
 	var chosen_hp: int = 0
 	var chosen_max_hp: int = default_max_hp
+	var any_jumper := false
+	var any_airborne := false
 
 	for segment_variant in bucket:
 		var segment: Dictionary = segment_variant
+		if bool(segment.get("is_jumper", false)):
+			any_jumper = true
+		if String(segment.get("jump_state", JUMP_STATE_IDLE)) == JUMP_STATE_AIRBORNE:
+			any_airborne = true
 		if not bool(segment["alive"]):
 			continue
 		if chosen_hp == 0:
@@ -282,6 +489,14 @@ func _merge_bucket(bucket: Array) -> Dictionary:
 		merged["brick_type"] = chosen_type
 		merged["hp"] = clampi(chosen_hp, 1, chosen_max_hp)
 		merged["max_hp"] = chosen_max_hp
+		if any_jumper:
+			_set_jumper_metadata(
+				merged,
+				true,
+				JUMP_STATE_RECOVERY if any_airborne else JUMP_STATE_IDLE
+			)
+		else:
+			_set_jumper_metadata(merged, false, JUMP_STATE_IDLE)
 
 	return merged
 
@@ -453,6 +668,8 @@ func _damage_segment(segment_index: int, damage: int, source_tier: int = -1) -> 
 		return
 	var segment: Dictionary = _segments[segment_index]
 	if not bool(segment["alive"]):
+		return
+	if _is_segment_airborne(segment_index):
 		return
 
 	var world_position := _segment_world_position(segment_index)

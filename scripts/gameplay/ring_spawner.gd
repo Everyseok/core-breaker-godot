@@ -46,6 +46,10 @@ func _spawn_ring() -> void:
 		"rotation_mode",
 		RingSpawnPlannerRef.ROTATION_CLOCKWISE
 	))
+	var wall_pattern: String = String(spawn_spec.get(
+		"wall_pattern",
+		RingSpawnPlannerRef.PATTERN_NORMAL
+	))
 	var layer_specs: Array = spawn_spec.get("layers", [])
 	if layer_specs.is_empty():
 		layer_specs = [{
@@ -81,7 +85,8 @@ func _spawn_ring() -> void:
 			wall_group_id,
 			layer_index,
 			layer_specs.size(),
-			rotation_mode
+			rotation_mode,
+			wall_pattern
 		)
 		ring.brick_destroyed.connect(_on_ring_brick_destroyed)
 		_ring_layer.add_child(ring)

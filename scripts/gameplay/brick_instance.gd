@@ -10,6 +10,7 @@ const COLLISION_W := BrickRulesRef.SEGMENT_SIZE
 const COLLISION_H := 14.0
 const VISUAL_W := BrickRulesRef.SEGMENT_SIZE
 const VISUAL_H := 14.0
+const DEFAULT_COLLISION_LAYER := 2
 
 var brick_type: int = BrickRulesRef.BrickType.NORMAL
 var hp: int = 1
@@ -42,8 +43,31 @@ func set_segment_context(owner: Node2D, index: int) -> void:
 	segment_index = index
 
 
+func set_airborne_collision_disabled(disabled: bool) -> void:
+	collision_layer = 0 if disabled else DEFAULT_COLLISION_LAYER
+	monitorable = not disabled
+
+
+func set_jump_visual_state(jump_state: String, is_jumper: bool) -> void:
+	match jump_state:
+		"warning":
+			modulate = Color(1.0, 0.92, 0.68, 1.0)
+		"airborne":
+			modulate = Color(0.92, 0.98, 1.0, 0.78)
+		"recovery":
+			modulate = Color(0.84, 1.0, 0.90, 1.0)
+		_:
+			modulate = Color(1.0, 1.0, 1.0, 1.0) if is_jumper else Color.WHITE
+
+
+func is_airborne_for_core_breach() -> bool:
+	if ring_owner != null and is_instance_valid(ring_owner) and ring_owner.has_method("is_segment_airborne"):
+		return bool(ring_owner.call("is_segment_airborne", segment_index))
+	return false
+
+
 func _ready() -> void:
-	collision_layer = 2
+	collision_layer = DEFAULT_COLLISION_LAYER
 	collision_mask = 0
 
 	var shape := CollisionShape2D.new()

@@ -11,6 +11,10 @@ const DEFAULT_SHRINK_SPEED := 30.0
 const DEFAULT_LAYER_SPACING := 18.0
 const ROTATION_CLOCKWISE := "clockwise"
 const ROTATION_ALTERNATING_1S := "alternating_1s"
+const PATTERN_NORMAL := "normal"
+const PATTERN_JUMPING_MONSTER := "jumping_monster"
+const LATE_GAME_PATTERN_START_K := 2000
+const LATE_GAME_PATTERN_BAND_SIZE := 1000
 
 
 func build_spawn_spec(k_value: int) -> Dictionary:
@@ -24,6 +28,7 @@ func build_spawn_spec(k_value: int) -> Dictionary:
 		"brick_type": brick_type_for_k(k_value),
 		"layers": layers,
 		"rotation_mode": _rotation_mode_for_k(k_value),
+		"wall_pattern": _wall_pattern_for_k(k_value),
 	}
 
 
@@ -49,9 +54,23 @@ func _shrink_speed_for_k(k_value: int) -> float:
 
 
 func _rotation_mode_for_k(k_value: int) -> String:
-	if k_value >= 2000 and k_value < 3000:
+	if _late_game_band_index(k_value) % 2 == 0 and k_value >= LATE_GAME_PATTERN_START_K:
 		return ROTATION_ALTERNATING_1S
 	return ROTATION_CLOCKWISE
+
+
+func _wall_pattern_for_k(k_value: int) -> String:
+	if k_value < LATE_GAME_PATTERN_START_K:
+		return PATTERN_NORMAL
+	if _late_game_band_index(k_value) % 2 == 1:
+		return PATTERN_JUMPING_MONSTER
+	return PATTERN_NORMAL
+
+
+func _late_game_band_index(k_value: int) -> int:
+	if k_value < LATE_GAME_PATTERN_START_K:
+		return -1
+	return int(floor(float(k_value - LATE_GAME_PATTERN_START_K) / float(LATE_GAME_PATTERN_BAND_SIZE)))
 
 
 func _spawn_radius() -> float:
