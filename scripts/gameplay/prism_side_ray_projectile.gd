@@ -42,7 +42,7 @@ func _process(delta: float) -> void:
 
 func _on_area_entered(area: Area2D) -> void:
 	var resolved_tier: int = maxi(source_tier, 0)
-	var damage := DamageRulesRef.damage_for_tier(resolved_tier)
+	var damage := BuffManager.apply_damage_multiplier(DamageRulesRef.damage_for_tier(resolved_tier))
 	if area.has_method("resolve_projectile_hit"):
 		area.call("resolve_projectile_hit", damage, 0, resolved_tier)
 	elif area.has_method("take_damage"):

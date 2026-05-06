@@ -18,6 +18,7 @@ const BASE_FIRE_INTERVAL  := 0.35
 const OVERCLOCK_MULTIPLIER := 1.0 / 3.0
 const OVERCLOCK_DURATION  := 3.0
 const OVERCLOCK_COOLDOWN := 15.0
+const BUFF_DUPLICATE_ANGLE_OFFSET := 4.0
 
 var _projectile_layer: Node2D
 var _hit_effect_layer: Node2D
@@ -119,7 +120,8 @@ func _process(delta: float) -> void:
 func _fire() -> void:
 	if not GameState.is_playing or _projectile_layer == null:
 		return
-	for spec_variant in WeaponFirePatternRef.specs_for_tier(_current_tier):
+	var fire_specs := _expand_specs_for_projectile_count_buff(WeaponFirePatternRef.specs_for_tier(_current_tier))
+	for spec_variant in fire_specs:
 		var spec: Dictionary = spec_variant
 		_fire_projectile_spec(spec)
 	_play_fire_feedback()
@@ -144,6 +146,27 @@ func _fire_projectile_spec(spec: Dictionary) -> void:
 	if explosion_same_layer_radius > 0:
 		projectile.set("explosion_same_layer_radius", explosion_same_layer_radius)
 	_attach_projectile(projectile)
+
+
+func _expand_specs_for_projectile_count_buff(base_specs: Array) -> Array:
+	var multiplier: int = BuffManager.get_projectile_count_multiplier()
+	if multiplier <= 1:
+		return base_specs
+	var expanded_specs: Array = []
+	for spec_variant in base_specs:
+		var spec: Dictionary = spec_variant
+		expanded_specs.append(spec)
+		for duplicate_index in range(1, multiplier):
+			var duplicate_spec := spec.duplicate(true)
+			var base_angle := float(duplicate_spec.get("angle_offset_degrees", 0.0))
+			duplicate_spec["angle_offset_degrees"] = base_angle + _duplicate_angle_offset(base_angle, duplicate_index)
+			expanded_specs.append(duplicate_spec)
+	return expanded_specs
+
+
+func _duplicate_angle_offset(base_angle: float, duplicate_index: int) -> float:
+	var side := -1.0 if base_angle > 0.0 else 1.0
+	return side * BUFF_DUPLICATE_ANGLE_OFFSET * float(duplicate_index)
 
 
 func _instantiate_projectile(projectile_key: String) -> Node2D:

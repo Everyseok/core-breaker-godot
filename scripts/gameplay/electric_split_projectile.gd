@@ -58,7 +58,7 @@ func _on_area_entered(area: Area2D) -> void:
 		if normal_variant is Vector2:
 			bounce_normal = normal_variant
 
-	var damage := DamageRulesRef.damage_for_tier(VISUAL_TIER)
+	var damage := BuffManager.apply_damage_multiplier(DamageRulesRef.damage_for_tier(VISUAL_TIER))
 	if area.has_method("resolve_electric_projectile_hit"):
 		area.call("resolve_electric_projectile_hit", damage, VISUAL_TIER)
 	elif area.has_method("resolve_projectile_hit"):

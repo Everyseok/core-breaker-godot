@@ -433,43 +433,35 @@ func _slot_ratio(slot: int) -> float:
 
 
 func _on_buff_button_pressed() -> void:
-	var weapon = _get_weapon()
-	if weapon == null or not is_instance_valid(weapon):
-		return
-	weapon.activate_overclock()
+	if BuffManager.start_buff_roll():
+		AudioEvents.ui_confirm()
+	else:
+		AudioEvents.ui_error()
 	_update_buff_button_state()
 
 
 func _update_buff_button_state() -> void:
 	if _buff_button == null:
 		return
-	var weapon = _get_weapon()
-	if weapon == null or not is_instance_valid(weapon):
+	if not GameState.is_playing:
 		_buff_button.disabled = true
 		_buff_button.text = "--"
 		return
 
-	if not weapon.is_overclock_unlocked():
+	if BuffManager.is_roll_in_progress():
 		_buff_button.disabled = true
-		_buff_button.text = "가속\n%d개" % weapon.get_overclock_unlock_threshold()
+		_buff_button.text = "선택중"
 		return
 
-	if weapon.is_overclock_active():
+	if BuffManager.buff_used_this_run:
 		_buff_button.disabled = true
-		_buff_button.text = "가속\n중"
+		_buff_button.text = BuffManager.get_active_buff_display_name()
 		return
 
-	if weapon.is_overclock_on_cooldown():
+	if not BuffManager.is_buff_unlocked(GameState.current_level_k):
 		_buff_button.disabled = true
-		_buff_button.text = "대기\n%d" % maxi(ceili(weapon.get_overclock_remaining_time()), 0)
+		_buff_button.text = "버프\n%d개" % BuffManager.get_unlock_k()
 		return
 
-	_buff_button.disabled = false
-	_buff_button.text = "가속"
-
-
-func _get_weapon():
-	var weapons := get_tree().get_nodes_in_group("weapon")
-	if weapons.is_empty():
-		return null
-	return weapons[0]
+	_buff_button.disabled = not BuffManager.can_open_buff(GameState.current_level_k)
+	_buff_button.text = "버프"

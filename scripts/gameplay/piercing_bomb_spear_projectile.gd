@@ -48,7 +48,7 @@ func _process(delta: float) -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
-	var damage := DamageRulesRef.damage_for_tier(VISUAL_TIER)
+	var damage := BuffManager.apply_damage_multiplier(DamageRulesRef.damage_for_tier(VISUAL_TIER))
 	if not area.has_method("resolve_piercing_spear_hit"):
 		if area.has_method("take_damage"):
 			area.call("take_damage", damage, VISUAL_TIER)
