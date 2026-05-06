@@ -4,6 +4,7 @@ extends Node2D
 const DAMAGE_NUMBER_SCENE := preload("res://scenes/vfx/damage_number.tscn")
 const BRICK_BREAK_EFFECT_SCENE := preload("res://scenes/vfx/brick_break_effect.tscn")
 const COMBAT_PROC_EFFECT_SCENE := preload("res://scenes/vfx/combat_proc_effect.tscn")
+const AdLayoutRef := preload("res://scripts/ui/ad_layout.gd")
 
 @onready var _core = $Core
 @onready var _weapon = $Weapon
@@ -19,6 +20,9 @@ var _background: Node2D
 func _ready() -> void:
 	add_to_group("game_root")
 	_build_background()
+	_apply_ad_safe_playfield_layout()
+	if not get_viewport().size_changed.is_connected(_apply_ad_safe_playfield_layout):
+		get_viewport().size_changed.connect(_apply_ad_safe_playfield_layout)
 	GameState.game_over.connect(_on_game_over)
 	GameState.max_level_cleared.connect(_on_max_level_cleared)
 	GameState.level_transitioned.connect(_on_level_transitioned)
@@ -37,15 +41,52 @@ func _build_background() -> void:
 	if bg_script == null:
 		return
 	_background = bg_script.new()
-	_background.position = -position
+	_sync_background_transform()
 	add_child(_background)
 	move_child(_background, 0)
+
+
+func _apply_ad_safe_playfield_layout() -> void:
+	var viewport_size: Vector2 = get_viewport_rect().size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		viewport_size = Vector2(390.0, 844.0)
+
+	var playfield_top := (
+		AdLayoutRef.RESERVED_TOP_HEIGHT
+		+ AdLayoutRef.HUD_RESERVED_HEIGHT
+		+ AdLayoutRef.PLAYFIELD_TOP_GAP
+	)
+	var playfield_bottom := viewport_size.y - AdLayoutRef.BOTTOM_CONTROL_RESERVED_HEIGHT
+	if playfield_bottom <= playfield_top + 80.0:
+		playfield_bottom = viewport_size.y - 150.0
+
+	var radius_by_width := maxf((viewport_size.x - (AdLayoutRef.PLAYFIELD_HORIZONTAL_MARGIN * 2.0)) * 0.5, 1.0)
+	var radius_by_height := maxf((playfield_bottom - playfield_top) * 0.5, 1.0)
+	var scale_factor := clampf(
+		minf(radius_by_width, radius_by_height) / AdLayoutRef.PLAYFIELD_BASE_OUTER_RADIUS,
+		AdLayoutRef.PLAYFIELD_MIN_SCALE,
+		AdLayoutRef.PLAYFIELD_MAX_SCALE
+	)
+
+	position = Vector2(viewport_size.x * 0.5, (playfield_top + playfield_bottom) * 0.5)
+	scale = Vector2.ONE * scale_factor
+	_sync_background_transform()
+
+
+func _sync_background_transform() -> void:
+	if _background == null:
+		return
+	var safe_scale := Vector2(maxf(scale.x, 0.001), maxf(scale.y, 0.001))
+	_background.position = Vector2(-position.x / safe_scale.x, -position.y / safe_scale.y)
+	_background.scale = Vector2(1.0 / safe_scale.x, 1.0 / safe_scale.y)
 
 
 func start_game() -> void:
 	# Public entry point called by MainMenu (initial start) and restart paths.
 	# Clears any active bricks/projectiles so it is safe to call on both initial
 	# launch and after a previous run has ended.
+	AudioEvents.game_start()
+	AudioEvents.bgm_set_state(&"run", float(GameState.current_level_k))
 	_ring_spawner.stop()
 	_clear_runtime_layers()
 	DangerManager.reset()
@@ -64,18 +105,23 @@ func _on_core_breached() -> void:
 func _on_game_over() -> void:
 	_ring_spawner.stop()
 	DangerManager.reset()
-	# GM-01 / GC-01: submit score at run completion only; duplicate guard is in PlatformBridge
-	PlatformBridge.submit_leaderboard_score(GameState.total_progress)
+	AudioEvents.game_over()
+	AudioEvents.bgm_stop()
+	# GM-01 / GC-01: submit the user's persisted best after run completion.
+	PlatformBridge.submit_leaderboard_score(SaveManager.get_best_record_value())
 
 
 func _on_max_level_cleared() -> void:
 	_ring_spawner.stop()
 	DangerManager.reset()
-	# GM-01 / GC-01: submit score at max-level-clear; total_progress == 300000
-	PlatformBridge.submit_leaderboard_score(GameState.total_progress)
+	AudioEvents.game_max_clear()
+	AudioEvents.bgm_stop()
+	# GM-01 / GC-01: submit the user's persisted best after max-level-clear.
+	PlatformBridge.submit_leaderboard_score(SaveManager.get_best_record_value())
 
 
 func _on_level_transitioned(_new_level: int) -> void:
+	AudioEvents.level_transition()
 	_reset_active_level_state()
 
 

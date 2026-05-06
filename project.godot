@@ -13,7 +13,7 @@ config_version=5
 config/name="game_junseokism.ver1"
 run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://assets/branding/app_icon_600.png"
 
 [autoload]
 
@@ -21,6 +21,7 @@ GameState="*res://scripts/autoload/game_state.gd"
 InputHandler="*res://scripts/gameplay/input_handler.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 AudioManager="*res://scripts/autoload/audio_manager.gd"
+AudioEvents="*res://scripts/audio/audio_events.gd"
 DangerManager="*res://scripts/autoload/danger_manager.gd"
 PlatformBridge="*res://scripts/autoload/platform_bridge.gd"
 

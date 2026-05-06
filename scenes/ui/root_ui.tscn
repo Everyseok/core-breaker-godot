@@ -14,6 +14,24 @@
 layer = 2
 script = ExtResource("1_root")
 
+[node name="AdBannerReserve" type="Control" parent="."]
+offset_right = 390.0
+offset_bottom = 100.0
+mouse_filter = 2
+
+[node name="Backdrop" type="ColorRect" parent="AdBannerReserve"]
+offset_right = 390.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.008, 0.012, 0.022, 0.92)
+
+[node name="BottomPadding" type="ColorRect" parent="AdBannerReserve"]
+offset_top = 96.0
+offset_right = 390.0
+offset_bottom = 100.0
+mouse_filter = 2
+color = Color(0.02, 0.05, 0.1, 0.96)
+
 [node name="SafeAreaContainer" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -219,7 +237,7 @@ offset_top = 1.0
 offset_right = 170.0
 offset_bottom = 20.0
 mouse_filter = 2
-text = "무기: 화살"
+text = "다음: 번개"
 
 [node name="BestKLabel" type="Label" parent="SafeAreaContainer/HUD"]
 offset_left = 266.0

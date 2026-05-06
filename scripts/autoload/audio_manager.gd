@@ -35,15 +35,15 @@ func restore_mute_state() -> void:
 
 
 func set_bgm_intensity(level: int) -> void:
-	print("[AudioManager] BGM intensity → %d" % level)
-	# Phase 5: swap/crossfade BGM variants per level
+	if AudioEvents != null and AudioEvents.has_method("danger_level"):
+		AudioEvents.danger_level(level)
 
 
 func play_hook(hook_name: String) -> void:
 	if hook_name == "":
 		return
-	print("[AudioManager] hook → %s" % hook_name)
-	# Future Phase 5: map hook ids to real SFX/BGM cues.
+	if AudioEvents != null and AudioEvents.has_method("play_hook"):
+		AudioEvents.play_hook(hook_name)
 
 
 func play_ui_impact(impact_name: String) -> void:

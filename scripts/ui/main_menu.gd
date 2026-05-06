@@ -39,18 +39,19 @@ func _ready() -> void:
 	_load_background_texture()
 	_update_best_label()
 	_clear_ranking_feedback()
+	AudioEvents.bgm_set_state(&"title", 0.0)
 
 
 func _apply_style() -> void:
-	_background_fallback.color = Color(0.02, 0.04, 0.09)
-	_top_overlay.color = Color(0.01, 0.04, 0.09, 0.18)
-	_bottom_overlay.color = Color(0.02, 0.05, 0.12, 0.28)
-	_left_vignette.color = Color(0.01, 0.03, 0.08, 0.14)
-	_right_vignette.color = Color(0.01, 0.03, 0.08, 0.14)
-	_menu_trim.color = Color(0.70, 0.90, 1.0, 0.18)
+	_background_fallback.color = Color(0.86, 0.94, 1.0)
+	_top_overlay.color = Color(1.0, 0.88, 0.50, 0.10)
+	_bottom_overlay.color = Color(0.50, 0.78, 1.0, 0.16)
+	_left_vignette.color = Color(1.0, 0.82, 0.42, 0.08)
+	_right_vignette.color = Color(0.48, 0.80, 1.0, 0.08)
+	_menu_trim.color = Color(1.0, 0.74, 0.30, 0.28)
 
 	UiStyleRef.apply_menu_title(_title_shadow, 30, UiStyleRef.MENU_TITLE_SHADOW, 0)
-	UiStyleRef.apply_menu_title(_title_label, 30, Color(0.98, 0.99, 1.0), 6)
+	UiStyleRef.apply_menu_title(_title_label, 30, Color(1.0, 0.95, 0.44), 6)
 	UiStyleRef.apply_display_label(_best_label, 18, UiStyleRef.READY_YELLOW, 4)
 	UiStyleRef.apply_arcade_button(_start_btn, UiStyleRef.MENU_PRIMARY_FILL, UiStyleRef.MENU_PRIMARY_BORDER, Color.WHITE, 24)
 	UiStyleRef.apply_arcade_button(_ranking_btn, UiStyleRef.MENU_SECONDARY_FILL, UiStyleRef.MENU_SECONDARY_BORDER, Color.WHITE, 21)
@@ -102,6 +103,7 @@ func _on_visibility_changed() -> void:
 	if visible:
 		_update_best_label()
 		_clear_ranking_feedback()
+		AudioEvents.bgm_set_state(&"title", 0.0)
 
 
 func _on_best_record_changed(_best_value: int) -> void:
@@ -118,6 +120,7 @@ func _on_start_pressed() -> void:
 
 
 func _on_ranking_pressed() -> void:
+	AudioEvents.ui_tap()
 	_clear_ranking_feedback()
 	PlatformBridge.open_leaderboard()
 
@@ -129,6 +132,7 @@ func _on_game_started() -> void:
 func _on_leaderboard_open_failed(message: String) -> void:
 	if not visible:
 		return
+	AudioEvents.ui_error()
 	_show_ranking_feedback(message)
 
 

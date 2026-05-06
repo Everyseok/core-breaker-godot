@@ -51,6 +51,7 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 
 	_spawn_hit_effect(_impact_position())
+	AudioEvents.weapon_hit(resolved_tier, &"prism_lance")
 	queue_free()
 
 

@@ -450,6 +450,7 @@ func _damage_segment(segment_index: int, damage: int, source_tier: int = -1) -> 
 	var next_hp: int = int(segment["hp"]) - damage
 	_request_damage_number(world_position, damage, next_hp <= 0, source_tier)
 	if next_hp <= 0:
+		AudioEvents.brick_break()
 		_request_brick_break_effect(world_position, int(segment["brick_type"]))
 		_remove_brick(segment_index)
 		segment["alive"] = false
@@ -714,9 +715,7 @@ func _request_weapon_choice_effect(
 
 
 func _play_choice_proc_audio(choice_id: String) -> void:
-	if AudioManager == null or not AudioManager.has_method("play_hook"):
-		return
-	AudioManager.play_hook(WeaponChoiceRulesRef.proc_audio_hook_for_id(choice_id))
+	AudioEvents.weapon_proc(StringName(choice_id))
 
 
 func _remove_brick(segment_index: int) -> void:

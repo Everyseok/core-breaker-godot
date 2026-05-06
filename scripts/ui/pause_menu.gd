@@ -51,20 +51,24 @@ func show_menu() -> void:
 	_clear_ranking_feedback()
 	visible = true
 	get_tree().paused = true
+	AudioEvents.ui_pause()
 
 
 func _resume() -> void:
 	_clear_ranking_feedback()
 	get_tree().paused = false
 	visible = false
+	AudioEvents.ui_resume()
 
 
 func _toggle_sound() -> void:
 	AudioManager.set_sound_enabled(not AudioManager.get_sound_enabled())
 	_update_sound_label()
+	AudioEvents.ui_switch()
 
 
 func _open_ranking() -> void:
+	AudioEvents.ui_tap()
 	_clear_ranking_feedback()
 	PlatformBridge.open_leaderboard()
 
@@ -73,6 +77,7 @@ func _restart() -> void:
 	_clear_ranking_feedback()
 	get_tree().paused = false
 	visible = false
+	AudioEvents.ui_confirm()
 	var roots: Array = get_tree().get_nodes_in_group("game_root")
 	if roots.is_empty():
 		get_tree().reload_current_scene()
@@ -85,13 +90,13 @@ func _update_sound_label() -> void:
 
 
 func _apply_style() -> void:
-	_dim_overlay.color = Color(0.01, 0.03, 0.08, 0.58)
-	_plate_shadow.color = Color(0.0, 0.0, 0.0, 0.22)
-	_trim_top.color = Color(0.72, 0.90, 1.0, 0.16)
-	_trim_bottom.color = Color(0.18, 0.30, 0.58, 0.52)
+	_dim_overlay.color = Color(0.12, 0.18, 0.28, 0.42)
+	_plate_shadow.color = Color(0.32, 0.22, 0.08, 0.18)
+	_trim_top.color = Color(1.0, 1.0, 1.0, 0.42)
+	_trim_bottom.color = Color(1.0, 0.62, 0.22, 0.62)
 	UiStyleRef.apply_menu_plate(_plate)
 	UiStyleRef.apply_menu_title(_title_shadow, 28, UiStyleRef.MENU_TITLE_SHADOW, 0)
-	UiStyleRef.apply_menu_title(_title, 28, Color.WHITE, 6)
+	UiStyleRef.apply_menu_title(_title, 28, Color(1.0, 0.95, 0.44), 6)
 	UiStyleRef.apply_arcade_button(_resume_btn, UiStyleRef.MENU_PRIMARY_FILL, UiStyleRef.MENU_PRIMARY_BORDER, Color.WHITE, 22)
 	UiStyleRef.apply_arcade_button(_ranking_btn, UiStyleRef.MENU_SECONDARY_FILL, UiStyleRef.MENU_SECONDARY_BORDER, Color.WHITE, 21)
 	UiStyleRef.apply_arcade_button(_sound_btn, UiStyleRef.MENU_SUCCESS_FILL, UiStyleRef.MENU_SUCCESS_BORDER, Color.WHITE, 21)
@@ -115,6 +120,7 @@ func _is_weapon_choice_panel_visible() -> bool:
 func _on_leaderboard_open_failed(message: String) -> void:
 	if not visible:
 		return
+	AudioEvents.ui_error()
 	_show_ranking_feedback(message)
 
 

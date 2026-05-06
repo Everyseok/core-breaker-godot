@@ -60,7 +60,7 @@ func _build_visual() -> void:
 func _apply_content() -> void:
 	var text := _format_damage(_amount)
 	var width := maxf(44.0, 22.0 + (float(text.length()) * 22.0))
-	var font_size := 26 if _destroyed else 22
+	var font_size := 30 if _destroyed else 26
 	var primary := WeaponProfileRef.get_primary_color(_tier)
 	var secondary := WeaponProfileRef.get_secondary_color(_tier)
 

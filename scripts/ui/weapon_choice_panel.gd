@@ -314,9 +314,7 @@ func _force_close() -> void:
 
 
 func _play_audio_hook(hook_name: String) -> void:
-	if AudioManager == null or not AudioManager.has_method("play_hook"):
-		return
-	AudioManager.play_hook(hook_name)
+	AudioEvents.play_hook(hook_name)
 
 
 func _profile_for_choice(choice_id: String) -> Dictionary:

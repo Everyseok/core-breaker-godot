@@ -108,7 +108,10 @@ func trigger_game_over() -> void:
 	if not is_playing:
 		return
 	is_playing = false
+	var previous_best := SaveManager.get_best_record_value()
 	SaveManager.record_run_result(total_progress, current_level, current_level_k)
+	if total_progress > previous_best:
+		AudioEvents.high_score()
 	game_over.emit()
 
 
@@ -116,7 +119,10 @@ func trigger_max_level_clear() -> void:
 	if not is_playing:
 		return
 	is_playing = false
+	var previous_best := SaveManager.get_best_record_value()
 	SaveManager.record_run_result(total_progress, current_level, current_level_k)
+	if total_progress > previous_best:
+		AudioEvents.high_score()
 	max_level_cleared.emit()
 
 

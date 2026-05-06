@@ -326,12 +326,14 @@ func _on_move_left_pressed() -> void:
 	if _position_slot <= PositionSlot.LEFT:
 		return
 	_set_position_slot(_position_slot - 1)
+	AudioEvents.ui_switch()
 
 
 func _on_move_right_pressed() -> void:
 	if _position_slot >= PositionSlot.RIGHT:
 		return
 	_set_position_slot(_position_slot + 1)
+	AudioEvents.ui_switch()
 
 
 func _update_layout() -> void:

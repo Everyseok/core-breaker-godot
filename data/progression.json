@@ -1,11 +1,11 @@
 {
-  "_comment": "Projectile tier thresholds. K = total bricks destroyed this session. display_name is player-facing. implemented=true means the combat behavior exists in code today; later tiers can be spec-locked before their combat behavior is implemented.",
+  "_comment": "Projectile tier thresholds. K is still the internal progression counter, but player-facing UI should describe this as broken bricks. display_name is player-facing.",
   "tiers": [
-    { "k_min": 0,    "k_max": 29,   "tier": 0, "name": "basic_arrow",         "display_name": "ARROW",                 "implemented": true },
-    { "k_min": 30,   "k_max": 79,   "tier": 1, "name": "stone_projectile",    "display_name": "STONE",                 "implemented": true },
-    { "k_min": 80,   "k_max": 149,  "tier": 2, "name": "split_arrow",         "display_name": "SPLIT ARROW",           "implemented": true },
-    { "k_min": 150,  "k_max": 499,  "tier": 3, "name": "electric_split_arrow","display_name": "ELECTRIC SPLIT ARROW",  "implemented": true },
-    { "k_min": 500,  "k_max": 999,  "tier": 4, "name": "piercing_bomb_spear", "display_name": "PIERCING BOMB SIEGE",   "implemented": true },
-    { "k_min": 1000, "k_max": -1,   "tier": 5, "name": "hybrid_siege",        "display_name": "HYBRID SIEGE",          "implemented": false, "enabled": false }
+    { "k_min": 0,    "k_max": 29,   "tier": 0, "name": "arrow",          "display_name": "화살",         "implemented": true },
+    { "k_min": 30,   "k_max": 79,   "tier": 1, "name": "thunder",        "display_name": "번개",         "implemented": true },
+    { "k_min": 80,   "k_max": 149,  "tier": 2, "name": "spark_lance",    "display_name": "스파크 랜스", "implemented": true },
+    { "k_min": 150,  "k_max": 499,  "tier": 3, "name": "volt_storm",     "display_name": "볼트 스톰",   "implemented": true },
+    { "k_min": 500,  "k_max": 2999, "tier": 4, "name": "siege_cannon",   "display_name": "시즈 캐논",   "implemented": true },
+    { "k_min": 3000, "k_max": -1,   "tier": 5, "name": "hybrid_siege",   "display_name": "하이브리드",   "implemented": false, "enabled": false }
   ]
 }

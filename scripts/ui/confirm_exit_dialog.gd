@@ -22,12 +22,15 @@ func _ready() -> void:
 
 func show_dialog() -> void:
 	visible = true
+	AudioEvents.ui_menu_open()
 
 
 func _on_stay() -> void:
 	visible = false
+	AudioEvents.ui_menu_close()
 
 
 func _on_leave() -> void:
 	visible = false
+	AudioEvents.ui_confirm()
 	PlatformBridge.request_close()

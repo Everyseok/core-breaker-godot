@@ -69,6 +69,7 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 
 	_spawn_hit_effect(_impact_position(), bounce_normal)
+	AudioEvents.weapon_hit(VISUAL_TIER, StringName(GameState.active_weapon_choice_id))
 
 	if _bounces_remaining <= 0:
 		queue_free()

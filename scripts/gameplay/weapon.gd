@@ -92,6 +92,7 @@ func activate_overclock() -> void:
 	_is_overclocked = true
 	_overclock_timer = OVERCLOCK_DURATION
 	_fire_timer.wait_time = BASE_FIRE_INTERVAL * OVERCLOCK_MULTIPLIER
+	AudioEvents.weapon_overclock_start()
 
 
 func _process(delta: float) -> void:
@@ -112,6 +113,7 @@ func _process(delta: float) -> void:
 		_overclock_timer = 0.0
 		_overclock_cooldown_timer = OVERCLOCK_COOLDOWN
 		_fire_timer.wait_time = BASE_FIRE_INTERVAL
+		AudioEvents.weapon_overclock_end()
 
 
 func _fire() -> void:
@@ -176,12 +178,7 @@ func _fire_prism_side_rays() -> void:
 		ray.source_tier = _current_tier
 		_attach_projectile(ray)
 	_request_combat_effect("prism_lance", _get_launch_origin(), _get_launch_origin() + (InputHandler.aim_direction * 80.0), _current_tier)
-	if AudioManager != null:
-		var hook_name := WeaponChoiceRulesRef.proc_audio_hook_for_id(WeaponChoiceRulesRef.PRISM_LANCE)
-		if AudioManager.has_method("play_weapon_proc"):
-			AudioManager.play_weapon_proc(hook_name)
-		elif AudioManager.has_method("play_hook"):
-			AudioManager.play_hook(hook_name)
+	AudioEvents.weapon_proc(StringName(WeaponChoiceRulesRef.PRISM_LANCE))
 
 
 func _on_tier_changed(tier: int) -> void:

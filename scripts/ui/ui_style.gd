@@ -3,27 +3,27 @@ extends RefCounted
 
 const UI_FONT_PATH := "res://assets/fonts/game_ui_kr.ttf"
 
-const PANEL_DARK := Color(0.08, 0.10, 0.18, 0.94)
-const PANEL_SOFT := Color(0.12, 0.14, 0.24, 0.94)
-const PANEL_BORDER := Color(0.34, 0.47, 0.84, 1.0)
-const TEXT_MAIN := Color(0.96, 0.98, 1.0)
-const TEXT_SUB := Color(0.73, 0.84, 1.0)
-const TEXT_MUTE := Color(0.64, 0.72, 0.86)
-const READY_YELLOW := Color(0.98, 0.82, 0.24)
-const SUCCESS_GREEN := Color(0.38, 0.82, 0.52)
-const DANGER_RED := Color(0.92, 0.38, 0.34)
-const MENU_SURFACE := Color(0.05, 0.08, 0.16, 0.76)
-const MENU_SURFACE_SOFT := Color(0.08, 0.11, 0.20, 0.62)
-const MENU_TRIM := Color(0.28, 0.44, 0.78, 0.56)
-const MENU_TITLE_SHADOW := Color(0.34, 0.84, 1.0, 0.72)
-const MENU_PRIMARY_FILL := Color(0.16, 0.38, 0.76, 0.96)
-const MENU_PRIMARY_BORDER := Color(0.66, 0.90, 1.0, 0.92)
-const MENU_SECONDARY_FILL := Color(0.08, 0.13, 0.24, 0.94)
-const MENU_SECONDARY_BORDER := Color(0.44, 0.72, 1.0, 0.72)
-const MENU_SUCCESS_FILL := Color(0.12, 0.34, 0.28, 0.96)
-const MENU_SUCCESS_BORDER := Color(0.50, 0.88, 0.72, 0.88)
-const MENU_DANGER_FILL := Color(0.42, 0.12, 0.16, 0.96)
-const MENU_DANGER_BORDER := Color(1.0, 0.64, 0.68, 0.88)
+const PANEL_DARK := Color(0.98, 0.92, 0.76, 0.95)
+const PANEL_SOFT := Color(0.95, 0.98, 1.0, 0.94)
+const PANEL_BORDER := Color(1.0, 0.66, 0.26, 1.0)
+const TEXT_MAIN := Color(0.18, 0.20, 0.32)
+const TEXT_SUB := Color(0.34, 0.42, 0.62)
+const TEXT_MUTE := Color(0.38, 0.44, 0.58)
+const READY_YELLOW := Color(1.0, 0.78, 0.20)
+const SUCCESS_GREEN := Color(0.26, 0.76, 0.46)
+const DANGER_RED := Color(0.94, 0.36, 0.32)
+const MENU_SURFACE := Color(1.0, 0.94, 0.78, 0.82)
+const MENU_SURFACE_SOFT := Color(0.90, 0.98, 1.0, 0.70)
+const MENU_TRIM := Color(1.0, 0.66, 0.28, 0.72)
+const MENU_TITLE_SHADOW := Color(1.0, 0.72, 0.28, 0.72)
+const MENU_PRIMARY_FILL := Color(0.28, 0.68, 1.0, 0.98)
+const MENU_PRIMARY_BORDER := Color(1.0, 0.92, 0.42, 0.96)
+const MENU_SECONDARY_FILL := Color(0.38, 0.82, 0.92, 0.96)
+const MENU_SECONDARY_BORDER := Color(0.96, 1.0, 1.0, 0.86)
+const MENU_SUCCESS_FILL := Color(0.30, 0.78, 0.50, 0.96)
+const MENU_SUCCESS_BORDER := Color(0.88, 1.0, 0.72, 0.88)
+const MENU_DANGER_FILL := Color(0.96, 0.42, 0.38, 0.96)
+const MENU_DANGER_BORDER := Color(1.0, 0.86, 0.58, 0.90)
 
 static var _ui_font: Font
 static var _fallback_font: SystemFont
@@ -78,7 +78,7 @@ static func apply_label(label: Label, font_size: int, font_color: Color = TEXT_M
 	label.add_theme_font_override("font", get_font())
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", font_color)
-	label.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.96))
+	label.add_theme_color_override("font_outline_color", _outline_for(font_color))
 	label.add_theme_constant_override("outline_size", outline_size)
 
 
@@ -86,7 +86,7 @@ static func apply_display_label(label: Label, font_size: int, font_color: Color 
 	label.add_theme_font_override("font", get_display_font())
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", font_color)
-	label.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.98))
+	label.add_theme_color_override("font_outline_color", _outline_for(font_color))
 	label.add_theme_constant_override("outline_size", outline_size)
 
 
@@ -103,7 +103,7 @@ static func apply_button(
 	button.add_theme_color_override("font_hover_color", font_color.lightened(0.06))
 	button.add_theme_color_override("font_pressed_color", Color.WHITE)
 	button.add_theme_color_override("font_disabled_color", font_color.darkened(0.35))
-	button.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.96))
+	button.add_theme_color_override("font_outline_color", _outline_for(font_color))
 	button.add_theme_constant_override("outline_size", 5)
 	button.add_theme_stylebox_override("normal", _make_box(fill_color, border_color))
 	button.add_theme_stylebox_override("hover", _make_box(fill_color.lightened(0.10), border_color.lightened(0.08)))
@@ -141,7 +141,7 @@ static func apply_menu_title(label: Label, font_size: int, font_color: Color = T
 	label.add_theme_font_override("font", get_display_font())
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", font_color)
-	label.add_theme_color_override("font_outline_color", Color(0.02, 0.04, 0.08, 0.98))
+	label.add_theme_color_override("font_outline_color", _outline_for(font_color))
 	label.add_theme_constant_override("outline_size", outline_size)
 
 
@@ -158,7 +158,7 @@ static func apply_arcade_button(
 	button.add_theme_color_override("font_hover_color", font_color.lightened(0.04))
 	button.add_theme_color_override("font_pressed_color", Color.WHITE)
 	button.add_theme_color_override("font_disabled_color", font_color.darkened(0.35))
-	button.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.98))
+	button.add_theme_color_override("font_outline_color", _outline_for(font_color))
 	button.add_theme_constant_override("outline_size", 5)
 	button.add_theme_stylebox_override("normal", _make_box_variant(fill_color, border_color, 16, 8))
 	button.add_theme_stylebox_override("hover", _make_box_variant(fill_color.lightened(0.08), border_color.lightened(0.05), 16, 9))
@@ -191,6 +191,13 @@ static func _make_box(fill_color: Color, border_color: Color) -> StyleBoxFlat:
 	box.content_margin_right = 10.0
 	box.content_margin_bottom = 7.0
 	return box
+
+
+static func _outline_for(font_color: Color) -> Color:
+	var luminance := (font_color.r * 0.299) + (font_color.g * 0.587) + (font_color.b * 0.114)
+	if luminance < 0.55:
+		return Color(1.0, 0.96, 0.78, 0.88)
+	return Color(0.03, 0.05, 0.10, 0.96)
 
 
 static func _make_box_variant(fill_color: Color, border_color: Color, radius: int, shadow_size: int) -> StyleBoxFlat:

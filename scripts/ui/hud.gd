@@ -66,24 +66,26 @@ const CURRENT_WEAPON_HEIGHT: float = 20.0
 const BEST_LABEL_WIDTH: float = 112.0
 const STRIPE_STEP: float = 18.0
 
-const HUD_SURFACE_COLOR := Color(0.04, 0.06, 0.13, 0.90)
-const HUD_SHADOW_COLOR := Color(0.0, 0.0, 0.0, 0.26)
-const HUD_TOP_TRIM_COLOR := Color(0.78, 0.90, 1.0, 0.16)
-const HUD_BOTTOM_TRIM_COLOR := Color(0.20, 0.34, 0.62, 0.74)
-const GAUGE_TRACK_COLOR := Color(0.08, 0.11, 0.20, 0.96)
-const GAUGE_BORDER_COLOR := Color(0.18, 0.24, 0.34, 0.72)
-const GAUGE_FILL_COLOR := Color(0.22, 0.68, 1.0, 0.22)
-const GAUGE_SHINE_COLOR := Color(1.0, 1.0, 1.0, 0.12)
-const NUMBER_MAIN_COLOR := Color(1.0, 0.99, 0.94)
-const NUMBER_SHADOW_COLOR := Color(0.36, 0.82, 1.0, 0.74)
-const NUMBER_OUTLINE_COLOR := Color(0.03, 0.05, 0.10, 0.98)
-const THRESHOLD_BASE_ACCENT := Color(0.46, 0.84, 1.0, 0.85)
-const DIVIDER_COLOR := Color(0.28, 0.42, 0.70, 0.86)
-const PAUSE_BG_COLOR := Color(0.09, 0.15, 0.28, 0.96)
-const PAUSE_BG_HOVER_COLOR := Color(0.11, 0.18, 0.33, 0.98)
-const PAUSE_BG_PRESSED_COLOR := Color(0.07, 0.12, 0.22, 1.0)
-const PAUSE_BORDER_COLOR := Color(0.24, 0.50, 0.84, 0.48)
-const PAUSE_BORDER_HOVER_COLOR := Color(0.40, 0.72, 1.0, 0.62)
+const HUD_SURFACE_COLOR := Color(0.98, 0.94, 0.78, 0.86)
+const HUD_SHADOW_COLOR := Color(0.32, 0.22, 0.08, 0.24)
+const HUD_TOP_TRIM_COLOR := Color(1.0, 1.0, 1.0, 0.72)
+const HUD_BOTTOM_TRIM_COLOR := Color(1.0, 0.70, 0.26, 0.88)
+const GAUGE_TRACK_COLOR := Color(0.62, 0.74, 0.92, 0.94)
+const GAUGE_BORDER_COLOR := Color(0.24, 0.42, 0.78, 0.84)
+const GAUGE_FILL_COLOR := Color(0.18, 0.58, 0.96, 0.58)
+const GAUGE_SHINE_COLOR := Color(0.92, 0.98, 1.0, 0.36)
+const HUD_TEXT_COLOR := Color(0.11, 0.16, 0.30)
+const HUD_TEXT_OUTLINE_COLOR := Color(1.0, 0.96, 0.78, 0.96)
+const NUMBER_MAIN_COLOR := Color(0.10, 0.18, 0.32)
+const NUMBER_SHADOW_COLOR := Color(1.0, 0.92, 0.58, 0.72)
+const NUMBER_OUTLINE_COLOR := Color(1.0, 0.98, 0.76, 0.98)
+const THRESHOLD_BASE_ACCENT := Color(1.0, 0.62, 0.20, 0.92)
+const DIVIDER_COLOR := Color(0.46, 0.64, 0.96, 0.72)
+const PAUSE_BG_COLOR := Color(0.36, 0.68, 1.0, 0.98)
+const PAUSE_BG_HOVER_COLOR := Color(0.46, 0.76, 1.0, 1.0)
+const PAUSE_BG_PRESSED_COLOR := Color(0.24, 0.54, 0.92, 1.0)
+const PAUSE_BORDER_COLOR := Color(0.98, 0.98, 1.0, 0.86)
+const PAUSE_BORDER_HOVER_COLOR := Color(1.0, 0.90, 0.36, 0.92)
 const PAUSE_BAR_COLOR := Color.WHITE
 const PAUSE_BAR_SHADOW_COLOR := Color(0.34, 0.88, 1.0, 0.56)
 
@@ -140,9 +142,9 @@ func _apply_reference_styles() -> void:
 	_style_pause_button()
 	_style_current_weapon_row()
 
-	UiStyleRef.apply_display_label(_best_label, 12, UiStyleRef.TEXT_MUTE, 3)
+	UiStyleRef.apply_display_label(_best_label, 12, HUD_TEXT_COLOR, 4)
 	UiStyleRef.apply_display_label(_weapon_impact_label, 17, UiStyleRef.READY_YELLOW, 4)
-	_best_label.add_theme_color_override("font_outline_color", Color(0.02, 0.04, 0.08, 0.92))
+	_best_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
 	_best_label.text = _format_best_label()
 	_weapon_flash.visible = false
 	_weapon_impact_label.visible = false
@@ -156,7 +158,7 @@ func _apply_hud_band_style() -> void:
 	var band_box := StyleBoxFlat.new()
 	band_box.bg_color = HUD_SURFACE_COLOR
 	band_box.border_width_bottom = 1
-	band_box.border_color = Color(0.16, 0.24, 0.42, 0.52)
+	band_box.border_color = Color(0.95, 0.62, 0.24, 0.70)
 	band_box.corner_radius_bottom_left = 18
 	band_box.corner_radius_bottom_right = 18
 	band_box.shadow_color = Color(0.0, 0.0, 0.0, 0.0)
@@ -187,26 +189,29 @@ func _style_level_gauge() -> void:
 
 	_gauge_fill_rect.color = GAUGE_FILL_COLOR
 	_gauge_shine.color = GAUGE_SHINE_COLOR
-	UiStyleRef.apply_display_label(_level_label, 15, Color(0.98, 0.99, 1.0), 4)
+	UiStyleRef.apply_display_label(_level_label, 15, HUD_TEXT_COLOR, 4)
+	_level_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
 
 
 func _style_threshold_module() -> void:
-	UiStyleRef.apply_label(_threshold_value_label, 11, UiStyleRef.TEXT_SUB, 3)
-	UiStyleRef.apply_display_label(_threshold_name_label, 13, UiStyleRef.TEXT_MAIN, 4)
+	UiStyleRef.apply_label(_threshold_value_label, 11, HUD_TEXT_COLOR, 4)
+	UiStyleRef.apply_display_label(_threshold_name_label, 13, HUD_TEXT_COLOR, 4)
+	_threshold_value_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
+	_threshold_name_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
 	_threshold_accent_line.color = THRESHOLD_BASE_ACCENT
 
 
 func _style_number_labels(font_size: int) -> void:
-	_main_number_shadow_label.add_theme_font_override("font", UiStyleRef.get_display_font())
+	_main_number_shadow_label.add_theme_font_override("font", UiStyleRef.get_font())
 	_main_number_shadow_label.add_theme_font_size_override("font_size", font_size)
 	_main_number_shadow_label.add_theme_color_override("font_color", NUMBER_SHADOW_COLOR)
 	_main_number_shadow_label.add_theme_constant_override("outline_size", 0)
 
-	_main_number_label.add_theme_font_override("font", UiStyleRef.get_display_font())
+	_main_number_label.add_theme_font_override("font", UiStyleRef.get_font())
 	_main_number_label.add_theme_font_size_override("font_size", font_size)
 	_main_number_label.add_theme_color_override("font_color", NUMBER_MAIN_COLOR)
 	_main_number_label.add_theme_color_override("font_outline_color", NUMBER_OUTLINE_COLOR)
-	_main_number_label.add_theme_constant_override("outline_size", 6)
+	_main_number_label.add_theme_constant_override("outline_size", 4)
 
 
 func _style_pause_button() -> void:
@@ -246,7 +251,8 @@ func _style_pause_button() -> void:
 
 func _style_current_weapon_row() -> void:
 	_current_weapon_accent.color = THRESHOLD_BASE_ACCENT
-	UiStyleRef.apply_display_label(_weapon_label, 15, Color(0.96, 0.98, 1.0), 4)
+	UiStyleRef.apply_display_label(_weapon_label, 15, HUD_TEXT_COLOR, 4)
+	_weapon_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
 
 
 func _layout_reference_hud() -> void:
@@ -440,8 +446,10 @@ func _refresh_threshold_module() -> void:
 
 	_threshold_value_label.text = "%d+" % maxi(threshold, 0)
 	_threshold_name_label.text = display_name
-	_threshold_value_label.add_theme_color_override("font_color", secondary)
-	_threshold_name_label.add_theme_color_override("font_color", Color(1.0, 0.99, 0.95))
+	_threshold_value_label.add_theme_color_override("font_color", HUD_TEXT_COLOR)
+	_threshold_value_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
+	_threshold_name_label.add_theme_color_override("font_color", HUD_TEXT_COLOR)
+	_threshold_name_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
 	_threshold_accent_line.color = accent.lightened(0.10)
 	_rebuild_threshold_icon(WeaponProfileRef.get_icon_style(tier), primary, secondary, accent)
 	_layout_reference_hud()
@@ -449,11 +457,12 @@ func _refresh_threshold_module() -> void:
 
 func _refresh_current_weapon_module(tier: int, choice_id: String = "") -> void:
 	_current_weapon_name = WeaponProfileRef.get_display_name(tier, choice_id)
-	_weapon_label.text = "무기: %s" % _current_weapon_name
+	_weapon_label.text = _format_next_goal_label()
 	var accent := WeaponProfileRef.get_accent_color(tier, choice_id)
 	var secondary := WeaponProfileRef.get_secondary_color(tier, choice_id)
 	_current_weapon_accent.color = accent
-	_weapon_label.add_theme_color_override("font_color", secondary)
+	_weapon_label.add_theme_color_override("font_color", HUD_TEXT_COLOR)
+	_weapon_label.add_theme_color_override("font_outline_color", HUD_TEXT_OUTLINE_COLOR)
 
 
 func _rebuild_threshold_icon(style_id: String, primary: Color, secondary: Color, accent: Color) -> void:
@@ -577,6 +586,19 @@ func _get_threshold_module_width() -> float:
 
 func _format_best_label() -> String:
 	return "최고 %d개" % SaveManager.get_best_record_value()
+
+
+func _format_next_goal_label() -> String:
+	var progression_state: Dictionary = GameState.get_progression_display_state()
+	var next_name := String(progression_state.get("next_unlock_name", ""))
+	var next_threshold := int(progression_state.get("next_unlock_threshold", -1))
+	if next_threshold >= GameState.get_level_size_k():
+		if GameState.current_level >= GameState.MAX_LEVEL:
+			return "다음: 최고 단계!"
+		return "다음: Lv.%d -> Lv.%d" % [GameState.current_level, GameState.current_level + 1]
+	if next_name == "":
+		return "다음: 준비 중"
+	return "다음: %s" % next_name
 
 
 func _set_rect(control: Control, rect_position: Vector2, rect_size: Vector2) -> void:

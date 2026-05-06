@@ -99,6 +99,8 @@ func take_damage(amount: int, source_tier: int = -1) -> void:
 		return
 	var will_destroy := hp - amount <= 0
 	_request_damage_number(amount, will_destroy, source_tier)
+	if will_destroy:
+		AudioEvents.brick_break()
 	if will_destroy and (ring_owner == null or not is_instance_valid(ring_owner)):
 		_request_brick_break_effect()
 	hp -= amount

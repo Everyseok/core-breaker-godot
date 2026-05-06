@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "events": {
+    "bgm.core_loop": {
+      "path": "res://assets/audio/bgm/core_loop.ogg",
+      "volume_db": -5.5,
+      "cooldown_ms": 0,
+      "max_instances": 1,
+      "loop": true
+    },
+    "ui.button_tap": {
+      "path": "res://assets/audio/sfx/ui/button_tap.ogg",
+      "volume_db": -7.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 35,
+      "max_instances": 3
+    },
+    "ui.menu_open": {
+      "path": "res://assets/audio/sfx/ui/menu_open.ogg",
+      "volume_db": -6.5,
+      "pitch_variation": 0.03,
+      "cooldown_ms": 90,
+      "max_instances": 2
+    },
+    "ui.menu_close": {
+      "path": "res://assets/audio/sfx/ui/menu_close.ogg",
+      "volume_db": -6.5,
+      "pitch_variation": 0.03,
+      "cooldown_ms": 90,
+      "max_instances": 2
+    },
+    "ui.confirm": {
+      "path": "res://assets/audio/sfx/ui/confirm.ogg",
+      "volume_db": -6.0,
+      "pitch_variation": 0.03,
+      "cooldown_ms": 80,
+      "max_instances": 2
+    },
+    "ui.error": {
+      "path": "res://assets/audio/sfx/ui/error.ogg",
+      "volume_db": -7.5,
+      "pitch_variation": 0.02,
+      "cooldown_ms": 160,
+      "max_instances": 1
+    },
+    "ui.switch": {
+      "path": "res://assets/audio/sfx/ui/switch.ogg",
+      "volume_db": -7.5,
+      "pitch_variation": 0.03,
+      "cooldown_ms": 90,
+      "max_instances": 2
+    },
+    "game.over": {
+      "path": "res://assets/audio/sfx/progression/game_over.ogg",
+      "volume_db": -4.5,
+      "pitch_variation": 0.0,
+      "cooldown_ms": 600,
+      "max_instances": 1
+    },
+    "game.max_clear": {
+      "path": "res://assets/audio/sfx/progression/max_clear.ogg",
+      "volume_db": -4.0,
+      "pitch_variation": 0.0,
+      "cooldown_ms": 600,
+      "max_instances": 1
+    },
+    "weapon.hit.arrow": {
+      "path": "res://assets/audio/sfx/weapons/arrow/hit.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.07,
+      "cooldown_ms": 0,
+      "max_instances": 32
+    },
+    "weapon.hit.thunder": {
+      "path": "res://assets/audio/sfx/weapons/thunder/hit.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.05,
+      "cooldown_ms": 0,
+      "max_instances": 32
+    },
+    "weapon.hit.spark_lance": {
+      "path": "res://assets/audio/sfx/weapons/spark_lance/hit.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.05,
+      "cooldown_ms": 0,
+      "max_instances": 32
+    },
+    "weapon.hit.volt_storm": {
+      "path": "res://assets/audio/sfx/weapons/volt_storm/hit.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 0,
+      "max_instances": 32
+    },
+    "weapon.hit.siege_cannon": {
+      "path": "res://assets/audio/sfx/weapons/siege_cannon/hit.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 0,
+      "max_instances": 24
+    },
+    "weapon.hit.chain_lightning": {
+      "path": "res://assets/audio/sfx/weapons/chain_lightning/proc.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.05,
+      "cooldown_ms": 0,
+      "max_instances": 24
+    },
+    "weapon.hit.prism_lance": {
+      "path": "res://assets/audio/sfx/weapons/prism_lance/proc.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 0,
+      "max_instances": 16
+    },
+    "weapon.hit.meteor_cannon": {
+      "path": "res://assets/audio/sfx/weapons/meteor_cannon/proc.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 0,
+      "max_instances": 12
+    },
+    "weapon.proc.chain_lightning": {
+      "path": "res://assets/audio/sfx/weapons/chain_lightning/proc.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.05,
+      "cooldown_ms": 0,
+      "max_instances": 24
+    },
+    "weapon.proc.prism_lance": {
+      "path": "res://assets/audio/sfx/weapons/prism_lance/proc.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 0,
+      "max_instances": 16
+    },
+    "weapon.proc.meteor_cannon": {
+      "path": "res://assets/audio/sfx/weapons/meteor_cannon/proc.ogg",
+      "volume_db": -10.5,
+      "pitch_variation": 0.04,
+      "cooldown_ms": 0,
+      "max_instances": 12
+    },
+    "weapon.choice.open": {
+      "path": "res://assets/audio/sfx/ui/menu_open.ogg",
+      "volume_db": -5.5,
+      "pitch_variation": 0.02,
+      "cooldown_ms": 200,
+      "max_instances": 1
+    },
+    "weapon.choice.select": {
+      "path": "res://assets/audio/sfx/progression/weapon_select.ogg",
+      "volume_db": -4.5,
+      "pitch_variation": 0.02,
+      "cooldown_ms": 250,
+      "max_instances": 1
+    },
+    "brick.hit": {
+      "path": "res://assets/audio/sfx/brick/hit.ogg",
+      "volume_db": -16.5,
+      "pitch_variation": 0.08,
+      "cooldown_ms": 0,
+      "max_instances": 32
+    },
+    "brick.break": {
+      "path": "res://assets/audio/sfx/brick/break.ogg",
+      "volume_db": -12.0,
+      "pitch_variation": 0.08,
+      "cooldown_ms": 0,
+      "max_instances": 24
+    }
+  }
+}

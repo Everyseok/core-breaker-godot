@@ -53,6 +53,7 @@ func _on_area_entered(area: Area2D) -> void:
 		if area.has_method("take_damage"):
 			area.call("take_damage", damage, VISUAL_TIER)
 			_spawn_hit_effect(_impact_position(), Vector2.ZERO)
+			AudioEvents.weapon_hit(VISUAL_TIER, StringName(GameState.active_weapon_choice_id))
 			queue_free()
 		return
 
@@ -68,6 +69,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if target_key != "":
 		_hit_target_keys[target_key] = true
 	_spawn_hit_effect(_impact_position(), Vector2.ZERO)
+	AudioEvents.weapon_hit(VISUAL_TIER, StringName(GameState.active_weapon_choice_id))
 	_pierce_collisions += 1
 
 	if _pierce_collisions >= max_pierce_collisions:
