@@ -39,6 +39,7 @@
 | Ads state | `NOT_IMPLEMENTED / FUTURE`; no placeholder slots, no fake ad UI |
 | Developer Center breadth | All first-column categories are now mapped; many marketing/API/revenue items are future-stage rather than current blockers |
 | GitHub push safety | Blocked until private remote exists and `gh` auth is healthy |
+| Buff System MVP | Implemented and manually smoke-tested |
 
 ## Highest-Priority Blockers
 

@@ -94,3 +94,14 @@
 - Overclock selection uses the existing fast-fire behavior and naturally ends.
 - Buff cannot be selected a second time in the same run.
 - PauseMenu and RevivePrompt still work.
+
+## Manual QA Result
+- K < 500 locked: OK
+- K >= 500 enabled: OK
+- Roulette pauses gameplay: OK
+- Gameplay resumes after reveal: OK
+- Projectile x2 works: OK
+- Damage x1.5 works: OK
+- Overclock works: OK
+- One-use-per-run works: OK
+- PauseMenu / RevivePrompt / GameOver interaction checked: OK
