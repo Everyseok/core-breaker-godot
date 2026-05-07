@@ -71,6 +71,25 @@ None. All catalog paths exist on disk.
 
 The release-readiness status remains `PARTIAL` because a `COMPLETE` status requires every active audio file to have source, license, author, commercial use, duration, sample rate, channel, file size, and processing notes fully recorded.
 
+## Phase 8 Passive SFX Addendum
+
+- Passive SFX files added: 6
+- Passive SFX source family: OpenGameArt CC0 source pages
+- Passive SFX total size: 65,692 B
+- Passive SFX format: Ogg Vorbis, 44100 Hz stereo
+- Missing catalog files after integration: expected 0
+- Unreferenced passive media after integration: expected 0
+- Passive SFX status: VERIFIED
+
+| Passive event | Final file | Source page | Original file | License | Author | Size | Duration | Notes |
+|---|---|---|---|---|---|---:|---:|---|
+| `passive.stone_throw.launch` | `assets/audio/sfx/passives/stone_throw/launch.ogg` | `https://opengameart.org/content/various-sound-effects-0` | `snd_throw1.wav` | CC0 | Spring Spring | 14,910 B | 0.380s | Catapult/throw launch for stone passive. |
+| `passive.stone_throw.impact` | `assets/audio/sfx/passives/stone_throw/impact.ogg` | `https://opengameart.org/content/various-sound-effects-0` | `small_rock_impact.wav` | CC0 | Spring Spring | 15,927 B | 0.531s | Small stone impact on brick. |
+| `passive.meteor.launch` | `assets/audio/sfx/passives/meteor/launch.ogg` | `https://opengameart.org/content/25-cc0-bang-firework-sfx` | `cannon_03.ogg` | CC0 | rubberduck | 11,529 B | 0.601s | Meteor cannon launch; not sky-falling meteor audio. |
+| `passive.meteor.impact` | `assets/audio/sfx/passives/meteor/impact.ogg` | `https://opengameart.org/content/various-sound-effects-0` | `cannonball_tap.wav` | CC0 | Spring Spring | 8,076 B | 0.491s | Cannonball collision / impact, intentionally different from existing `cannon_hit_wall_0.ogg`. |
+| `passive.machine_gun.burst` | `assets/audio/sfx/passives/machine_gun/burst.ogg` | `https://opengameart.org/content/laser-weapon-burst-fire` | `burst fire.mp3` | CC0 | celestialghost8 | 9,407 B | 0.451s | Arcade "다다다다다" burst fire, not realistic firearm. |
+| `passive.machine_gun.hit` | `assets/audio/sfx/passives/machine_gun/hit.ogg` | `https://opengameart.org/content/various-sound-effects-0` | `tick.wav` | CC0 | Spring Spring | 5,843 B | 0.057s | Tiny tick/ping hit spark. |
+
 ## Passive SFX Phase 8 requirement
 
 Before adding passive SFX, each new file must have:

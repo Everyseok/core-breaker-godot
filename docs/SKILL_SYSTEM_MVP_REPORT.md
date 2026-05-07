@@ -350,3 +350,34 @@ Architecture notes:
 Validation:
 - `git diff --check` passed.
 - No forbidden files changed.
+
+## Phase 8 — OpenGameArt Passive SFX Catalog Integration
+
+Implemented:
+- Added six passive SFX files from OpenGameArt CC0 source pages.
+- Added passive SFX events to `data/audio/sound_catalog.json`.
+- Added `AudioEvents.passive_launch()` and `AudioEvents.passive_impact()`.
+- Wired SkillController to play passive launch/impact sounds through AudioEvents.
+
+Semantic direction:
+- stone_throw launch/impact follows catapult + stone + blunt brick impact.
+- meteor launch/impact follows meteor cannon + cannonball collision, not sky-falling meteor audio.
+- machine_gun follows arcade "다다다다다" burst fire plus tiny tick/ping hit spark, not realistic firearm audio.
+
+License/source:
+- All passive SFX source pages list `License(s): CC0`.
+- Source/license rows are recorded in `docs/AUDIO_LICENSES.md`.
+- Passive SFX metadata is recorded in `docs/AUDIO_LICENSE_AUDIT.md`.
+
+Architecture notes:
+- Playback uses existing AudioEvents -> sound_catalog.json -> AudioRouter path.
+- No direct AudioStreamPlayer was added outside the audio layer.
+- No direct audio file path loads were added to gameplay/UI/visual code.
+- AudioRouter and SoundCatalog were not modified.
+
+Validation:
+- JSON catalog validation passed.
+- Godot headless passed.
+- Passive SFX files exist.
+- No missing passive catalog files.
+- Total passive SFX size: 65,692 B.

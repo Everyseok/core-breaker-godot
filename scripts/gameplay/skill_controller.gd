@@ -185,7 +185,10 @@ func _fire_area_skill(skill_id: String, target: Dictionary) -> void:
 	var flight_time := SkillRulesRef.flight_time_for_id(skill_id)
 	var layer := _get_skill_vfx_layer()
 
+	AudioEvents.passive_launch(StringName(skill_id))
+
 	var impact_callback := func() -> void:
+		AudioEvents.passive_impact(StringName(skill_id))
 		if ring != null and is_instance_valid(ring) and ring.has_method("apply_skill_hit"):
 			ring.call("apply_skill_hit", segment_index, damage, spread_radius, skill_id)
 
@@ -204,6 +207,7 @@ func _fire_machine_gun(skill_id: String, targets: Array) -> void:
 	var origin := _get_skill_origin()
 	var layer := _get_skill_vfx_layer()
 	var tracer_index := 0
+	AudioEvents.passive_launch(StringName(skill_id))
 
 	for target_variant in targets:
 		if not (target_variant is Dictionary):
@@ -244,6 +248,9 @@ func _fire_machine_gun(skill_id: String, targets: Array) -> void:
 			continue
 
 		ring.call("apply_skill_multi_hit", indices, SkillRulesRef.damage_for_id(skill_id), skill_id)
+
+	if tracer_index > 0:
+		AudioEvents.passive_impact(StringName(skill_id))
 
 
 func get_debug_selected_skill_id() -> String:

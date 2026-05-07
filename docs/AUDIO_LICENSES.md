@@ -56,20 +56,15 @@ Extracted locally on 2026-05-08 with `ffprobe` and cross-checked with `afinfo`.
 | `assets/audio/sfx/weapons/thunder/hit.ogg` | 9,988 B | 0.241s | 44100 Hz | stereo | Original `spark.wav`; trimmed to 0.24s. |
 | `assets/audio/sfx/weapons/volt_storm/hit.ogg` | 9,992 B | 0.218s | 44100 Hz | stereo | Original `continuousspark.wav`; trimmed to 0.36s per manifest, exported file duration is 0.218s. |
 
-## Passive SFX to be added later
+## Passive SFX
 
-Do not add passive SFX license rows yet unless files already exist and source/license is known.
+Added on 2026-05-08 for Phase 8. All passive SFX source pages were checked on OpenGameArt before import and list `License(s): CC0`.
 
-Required fields for future passive SFX:
-- final filename
-- source site URL
-- exact prompt/search phrase
-- license
-- author if known
-- generation/download date
-- commercial use allowed
-- duration
-- sample rate
-- mono/stereo
-- file size
-- processing notes
+| File | Used by event(s) | Source | License | Author | Commercial use | Verification status | Notes |
+|---|---|---|---|---|---|---|---|
+| `assets/audio/sfx/passives/stone_throw/launch.ogg` | `passive.stone_throw.launch` | `https://opengameart.org/content/various-sound-effects-0` | CC0 | Spring Spring | Yes | VERIFIED | Original `snd_throw1.wav`; converted to Ogg Vorbis, trimmed to 0.380s, 44100 Hz stereo, 14,910 B. Semantic mapping: catapult/throw launch for stone passive. |
+| `assets/audio/sfx/passives/stone_throw/impact.ogg` | `passive.stone_throw.impact` | `https://opengameart.org/content/various-sound-effects-0` | CC0 | Spring Spring | Yes | VERIFIED | Original `small_rock_impact.wav`; converted to Ogg Vorbis, trimmed to 0.531s, 44100 Hz stereo, 15,927 B. Semantic mapping: small stone impact on brick. |
+| `assets/audio/sfx/passives/meteor/launch.ogg` | `passive.meteor.launch` | `https://opengameart.org/content/25-cc0-bang-firework-sfx` | CC0 | rubberduck | Yes | VERIFIED | Original `cannon_03.ogg`; converted to Ogg Vorbis, trimmed to 0.601s, 44100 Hz stereo, 11,529 B. Semantic mapping: meteor cannon launch, not sky-falling meteor. |
+| `assets/audio/sfx/passives/meteor/impact.ogg` | `passive.meteor.impact` | `https://opengameart.org/content/various-sound-effects-0` | CC0 | Spring Spring | Yes | VERIFIED | Original `cannonball_tap.wav`; converted to Ogg Vorbis, trimmed to 0.491s, 44100 Hz stereo, 8,076 B. Semantic mapping: cannonball collision / impact, intentionally different from existing `cannon_hit_wall_0.ogg`. |
+| `assets/audio/sfx/passives/machine_gun/burst.ogg` | `passive.machine_gun.burst` | `https://opengameart.org/content/laser-weapon-burst-fire` | CC0 | celestialghost8 | Yes | VERIFIED | Original `burst fire.mp3`; converted to Ogg Vorbis, trimmed to 0.451s, 44100 Hz stereo, 9,407 B. Semantic mapping: arcade "다다다다다" burst fire, not realistic firearm. |
+| `assets/audio/sfx/passives/machine_gun/hit.ogg` | `passive.machine_gun.hit` | `https://opengameart.org/content/various-sound-effects-0` | CC0 | Spring Spring | Yes | VERIFIED | Original `tick.wav`; converted to Ogg Vorbis, 0.057s, 44100 Hz stereo, 5,843 B. Semantic mapping: tiny tick/ping hit spark. |

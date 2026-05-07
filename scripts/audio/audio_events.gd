@@ -139,6 +139,30 @@ func weapon_proc(choice_id: StringName) -> void:
 	_keep_bgm_alive()
 
 
+func passive_launch(passive_id: StringName) -> void:
+	match passive_id:
+		&"stone_throw":
+			play(&"passive.stone_throw.launch")
+		&"meteor":
+			play(&"passive.meteor.launch")
+		&"machine_gun":
+			play(&"passive.machine_gun.burst")
+		_:
+			pass
+
+
+func passive_impact(passive_id: StringName) -> void:
+	match passive_id:
+		&"stone_throw":
+			play(&"passive.stone_throw.impact")
+		&"meteor":
+			play(&"passive.meteor.impact")
+		&"machine_gun":
+			play(&"passive.machine_gun.hit")
+		_:
+			pass
+
+
 func weapon_choice_open() -> void:
 	play(&"weapon.choice.open")
 
