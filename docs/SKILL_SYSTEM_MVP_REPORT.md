@@ -191,6 +191,27 @@ Validation:
 - Godot headless passed.
 - Only UI text/report wording changed.
 
+## Phase 7 — Passive SFX Semantic Brief
+
+Implemented:
+- Added `docs/PASSIVE_SFX_SEMANTIC_BRIEF.md`.
+- Added `data/audio/passive_sfx_brief.json`.
+- Defined semantic prompts, search keywords, reject criteria, target file names, and license record requirements for passive SFX.
+
+Architecture notes:
+- Phase 7 is documentation/brief only.
+- Passive SFX must later integrate through `AudioEvents -> sound_catalog.json -> AudioRouter`.
+- No audio files were imported.
+- No `sound_catalog.json` changes were made.
+- No `AudioEvents.gd` changes were made.
+- No `SkillController.gd` changes were made.
+- `SFX_SOURCE_SITE` is `PENDING_USER_PROVIDED_SITE` because no passive-specific SFX source site was confirmed locally.
+
+Validation:
+- `python3 -m json.tool data/audio/passive_sfx_brief.json` passed.
+- `git diff --check` passed.
+- Only Phase 7 brief/report files changed.
+
 ## Phase 5A — Core Skill Companion Visuals
 
 Implemented:

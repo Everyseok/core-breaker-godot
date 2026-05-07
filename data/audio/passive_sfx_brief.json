@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "source_site": "PENDING_USER_PROVIDED_SITE",
+  "global_constraints": {
+    "format": "ogg",
+    "mono_preferred": true,
+    "target_total_size_kb": 800,
+    "hard_total_size_kb": 2048,
+    "license_required": true,
+    "architecture": "AudioEvents -> sound_catalog.json -> AudioRouter",
+    "style": [
+      "cute arcade pixel action",
+      "short one-shot sounds",
+      "low file size",
+      "no harsh realism",
+      "no horror",
+      "no gore",
+      "no realistic firearm audio",
+      "no long cinematic trailers",
+      "no copyrighted or unlicensed source"
+    ]
+  },
+  "target_files": {
+    "stone_throw": [
+      "assets/audio/sfx/passives/stone_throw/launch.ogg",
+      "assets/audio/sfx/passives/stone_throw/impact.ogg"
+    ],
+    "meteor": [
+      "assets/audio/sfx/passives/meteor/launch.ogg",
+      "assets/audio/sfx/passives/meteor/impact.ogg"
+    ],
+    "machine_gun": [
+      "assets/audio/sfx/passives/machine_gun/burst.ogg",
+      "assets/audio/sfx/passives/machine_gun/hit.ogg"
+    ]
+  },
+  "license_record_required": {
+    "document": "docs/AUDIO_LICENSES.md",
+    "fields": [
+      "final filename",
+      "source site URL",
+      "exact source/generation prompt or search phrase",
+      "license",
+      "author if known",
+      "generation/download date",
+      "modification/compression notes",
+      "whether commercial use is allowed"
+    ]
+  },
+  "passives": {
+    "stone_throw": {
+      "display_name": "돌",
+      "semantic_atoms": [
+        "stone",
+        "wood",
+        "catapult",
+        "toy mechanism",
+        "blunt brick impact",
+        "cute arcade"
+      ],
+      "launch_prompt": "cute pixel arcade wooden catapult release, short toy thunk, soft mechanical wood click, no realism, no violence, mono one-shot, 0.20 to 0.35 seconds",
+      "impact_prompt": "cute arcade stone impact on brick, blunt soft knock, short thud, small stone hit, no gore, no heavy explosion, mono one-shot, 0.25 to 0.45 seconds",
+      "search_keywords": [
+        "cute catapult release sfx",
+        "wooden toy thunk",
+        "stone hit brick arcade",
+        "small rock impact brick",
+        "pixel thud stone"
+      ],
+      "reject_if": [
+        "metallic sword",
+        "huge explosion",
+        "realistic injury",
+        "long cinematic boom",
+        "copyrighted pack without license"
+      ]
+    },
+    "meteor": {
+      "display_name": "메테오",
+      "semantic_atoms": [
+        "meteor cannon",
+        "ember shell",
+        "cannon-fired projectile",
+        "warm whoosh",
+        "soft ember boom",
+        "brick impact",
+        "arcade fireball"
+      ],
+      "launch_prompt": "cute fantasy meteor cannon firing ember shell, short warm foom, arcade fireball launch, not sky falling, not cinematic bomb, mono one-shot, 0.30 to 0.55 seconds",
+      "impact_prompt": "cute pixel ember cannon shell impacts bricks, soft boom with ember pop, warm arcade explosion, rounded low impact, no huge cinematic blast, no harsh clipping, mono one-shot, 0.35 to 0.70 seconds",
+      "search_keywords": [
+        "cute fireball launch sfx",
+        "fantasy cannon foom",
+        "ember projectile impact",
+        "soft fire boom arcade",
+        "pixel fireball hit brick"
+      ],
+      "reject_if": [
+        "falling meteor from sky",
+        "aircraft bomb",
+        "realistic artillery",
+        "bass overload",
+        "harsh explosion",
+        "long cinematic explosion",
+        "copyrighted pack without license"
+      ]
+    },
+    "machine_gun": {
+      "display_name": "기관총",
+      "semantic_atoms": [
+        "toy turret",
+        "drone",
+        "pixel tracer",
+        "arcade tick burst",
+        "mechanical tapping",
+        "tiny brick hit spark",
+        "non-realistic"
+      ],
+      "burst_prompt": "cute toy turret pixel burst, rapid tick tick tick, arcade mechanical tapping, not realistic gunshot, no military firearm, no shell casing, mono one-shot, 0.20 to 0.40 seconds",
+      "hit_prompt": "tiny pixel tracer hit on brick, light ping tick, very short arcade impact, not realistic bullet hit, no violence, mono one-shot, 0.08 to 0.18 seconds",
+      "search_keywords": [
+        "cute toy turret burst",
+        "pixel tick burst",
+        "arcade mechanical tapping",
+        "tiny laser hit brick",
+        "soft tracer ping"
+      ],
+      "reject_if": [
+        "realistic gunshot",
+        "rifle",
+        "machine gun realism",
+        "shell casing",
+        "military weapon",
+        "human injury",
+        "blood/gore",
+        "harsh loud shots",
+        "copyrighted pack without license"
+      ]
+    }
+  }
+}
