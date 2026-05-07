@@ -42,7 +42,7 @@ const _DEFINITIONS := [
 		"id": MACHINE_GUN,
 		"display_name": "기관총",
 		"unlock_k": 2000,
-		"interval": 0.3,
+		"interval": 0.7,
 		"damage": 3000,
 		"spread_radius": 0,
 		"max_targets": 10,

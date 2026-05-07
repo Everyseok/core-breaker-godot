@@ -115,6 +115,20 @@ Validation:
 Godot headless passed.
 git diff --check passed.
 
+## Phase 5A.1 — Machine Gun Skill Interval Balance
+
+Changed:
+- machine_gun automatic skill interval from 0.3s to 0.7s.
+
+Reason:
+- 0.3s with up to 10 targets is too aggressive before projectile VFX/SFX are added.
+- 0.7s reduces spam risk and keeps Phase 5B tracer/audio integration safer.
+
+Validation:
+- `git diff --check` passed.
+- MACHINE_GUN has exactly one interval key: 0.7.
+- No assets/audio/UI/VFX files changed.
+
 ## Phase 5A — Core Skill Companion Visuals
 
 Implemented:
