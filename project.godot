@@ -19,6 +19,7 @@ config/icon="res://assets/branding/app_icon_600.png"
 
 GameState="*res://scripts/autoload/game_state.gd"
 BuffManager="*res://scripts/autoload/buff_manager.gd"
+SkillManager="*res://scripts/autoload/skill_manager.gd"
 InputHandler="*res://scripts/gameplay/input_handler.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 AudioManager="*res://scripts/autoload/audio_manager.gd"
