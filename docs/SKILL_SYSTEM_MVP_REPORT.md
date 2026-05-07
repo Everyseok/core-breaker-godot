@@ -115,6 +115,45 @@ Validation:
 Godot headless passed.
 git diff --check passed.
 
+## Phase 5A — Core Skill Companion Visuals
+
+Implemented:
+
+Added scripts/visual/skill_visual_factory.gd
+Added SkillCompanionRoot under Core guardian visual root
+Added stone_throw companion visual as a small wooden catapult
+Added meteor companion visual as a small fantasy meteor cannon
+Added machine_gun companion visual as three cute toy turret/drone companions
+Core now listens to SkillManager skill state changes and rebuilds the companion visual
+
+Architecture notes:
+
+Phase 5A is visual-only.
+No projectile flight VFX was added.
+No impact VFX was added.
+No SkillController changes were made.
+No damage logic was added.
+No targeting logic was added.
+No SFX was added.
+No PNG/assets were added.
+Core does not call RingInstance, DangerManager, or SkillController.
+Actual flying projectiles remain for Phase 5B.
+
+Expected behavior:
+
+Before skill selection / before unlock, no companion is shown.
+When stone_throw is selected, a small catapult appears behind the core.
+When meteor is selected, a small fantasy cannon appears behind the core.
+When machine_gun is selected, three toy turrets/drones appear behind the core.
+Existing front weapon module and muzzle flash remain unobstructed.
+
+Validation:
+
+Godot headless passed.
+git diff --check passed.
+Visual boundary grep checks passed.
+No assets/audio/UI/SkillController/RingInstance/DangerManager changes were made.
+
 ## Phase 4 — Skill Selection UI
 
 Implemented:

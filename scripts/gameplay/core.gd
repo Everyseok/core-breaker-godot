@@ -8,6 +8,7 @@ signal core_breached()
 const KILL_RADIUS := 40.0
 const WeaponProfileRef := preload("res://scripts/visual/weapon_profile.gd")
 const WeaponModuleFactoryRef := preload("res://scripts/visual/weapon_module_factory.gd")
+const SkillVisualFactoryRef := preload("res://scripts/visual/skill_visual_factory.gd")
 
 var _aura_rect: ColorRect
 var _glow_rect: ColorRect
@@ -15,6 +16,7 @@ var _core_dot: ColorRect
 var _body_root: Node2D
 var _guardian_root: Node2D
 var _module_root: Node2D
+var _skill_companion_root: Node2D
 var _flash_root: Node2D
 var _shell_shadow: ColorRect
 var _outer_shell: ColorRect
@@ -39,6 +41,7 @@ var _left_wing_base_position: Vector2 = Vector2.ZERO
 var _right_wing_base_position: Vector2 = Vector2.ZERO
 var _recoil_offset: Vector2 = Vector2.ZERO
 var _current_tier: int = 0
+var _current_skill_visual_id: String = ""
 
 
 func _ready() -> void:
@@ -50,7 +53,9 @@ func _ready() -> void:
 	GameState.tier_threshold_reached.connect(_on_tier_threshold_reached)
 	GameState.weapon_choice_selected.connect(_on_weapon_choice_selected)
 	InputHandler.aim_changed.connect(_on_aim_changed)
+	_connect_skill_visual_signals()
 	_on_aim_changed(InputHandler.aim_direction)
+	_sync_skill_companion()
 	_start_idle_pulse()
 
 
@@ -155,6 +160,12 @@ func _build_visual() -> void:
 	_module_root.name = "WeaponModuleRoot"
 	_guardian_root.add_child(_module_root)
 
+	_skill_companion_root = Node2D.new()
+	_skill_companion_root.name = "SkillCompanionRoot"
+	_skill_companion_root.position = Vector2(0.0, 26.0)
+	_skill_companion_root.z_index = -2
+	_guardian_root.add_child(_skill_companion_root)
+
 	_flash_root = Node2D.new()
 	_flash_root.name = "MuzzleFlashRoot"
 	_flash_root.z_index = 2
@@ -188,6 +199,58 @@ func _on_tier_threshold_reached(unlocked_tier: int, _threshold: int, _display_na
 func _on_weapon_choice_selected(choice_id: String, _display_name: String) -> void:
 	_rebuild_guardian(GameState.current_projectile_tier, choice_id)
 	_pulse_guardian(GameState.current_projectile_tier, choice_id)
+
+
+func _connect_skill_visual_signals() -> void:
+	var skill_manager = get_node_or_null("/root/SkillManager")
+	if skill_manager == null:
+		return
+
+	var selected_callback := Callable(self, "_on_skill_selected")
+	if skill_manager.has_signal("skill_selected") and not skill_manager.is_connected("skill_selected", selected_callback):
+		skill_manager.connect("skill_selected", selected_callback)
+
+	var state_callback := Callable(self, "_sync_skill_companion")
+	if skill_manager.has_signal("skill_state_changed") and not skill_manager.is_connected("skill_state_changed", state_callback):
+		skill_manager.connect("skill_state_changed", state_callback)
+
+
+func _on_skill_selected(_skill_id: String, _display_name: String) -> void:
+	_sync_skill_companion()
+
+
+func _sync_skill_companion() -> void:
+	if _skill_companion_root == null:
+		return
+
+	var skill_manager = get_node_or_null("/root/SkillManager")
+	if skill_manager == null or not skill_manager.has_method("get_selected_skill_id"):
+		_clear_skill_companion()
+		return
+
+	var skill_id := String(skill_manager.call("get_selected_skill_id"))
+	_rebuild_skill_companion(skill_id)
+
+
+func _rebuild_skill_companion(skill_id: String) -> void:
+	if _skill_companion_root == null:
+		return
+
+	if skill_id == _current_skill_visual_id:
+		return
+
+	_current_skill_visual_id = skill_id
+	SkillVisualFactoryRef.build_companion(_skill_companion_root, skill_id)
+
+
+func _clear_skill_companion() -> void:
+	if _skill_companion_root == null:
+		return
+
+	for child in _skill_companion_root.get_children():
+		child.queue_free()
+
+	_current_skill_visual_id = ""
 
 
 func _on_aim_changed(direction: Vector2) -> void:
