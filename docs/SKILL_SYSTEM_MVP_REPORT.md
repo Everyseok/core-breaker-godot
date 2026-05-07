@@ -212,6 +212,30 @@ Validation:
 - `git diff --check` passed.
 - Only Phase 7 brief/report files changed.
 
+## Phase 7R — Existing Audio License Audit
+
+Implemented:
+- Audited existing audio files and sound catalog entries.
+- Created `docs/AUDIO_LICENSE_AUDIT.md`.
+- Created `docs/AUDIO_LICENSES.md`.
+- Checked whether passive SFX source site URL is documented locally.
+
+Findings:
+- Existing audio license status: PARTIAL
+- Passive SFX source site: PENDING_USER_PROVIDED_SITE
+- Passive SFX Phase 8 can proceed only after license/source information is explicit.
+
+Architecture notes:
+- No audio files were added.
+- No sound catalog changes were made.
+- No AudioEvents changes were made.
+- No gameplay code changed.
+
+Validation:
+- Existing audio inventory generated.
+- `git diff --check` passed.
+- JSON validation passed; `data/audio/passive_sfx_brief.json` was not modified.
+
 ## Phase 5A — Core Skill Companion Visuals
 
 Implemented:
