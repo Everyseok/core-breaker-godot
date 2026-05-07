@@ -174,6 +174,23 @@ Validation:
 - MACHINE_GUN has exactly one interval key: 0.7.
 - No assets/audio/UI/VFX files changed.
 
+## Phase 5B.1 — User-Facing Terminology Change: Skill to Passive
+
+Changed:
+- User-facing Korean UI terminology from `스킬` to `패시브`.
+- The system is selected once and then automatically repeats, so `패시브` is more accurate than active `스킬`.
+
+Architecture notes:
+- Internal code names remain `skill_*` for now to avoid broad rename risk.
+- No gameplay logic changed.
+- No VFX changed.
+- No SFX/audio/assets changed.
+
+Validation:
+- `git diff --check` passed.
+- Godot headless passed.
+- Only UI text/report wording changed.
+
 ## Phase 5A — Core Skill Companion Visuals
 
 Implemented:

@@ -77,7 +77,7 @@ func _build_ui() -> void:
 	_title_label.offset_top = 22.0
 	_title_label.offset_bottom = 58.0
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.text = "자동 스킬 선택!"
+	_title_label.text = "자동 패시브 선택!"
 	_panel.add_child(_title_label)
 	UiStyleRef.apply_label(_title_label, 26, Color.WHITE, 5)
 
@@ -86,7 +86,7 @@ func _build_ui() -> void:
 	_subtitle_label.offset_top = 60.0
 	_subtitle_label.offset_bottom = 92.0
 	_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_subtitle_label.text = "해금된 스킬 중 하나를 골라줘!"
+	_subtitle_label.text = "해금된 패시브 중 하나를 골라줘!"
 	_panel.add_child(_subtitle_label)
 	UiStyleRef.apply_label(_subtitle_label, 17, UiStyleRef.TEXT_SUB, 4)
 
@@ -120,8 +120,8 @@ func _open_panel(options: Array) -> void:
 	_center_panel()
 	_rebuild_cards(filtered_options)
 
-	_title_label.text = "자동 스킬 선택!"
-	_subtitle_label.text = "해금된 스킬 중 하나를 골라줘!"
+	_title_label.text = "자동 패시브 선택!"
+	_subtitle_label.text = "해금된 패시브 중 하나를 골라줘!"
 
 	visible = true
 	get_tree().paused = true
@@ -351,8 +351,8 @@ func _force_close() -> void:
 		get_tree().paused = false
 
 	visible = false
-	_title_label.text = "자동 스킬 선택!"
-	_subtitle_label.text = "해금된 스킬 중 하나를 골라줘!"
+	_title_label.text = "자동 패시브 선택!"
+	_subtitle_label.text = "해금된 패시브 중 하나를 골라줘!"
 
 
 func _center_panel() -> void:

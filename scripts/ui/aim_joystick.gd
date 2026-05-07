@@ -700,7 +700,7 @@ func _update_skill_button_state() -> void:
 
 	if GameState.current_level_k < 1000:
 		_skill_button.disabled = true
-		_skill_button.text = "스킬\n1000개"
+		_skill_button.text = "패시브\n1000개"
 		_set_skill_lock_visible(true)
 		return
 
@@ -716,9 +716,9 @@ func _update_skill_button_state() -> void:
 
 	_skill_button.disabled = false
 	if display_name == "":
-		_skill_button.text = "스킬\n선택"
+		_skill_button.text = "패시브\n선택"
 	else:
-		_skill_button.text = "스킬\n%s" % display_name
+		_skill_button.text = "패시브\n%s" % display_name
 	_set_skill_lock_visible(false)
 
 
