@@ -114,6 +114,44 @@ Validation:
 
 Godot headless passed.
 git diff --check passed.
+
+## Phase 4 — Skill Selection UI
+
+Implemented:
+
+Added scenes/ui/skill_select_panel.tscn
+Added scripts/ui/skill_select_panel.gd
+Registered SkillSelectPanel in scenes/ui/root_ui.tscn
+Added SkillButton next to BuffButton in scripts/ui/aim_joystick.gd
+Added skill lock badge matching the existing buff lock badge tone
+SkillButton opens SkillSelectPanel through SkillManager.request_skill_selection()
+SkillSelectPanel selects skills through SkillManager.select_skill()
+
+Architecture notes:
+
+UI does not call SkillController.
+UI does not call DangerManager.
+UI does not call RingInstance.
+UI does not apply damage.
+UI does not spawn VFX.
+UI does not create AudioStreamPlayer.
+No assets were added.
+No audio files were added.
+
+Expected UI behavior:
+
+Before 1000 score: SkillButton is disabled and shows 스킬\n1000개 with lock badge.
+At 1000 score: SkillButton is enabled and stone can be selected / already auto-selected by SkillManager.
+At 1500 score: stone and meteor appear in the skill panel.
+At 2000 score: stone, meteor, and machine_gun appear in the skill panel.
+SkillButton displays the selected skill display name.
+
+Validation:
+
+Godot headless passed.
+git diff --check passed.
+UI boundary grep checks passed.
+No gameplay/Core/assets/audio changes were made.
 No UI/Core/AimJoystick/assets/audio changes were made.
 
 Phase 3.1 — Machine Gun Target Selection Safety Refactor

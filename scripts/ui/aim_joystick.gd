@@ -62,11 +62,20 @@ var _buff_lock_shackle: Line2D
 var _buff_lock_body: Panel
 var _buff_lock_keyhole: ColorRect
 var _buff_lock_spark: ColorRect
+var _skill_button: Button
+var _skill_lock_badge: Control
+var _skill_lock_shadow: Panel
+var _skill_lock_shackle: Line2D
+var _skill_lock_body: Panel
+var _skill_lock_keyhole: ColorRect
+var _skill_lock_spark: ColorRect
 var _buff_manager = null
+var _skill_manager = null
 
 
 func _ready() -> void:
 	_buff_manager = get_node_or_null("/root/BuffManager")
+	_skill_manager = get_node_or_null("/root/SkillManager")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_ui()
@@ -80,6 +89,12 @@ func _ready() -> void:
 		GameState.game_over.connect(_sync_play_visibility)
 	if not GameState.max_level_cleared.is_connected(_sync_play_visibility):
 		GameState.max_level_cleared.connect(_sync_play_visibility)
+	var skill_manager = _get_skill_manager()
+	if skill_manager != null:
+		if skill_manager.has_signal("skill_state_changed") and not skill_manager.skill_state_changed.is_connected(_update_skill_button_state):
+			skill_manager.skill_state_changed.connect(_update_skill_button_state)
+		if skill_manager.has_signal("skill_selected") and not skill_manager.skill_selected.is_connected(_on_skill_selected):
+			skill_manager.skill_selected.connect(_on_skill_selected)
 	if not resized.is_connected(_update_layout):
 		resized.connect(_update_layout)
 
@@ -103,6 +118,7 @@ func _process(delta: float) -> void:
 	if not visible:
 		return
 	_update_buff_button_state()
+	_update_skill_button_state()
 	if _is_dragging_stick():
 		return
 	if _visual_knob_offset.is_zero_approx():
@@ -247,6 +263,50 @@ func _build_ui() -> void:
 	_buff_lock_spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_buff_lock_badge.add_child(_buff_lock_spark)
 
+	_skill_button = Button.new()
+	_skill_button.name = "SkillButton"
+	_skill_button.focus_mode = Control.FOCUS_NONE
+	_skill_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_skill_button.pressed.connect(_on_skill_button_pressed)
+	add_child(_skill_button)
+
+	_skill_lock_badge = Control.new()
+	_skill_lock_badge.name = "SkillLockBadge"
+	_skill_lock_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_skill_lock_badge.visible = false
+	_skill_lock_badge.z_index = 5
+	add_child(_skill_lock_badge)
+
+	_skill_lock_shadow = _build_panel("SkillLockShadow")
+	_skill_lock_badge.add_child(_skill_lock_shadow)
+
+	_skill_lock_shackle = Line2D.new()
+	_skill_lock_shackle.name = "SkillLockShackle"
+	_skill_lock_shackle.width = 4.0
+	_skill_lock_shackle.default_color = Color(1.0, 0.96, 0.68, 1.0)
+	_skill_lock_shackle.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_skill_lock_shackle.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_skill_lock_shackle.joint_mode = Line2D.LINE_JOINT_ROUND
+	_skill_lock_shackle.add_point(Vector2(9.0, 17.0))
+	_skill_lock_shackle.add_point(Vector2(9.0, 9.0))
+	_skill_lock_shackle.add_point(Vector2(16.0, 5.0))
+	_skill_lock_shackle.add_point(Vector2(23.0, 9.0))
+	_skill_lock_shackle.add_point(Vector2(23.0, 17.0))
+	_skill_lock_badge.add_child(_skill_lock_shackle)
+
+	_skill_lock_body = _build_panel("SkillLockBody")
+	_skill_lock_badge.add_child(_skill_lock_body)
+
+	_skill_lock_keyhole = ColorRect.new()
+	_skill_lock_keyhole.name = "SkillLockKeyhole"
+	_skill_lock_keyhole.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_skill_lock_badge.add_child(_skill_lock_keyhole)
+
+	_skill_lock_spark = ColorRect.new()
+	_skill_lock_spark.name = "SkillLockSpark"
+	_skill_lock_spark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_skill_lock_badge.add_child(_skill_lock_spark)
+
 
 func _build_panel(node_name: String) -> Panel:
 	var panel := Panel.new()
@@ -281,6 +341,7 @@ func _apply_visual_style() -> void:
 	_apply_arcade_button_style(_left_button)
 	_apply_arcade_button_style(_right_button)
 	UiStyleRef.apply_button(_buff_button, Color(0.18, 0.42, 0.30), Color(0.62, 0.94, 0.76), Color.WHITE, 16)
+	UiStyleRef.apply_button(_skill_button, Color(0.18, 0.30, 0.46), Color(0.62, 0.82, 1.0), Color.WHITE, 16)
 	_apply_lock_badge_style()
 
 
@@ -327,6 +388,10 @@ func _apply_lock_badge_style() -> void:
 	_apply_panel_box(_buff_lock_body, Color(1.0, 0.72, 0.22, 1.0), Color(1.0, 0.94, 0.48, 1.0), 6, 2, 2, 2, 3)
 	_buff_lock_keyhole.color = Color(0.22, 0.16, 0.12, 0.90)
 	_buff_lock_spark.color = Color(1.0, 0.98, 0.72, 0.92)
+	_apply_panel_box(_skill_lock_shadow, Color(0.00, 0.02, 0.06, 0.32), Color(0.00, 0.02, 0.06, 0.0), 7, 0, 0, 0, 0)
+	_apply_panel_box(_skill_lock_body, Color(1.0, 0.72, 0.22, 1.0), Color(1.0, 0.94, 0.48, 1.0), 6, 2, 2, 2, 3)
+	_skill_lock_keyhole.color = Color(0.22, 0.16, 0.12, 0.90)
+	_skill_lock_spark.color = Color(1.0, 0.98, 0.72, 0.92)
 
 
 func _on_joystick_area_gui_input(event: InputEvent) -> void:
@@ -444,16 +509,27 @@ func _update_layout() -> void:
 	)
 	_divider.size = DIVIDER_SIZE
 
+	var bottom_button_y := _divider.position.y - BUFF_BUTTON_GAP - BUFF_BUTTON_SIZE.y
+	var bottom_button_group_width := (BUFF_BUTTON_SIZE.x * 2.0) + BUFF_BUTTON_GAP
 	_buff_button.position = Vector2(
-		slot_center_x - (BUFF_BUTTON_SIZE.x * 0.5),
-		_divider.position.y - BUFF_BUTTON_GAP - BUFF_BUTTON_SIZE.y
+		slot_center_x - (bottom_button_group_width * 0.5),
+		bottom_button_y
 	)
 	_buff_button.size = BUFF_BUTTON_SIZE
+
+	_skill_button.position = Vector2(
+		_buff_button.position.x + BUFF_BUTTON_SIZE.x + BUFF_BUTTON_GAP,
+		bottom_button_y
+	)
+	_skill_button.size = BUFF_BUTTON_SIZE
+
 	_update_buff_lock_badge_layout()
+	_update_skill_lock_badge_layout()
 
 	_update_arcade_visuals()
 	_update_button_state()
 	_update_buff_button_state()
+	_update_skill_button_state()
 
 
 func _update_buff_lock_badge_layout() -> void:
@@ -467,6 +543,19 @@ func _update_buff_lock_badge_layout() -> void:
 	_buff_lock_keyhole.size = Vector2(4.0, 7.0)
 	_buff_lock_spark.position = Vector2(23.0, 7.0)
 	_buff_lock_spark.size = Vector2(4.0, 4.0)
+
+
+func _update_skill_lock_badge_layout() -> void:
+	_skill_lock_badge.position = _skill_button.position + Vector2(BUFF_BUTTON_SIZE.x - 20.0, -11.0)
+	_skill_lock_badge.size = LOCK_BADGE_SIZE
+	_skill_lock_shadow.position = Vector2(6.0, 11.0)
+	_skill_lock_shadow.size = LOCK_BODY_SIZE
+	_skill_lock_body.position = Vector2(5.0, 10.0)
+	_skill_lock_body.size = LOCK_BODY_SIZE
+	_skill_lock_keyhole.position = Vector2(14.0, 17.0)
+	_skill_lock_keyhole.size = Vector2(4.0, 7.0)
+	_skill_lock_spark.position = Vector2(23.0, 7.0)
+	_skill_lock_spark.size = Vector2(4.0, 4.0)
 
 
 func _update_arcade_visuals() -> void:
@@ -524,6 +613,19 @@ func _on_buff_button_pressed() -> void:
 	_update_buff_button_state()
 
 
+func _on_skill_button_pressed() -> void:
+	var skill_manager = _get_skill_manager()
+	if skill_manager != null and skill_manager.has_method("request_skill_selection") and bool(skill_manager.call("request_skill_selection")):
+		AudioEvents.ui_confirm()
+	else:
+		AudioEvents.ui_error()
+	_update_skill_button_state()
+
+
+func _on_skill_selected(_skill_id: String, _display_name: String) -> void:
+	_update_skill_button_state()
+
+
 func _update_buff_button_state() -> void:
 	if _buff_button == null:
 		return
@@ -571,12 +673,72 @@ func _update_buff_button_state() -> void:
 	_set_buff_lock_visible(false)
 
 
+func _update_skill_button_state() -> void:
+	if _skill_button == null:
+		return
+
+	var skill_manager = _get_skill_manager()
+	if skill_manager == null:
+		_skill_button.disabled = true
+		_skill_button.text = "--"
+		_set_skill_lock_visible(false)
+		return
+
+	if not GameState.is_playing:
+		_skill_button.disabled = true
+		_skill_button.text = "--"
+		_set_skill_lock_visible(false)
+		return
+
+	var buff_manager = _get_buff_manager()
+	if buff_manager != null and buff_manager.has_method("is_roll_in_progress"):
+		if bool(buff_manager.call("is_roll_in_progress")):
+			_skill_button.disabled = true
+			_skill_button.text = "선택중"
+			_set_skill_lock_visible(false)
+			return
+
+	if GameState.current_level_k < 1000:
+		_skill_button.disabled = true
+		_skill_button.text = "스킬\n1000개"
+		_set_skill_lock_visible(true)
+		return
+
+	if skill_manager.has_method("is_skill_panel_open") and bool(skill_manager.call("is_skill_panel_open")):
+		_skill_button.disabled = true
+		_skill_button.text = "선택중"
+		_set_skill_lock_visible(false)
+		return
+
+	var display_name := ""
+	if skill_manager.has_method("get_selected_skill_display_name"):
+		display_name = String(skill_manager.call("get_selected_skill_display_name"))
+
+	_skill_button.disabled = false
+	if display_name == "":
+		_skill_button.text = "스킬\n선택"
+	else:
+		_skill_button.text = "스킬\n%s" % display_name
+	_set_skill_lock_visible(false)
+
+
 func _get_buff_manager():
 	if _buff_manager == null or not is_instance_valid(_buff_manager):
 		_buff_manager = get_node_or_null("/root/BuffManager")
 	return _buff_manager
 
 
+func _get_skill_manager():
+	if _skill_manager == null or not is_instance_valid(_skill_manager):
+		_skill_manager = get_node_or_null("/root/SkillManager")
+	return _skill_manager
+
+
 func _set_buff_lock_visible(is_visible: bool) -> void:
 	if _buff_lock_badge != null:
 		_buff_lock_badge.visible = is_visible
+
+
+func _set_skill_lock_visible(is_visible: bool) -> void:
+	if _skill_lock_badge != null:
+		_skill_lock_badge.visible = is_visible

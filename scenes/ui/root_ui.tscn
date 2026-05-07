@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/root_ui.gd" id="1_root"]
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="2_hud"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/weapon_choice_panel.tscn" id="10_wcp"]
 [ext_resource type="PackedScene" path="res://scenes/ui/revive_prompt.tscn" id="11_rp"]
 [ext_resource type="PackedScene" path="res://scenes/ui/buff_roulette_panel.tscn" id="12_brp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/skill_select_panel.tscn" id="13_ssp"]
 
 [node name="RootUI" type="CanvasLayer"]
 layer = 2
@@ -336,6 +337,8 @@ text = "다시 시작"
 [node name="RevivePrompt" parent="." instance=ExtResource("11_rp")]
 
 [node name="BuffRoulettePanel" parent="." instance=ExtResource("12_brp")]
+
+[node name="SkillSelectPanel" parent="." instance=ExtResource("13_ssp")]
 
 [node name="PauseMenu" type="Control" parent="."]
 process_mode = 3
