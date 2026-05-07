@@ -205,7 +205,6 @@ Godot headless passed.
 git diff --check passed.
 UI boundary grep checks passed.
 No gameplay/Core/assets/audio changes were made.
-No UI/Core/AimJoystick/assets/audio changes were made.
 
 Phase 3.1 — Machine Gun Target Selection Safety Refactor
 
