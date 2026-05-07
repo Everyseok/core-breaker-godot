@@ -58,6 +58,19 @@ Note: `.ogg.import` files and license text files are not gameplay media and are 
 
 None. All catalog paths exist on disk.
 
+## Phase 7R.1 Metadata Hardening
+
+- `b9f338a docs: audit audio license status` push result: succeeded. `origin/feature/android-debug-apk-artifact` now points to `b9f338a`.
+- Metadata extraction tools: `ffprobe` available at `/opt/homebrew/bin/ffprobe`; `afinfo` available at `/usr/bin/afinfo`.
+- Files with file size recorded: 20 / 20 active `.ogg` media files.
+- Files with duration recorded: 20 / 20 active `.ogg` media files.
+- Files with sample rate/channel recorded: 20 / 20 active `.ogg` media files.
+- Current technical metadata: every active audio file is Ogg Vorbis at 44100 Hz; files are a mix of mono and stereo.
+- Remaining metadata gaps: OpenGameArt author names are still not documented locally for 8 weapon SFX files, except `assets/audio/bgm/core_loop.ogg`, whose file tags list Zane Little as artist/composer.
+- Current release-readiness status: PARTIAL.
+
+The release-readiness status remains `PARTIAL` because a `COMPLETE` status requires every active audio file to have source, license, author, commercial use, duration, sample rate, channel, file size, and processing notes fully recorded.
+
 ## Passive SFX Phase 8 requirement
 
 Before adding passive SFX, each new file must have:

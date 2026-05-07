@@ -4,11 +4,11 @@
 
 Status: PARTIAL
 
-Existing active audio files have repo-local source/license evidence in `assets/audio/LICENSE_MANIFEST.md`, `assets/audio/licenses/kenney/*.txt`, and `docs/audio/phase2-packs.md`. This file consolidates that evidence for release review. Some metadata, such as OpenGameArt author names, duration, sample rate, and stereo/mono information, is not fully recorded here and should be completed before a final release packet if required.
+Existing active audio files have repo-local source/license evidence in `assets/audio/LICENSE_MANIFEST.md`, `assets/audio/licenses/kenney/*.txt`, and `docs/audio/phase2-packs.md`. This file consolidates that evidence for release review. Phase 7R.1 added local file size, duration, sample rate, and channel metadata extracted with `ffprobe`/`afinfo`. Some OpenGameArt author names are still not documented locally and remain `UNKNOWN`, so the release status remains `PARTIAL`.
 
 | File | Used by event(s) | Source | License | Author | Commercial use | Verification status | Notes |
 |---|---|---|---|---|---|---|---|
-| `assets/audio/bgm/core_loop.ogg` | `bgm.core_loop` | `https://opengameart.org/content/flowerbed-fields-loop` | CC0 | UNKNOWN | Yes | PARTIAL | Manifest lists original `flowerbed_fields.ogg`, source page CC0, SHA256 `99607b996cc43c1891afcbf7c2c8d8aad1009266cea358d4753e3c50b1332d36`. Author not recorded in repo manifest. |
+| `assets/audio/bgm/core_loop.ogg` | `bgm.core_loop` | `https://opengameart.org/content/flowerbed-fields-loop` | CC0 | Zane Little | Yes | VERIFIED | Manifest lists original `flowerbed_fields.ogg`, source page CC0, SHA256 `99607b996cc43c1891afcbf7c2c8d8aad1009266cea358d4753e3c50b1332d36`. File metadata tags list artist/composer as Zane Little. |
 | `assets/audio/sfx/brick/break.ogg` | `brick.break` | `https://kenney.nl/assets/impact-sounds` | CC0 | Kenney Vleugels / Kenney.nl | Yes | VERIFIED | Original `Audio/impactMining_004.ogg`; internal Kenney license text preserved. |
 | `assets/audio/sfx/brick/hit.ogg` | `brick.hit` | `https://kenney.nl/assets/impact-sounds` | CC0 | Kenney Vleugels / Kenney.nl | Yes | VERIFIED | Original `Audio/impactMetal_light_004.ogg`; internal Kenney license text preserved. |
 | `assets/audio/sfx/progression/game_over.ogg` | `game.over` | `https://kenney.nl/assets/digital-audio` | CC0 | Kenney Vleugels / Kenney.nl | Yes | VERIFIED | Original `Audio/phaserDown3.ogg`; internal Kenney license text preserved. |
@@ -28,6 +28,33 @@ Existing active audio files have repo-local source/license evidence in `assets/a
 | `assets/audio/sfx/weapons/spark_lance/hit.ogg` | `weapon.hit.spark_lance` | `https://opengameart.org/content/laser` | CC0 | UNKNOWN | Yes | PARTIAL | Manifest lists original `laserthing2.wav` trimmed to 0.38s, source page CC0, SHA256 `922b04169afeefeee3f48b967fe5dbfb00171923f9ba6b336a99fbd6e4d198eb`. Author not recorded in repo manifest. |
 | `assets/audio/sfx/weapons/thunder/hit.ogg` | `weapon.hit.thunder` | `https://opengameart.org/content/electricity-sound-effects-0` | CC0 | UNKNOWN | Yes | PARTIAL | Manifest lists original `spark.wav` trimmed to 0.24s, source page CC0, SHA256 `9a3d987bdf7f405570aa015f6da42596ce84c5073c18c0561be7cd3ae401bc97`. Author not recorded in repo manifest. |
 | `assets/audio/sfx/weapons/volt_storm/hit.ogg` | `weapon.hit.volt_storm` | `https://opengameart.org/content/electricity-sound-effects-0` | CC0 | UNKNOWN | Yes | PARTIAL | Manifest lists original `continuousspark.wav` trimmed to 0.36s, source page CC0, SHA256 `4ec24045b4fb6a88b958d00f16cc39b8aa992cd6e6a5edb4ecb0f34b36ddb18b`. Author not recorded in repo manifest. |
+
+## Existing active audio technical metadata
+
+Extracted locally on 2026-05-08 with `ffprobe` and cross-checked with `afinfo`.
+
+| File | File size | Duration | Sample rate | Channels | Processing / original-file notes |
+|---|---:|---:|---:|---|---|
+| `assets/audio/bgm/core_loop.ogg` | 1,759,940 B | 105.932s | 44100 Hz | stereo | Original `flowerbed_fields.ogg`; source page CC0; no trim note in manifest. |
+| `assets/audio/sfx/brick/break.ogg` | 11,668 B | 0.830s | 44100 Hz | stereo | Original `Audio/impactMining_004.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/brick/hit.ogg` | 6,675 B | 0.213s | 44100 Hz | stereo | Original `Audio/impactMetal_light_004.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/progression/game_over.ogg` | 7,329 B | 0.496s | 44100 Hz | stereo | Original `Audio/phaserDown3.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/progression/max_clear.ogg` | 6,495 B | 0.679s | 44100 Hz | mono | Original `Audio/powerUp11.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/progression/weapon_select.ogg` | 6,363 B | 0.575s | 44100 Hz | mono | Original `Audio/powerUp8.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/ui/button_tap.ogg` | 4,876 B | 0.100s | 44100 Hz | mono | Original `Audio/click_001.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/ui/confirm.ogg` | 8,968 B | 0.290s | 44100 Hz | mono | Original `Audio/confirmation_001.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/ui/error.ogg` | 12,256 B | 0.533s | 44100 Hz | stereo | Original `Audio/error_003.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/ui/menu_close.ogg` | 14,752 B | 0.314s | 44100 Hz | mono | Original `Audio/close_002.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/ui/menu_open.ogg` | 14,975 B | 0.314s | 44100 Hz | mono | Original `Audio/open_002.ogg`; reused by `weapon.choice.open`. |
+| `assets/audio/sfx/ui/switch.ogg` | 7,097 B | 0.611s | 44100 Hz | stereo | Original `Audio/switch_002.ogg`; Kenney internal license preserved. |
+| `assets/audio/sfx/weapons/arrow/hit.ogg` | 7,574 B | 0.221s | 44100 Hz | stereo | Original `clink1_0.wav`; trimmed to 0.22s. |
+| `assets/audio/sfx/weapons/chain_lightning/proc.ogg` | 11,078 B | 0.218s | 44100 Hz | stereo | Original `continuousspark.wav`; trimmed to 0.30s per manifest, exported file duration is 0.218s. |
+| `assets/audio/sfx/weapons/meteor_cannon/proc.ogg` | 11,043 B | 0.721s | 44100 Hz | stereo | Original `explosion_1.wav`; trimmed to 0.72s. |
+| `assets/audio/sfx/weapons/prism_lance/proc.ogg` | 20,293 B | 0.621s | 44100 Hz | stereo | Original `magical_7_0.ogg`; trimmed to 0.62s. |
+| `assets/audio/sfx/weapons/siege_cannon/hit.ogg` | 14,537 B | 0.578s | 44100 Hz | stereo | Original `cannon_hit_wall_0.ogg`; trimmed to 0.58s. |
+| `assets/audio/sfx/weapons/spark_lance/hit.ogg` | 9,603 B | 0.311s | 44100 Hz | stereo | Original `laserthing2.wav`; trimmed to 0.38s per manifest, exported file duration is 0.311s. |
+| `assets/audio/sfx/weapons/thunder/hit.ogg` | 9,988 B | 0.241s | 44100 Hz | stereo | Original `spark.wav`; trimmed to 0.24s. |
+| `assets/audio/sfx/weapons/volt_storm/hit.ogg` | 9,992 B | 0.218s | 44100 Hz | stereo | Original `continuousspark.wav`; trimmed to 0.36s per manifest, exported file duration is 0.218s. |
 
 ## Passive SFX to be added later
 

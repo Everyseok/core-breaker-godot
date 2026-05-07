@@ -327,3 +327,26 @@ Validation:
 
 Godot headless passed.
 git diff --check passed.
+
+## Phase 7R.1 — Audio Release Metadata Hardening
+
+Implemented:
+- Pushed audio license audit commit `b9f338a docs: audit audio license status`.
+- Rechecked existing audio license/source metadata.
+- Extracted file size, duration, sample rate, and channel metadata for existing active audio.
+- Updated audio license docs only with locally verifiable metadata.
+
+Findings:
+- Existing audio license status: PARTIAL
+- Passive SFX source site: PENDING_USER_PROVIDED_SITE
+- Phase 8 status: BLOCKED until passive SFX source/license/files are explicit.
+
+Architecture notes:
+- No audio files were changed.
+- No sound catalog changes were made.
+- No AudioEvents changes were made.
+- No gameplay/UI/VFX code changed.
+
+Validation:
+- `git diff --check` passed.
+- No forbidden files changed.
