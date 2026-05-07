@@ -9,6 +9,7 @@ const AdLayoutRef := preload("res://scripts/ui/ad_layout.gd")
 @onready var _core = $Core
 @onready var _weapon = $Weapon
 @onready var _ring_spawner = $RingSpawner
+@onready var _skill_controller: Node2D = $SkillController
 @onready var _brick_layer: Node2D = $BrickLayer
 @onready var _projectile_layer: Node2D = $ProjectileLayer
 @onready var _vfx_layer: Node2D = $VfxLayer
@@ -34,6 +35,13 @@ func _ready() -> void:
 	_weapon.set_projectile_layer(_projectile_layer)
 	_weapon.set_hit_effect_layer(_vfx_layer)
 	_ring_spawner.set_ring_layer(_brick_layer)
+	if _skill_controller != null:
+		if _skill_controller.has_method("set_core"):
+			_skill_controller.call("set_core", _core)
+		if _skill_controller.has_method("set_projectile_layer"):
+			_skill_controller.call("set_projectile_layer", _projectile_layer)
+		if _skill_controller.has_method("set_vfx_layer"):
+			_skill_controller.call("set_vfx_layer", _vfx_layer)
 	# Auto-start removed: MainMenu.start_game() begins a run when the player taps Start.
 
 

@@ -1,0 +1,196 @@
+extends Node2D
+# SkillController — automatic runtime skill firing only.
+# This node must not own UI, permanent visuals, or audio assets.
+# Phase 3 intentionally applies damage without projectile VFX.
+
+const SkillRulesRef := preload("res://scripts/domain/skills/skill_rules.gd")
+
+var _core: Node2D
+var _projectile_layer: Node2D
+var _vfx_layer: Node2D
+var _elapsed_since_fire: float = 0.0
+
+
+func set_core(core: Node2D) -> void:
+	_core = core
+
+
+func set_projectile_layer(layer: Node2D) -> void:
+	_projectile_layer = layer
+
+
+func set_vfx_layer(layer: Node2D) -> void:
+	_vfx_layer = layer
+
+
+func _process(delta: float) -> void:
+	if not _can_tick_skill():
+		_elapsed_since_fire = 0.0
+		return
+
+	var skill_manager = _get_skill_manager()
+	if skill_manager == null:
+		return
+
+	if not skill_manager.has_method("get_selected_skill_id"):
+		return
+
+	var skill_id := String(skill_manager.call("get_selected_skill_id"))
+	if not SkillRulesRef.is_valid_skill_id(skill_id):
+		return
+
+	var interval := SkillRulesRef.interval_for_id(skill_id)
+	_elapsed_since_fire += delta
+	if _elapsed_since_fire < interval:
+		return
+
+	var targets := _select_targets(skill_id)
+	if targets.is_empty():
+		return
+
+	_elapsed_since_fire = 0.0
+	_fire_skill(skill_id, targets)
+
+
+func _can_tick_skill() -> bool:
+	if not GameState.is_playing:
+		return false
+	if GameState.revive_prompt_pending:
+		return false
+	if get_tree().paused:
+		return false
+	if GameState.has_method("is_weapon_choice_panel_open") and GameState.is_weapon_choice_panel_open():
+		return false
+
+	var skill_manager = _get_skill_manager()
+	if skill_manager != null and skill_manager.has_method("is_skill_panel_open"):
+		if bool(skill_manager.call("is_skill_panel_open")):
+			return false
+
+	var buff_manager = get_node_or_null("/root/BuffManager")
+	if buff_manager != null and buff_manager.has_method("is_roll_in_progress"):
+		if bool(buff_manager.call("is_roll_in_progress")):
+			return false
+
+	return true
+
+
+func _get_skill_manager():
+	return get_node_or_null("/root/SkillManager")
+
+
+func _select_targets(skill_id: String) -> Array:
+	var all_targets := _collect_all_skill_targets()
+	if all_targets.is_empty():
+		return []
+
+	all_targets.sort_custom(_sort_targets_by_danger)
+
+	if skill_id == SkillRulesRef.MACHINE_GUN:
+		var max_targets := mini(SkillRulesRef.max_targets_for_id(skill_id), all_targets.size())
+		return all_targets.slice(0, max_targets)
+
+	return [all_targets[0]]
+
+
+func _collect_all_skill_targets() -> Array:
+	var result: Array = []
+
+	if not DangerManager.has_method("get_tracked_rings_snapshot"):
+		return result
+
+	for ring_variant in DangerManager.get_tracked_rings_snapshot():
+		var ring = ring_variant
+		if ring == null or not is_instance_valid(ring):
+			continue
+		if not ring.has_method("get_skill_target_snapshot"):
+			continue
+
+		var ring_targets: Array = ring.call("get_skill_target_snapshot")
+		for target_variant in ring_targets:
+			if target_variant is Dictionary:
+				result.append(target_variant)
+
+	return result
+
+
+func _sort_targets_by_danger(a: Dictionary, b: Dictionary) -> bool:
+	# Smaller radius means the wall is closer to the core, therefore more dangerous.
+	return float(a.get("radius", INF)) < float(b.get("radius", INF))
+
+
+func _fire_skill(skill_id: String, targets: Array) -> void:
+	match skill_id:
+		SkillRulesRef.STONE_THROW, SkillRulesRef.METEOR:
+			_fire_area_skill(skill_id, targets[0])
+		SkillRulesRef.MACHINE_GUN:
+			_fire_machine_gun(skill_id, targets)
+		_:
+			return
+
+
+func _fire_area_skill(skill_id: String, target: Dictionary) -> void:
+	var ring = target.get("ring")
+	if ring == null or not is_instance_valid(ring):
+		return
+	if not ring.has_method("apply_skill_hit"):
+		return
+
+	var segment_index := int(target.get("segment_index", -1))
+	if segment_index < 0:
+		return
+
+	var damage := SkillRulesRef.damage_for_id(skill_id)
+	var spread_radius := SkillRulesRef.spread_radius_for_id(skill_id)
+	ring.call("apply_skill_hit", segment_index, damage, spread_radius, skill_id)
+
+
+func _fire_machine_gun(skill_id: String, targets: Array) -> void:
+	var grouped_by_ring: Dictionary = {}
+
+	for target_variant in targets:
+		if not (target_variant is Dictionary):
+			continue
+
+		var target: Dictionary = target_variant
+		var ring = target.get("ring")
+		if ring == null or not is_instance_valid(ring):
+			continue
+
+		var segment_index := int(target.get("segment_index", -1))
+		if segment_index < 0:
+			continue
+
+		var ring_key := str(ring.get_instance_id())
+		if not grouped_by_ring.has(ring_key):
+			grouped_by_ring[ring_key] = {
+				"ring": ring,
+				"indices": [],
+			}
+
+		grouped_by_ring[ring_key]["indices"].append(segment_index)
+
+	for group_variant in grouped_by_ring.values():
+		var group: Dictionary = group_variant
+		var ring = group.get("ring")
+		if ring == null or not is_instance_valid(ring):
+			continue
+		if not ring.has_method("apply_skill_multi_hit"):
+			continue
+
+		var indices: Array = group.get("indices", [])
+		if indices.is_empty():
+			continue
+
+		ring.call("apply_skill_multi_hit", indices, SkillRulesRef.damage_for_id(skill_id), skill_id)
+
+
+func get_debug_selected_skill_id() -> String:
+	var skill_manager = _get_skill_manager()
+	if skill_manager == null or not skill_manager.has_method("get_selected_skill_id"):
+		return SkillRulesRef.NONE
+	return String(skill_manager.call("get_selected_skill_id"))
+
+
+func get_debug_elapsed_since_fire() -> float:
+	return _elapsed_since_fire

@@ -78,3 +78,40 @@ Validation:
 - `apply_skill_hit()` and `apply_skill_multi_hit()` do not call `_apply_active_weapon_choice_for_hit()`.
 - `apply_projectile_hit()` behavior remains unchanged.
 - Airborne jumping segments remain immune because `_damage_segment()` is reused.
+
+Phase 3 — Automatic SkillController Runtime
+
+Implemented:
+
+Added scripts/gameplay/skill_controller.gd
+Added SkillController node to scenes/game/game_root.tscn
+Wired SkillController in scripts/gameplay/game_root.gd
+
+Architecture notes:
+
+No UI added.
+No VFX added.
+No SFX added.
+No assets added.
+No Core visual changes added.
+No AimJoystick changes added.
+SkillController reads selected skill from SkillManager.
+SkillController reads active rings through DangerManager.
+SkillController applies skill damage only through RingInstance skill methods.
+Machine gun targets are grouped by RingInstance before calling apply_skill_multi_hit().
+
+Runtime gating:
+
+Does not fire when GameState.is_playing == false
+Does not fire during revive prompt
+Does not fire while the tree is paused
+Does not fire while weapon choice panel is open
+Does not fire while skill panel is open
+Does not fire while buff roulette is in progress
+Does not fire when no valid living brick targets exist
+
+Validation:
+
+Godot headless passed.
+git diff --check passed.
+No UI/Core/AimJoystick/assets/audio changes were made.
