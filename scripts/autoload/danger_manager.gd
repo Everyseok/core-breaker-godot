@@ -28,6 +28,14 @@ func unregister_ring(ring: Node2D) -> void:
 	_tracked_rings.erase(ring)
 
 
+func get_tracked_rings_snapshot() -> Array:
+	var result: Array = []
+	for ring in _tracked_rings:
+		if is_instance_valid(ring):
+			result.append(ring)
+	return result
+
+
 func reset() -> void:
 	_tracked_rings.clear()
 	_set_level(0)

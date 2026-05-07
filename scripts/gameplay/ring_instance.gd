@@ -299,6 +299,29 @@ func segment_index_for_angle(angle: float) -> int:
 	return wrapi(raw_index, 0, _segments.size())
 
 
+func get_skill_target_snapshot() -> Array:
+	var targets: Array = []
+	for i in range(_segments.size()):
+		var segment: Dictionary = _segments[i]
+		if not bool(segment.get("alive", false)):
+			continue
+		if _is_segment_airborne(i):
+			continue
+		targets.append({
+			"ring": self,
+			"segment_index": i,
+			"world_position": _segment_world_position(i),
+			"radius": radius,
+		})
+	return targets
+
+
+func get_segment_world_position_safe(segment_index: int) -> Vector2:
+	if segment_index < 0 or segment_index >= _segments.size():
+		return global_position
+	return _segment_world_position(segment_index)
+
+
 func _build_initial_angles(count: int) -> Array:
 	var angles: Array = []
 	for i in range(count):
@@ -513,6 +536,30 @@ func _on_brick_destroyed(destroyed_brick_type: int, segment_index: int) -> void:
 	_segments[segment_index] = segment
 	_bricks[segment_index] = null
 	brick_destroyed.emit(destroyed_brick_type)
+	_cleanup_if_empty()
+
+
+func apply_skill_hit(segment_index: int, damage: int, spread_radius: int, _source_skill_id: String = "") -> void:
+	if damage <= 0 or _segments.is_empty():
+		return
+	var target_indices: Array = _collect_target_indices(segment_index, spread_radius)
+	for target_variant in target_indices:
+		_damage_segment(int(target_variant), damage, -1)
+	_cleanup_if_empty()
+
+
+func apply_skill_multi_hit(segment_indices: Array, damage: int, _source_skill_id: String = "") -> void:
+	if damage <= 0 or _segments.is_empty():
+		return
+	var used: Dictionary = {}
+	for index_variant in segment_indices:
+		var target_index := int(index_variant)
+		if target_index < 0 or target_index >= _segments.size():
+			continue
+		if used.has(target_index):
+			continue
+		used[target_index] = true
+		_damage_segment(target_index, damage, -1)
 	_cleanup_if_empty()
 
 

@@ -56,3 +56,25 @@ Phase 1.1 Validation results:
 - `git diff --check`: passed.
 - `git status --short`: confirmed Phase 1 intended files remain dirty/untracked; pre-existing `.godot` cache dirt remains.
 - Godot headless with `/Users/junseokism/Downloads/Godot 2.app/Contents/MacOS/Godot --headless --audio-driver Dummy --display-driver headless --path . --quit`: exited with code 0. Godot reported shutdown warnings about leaked resources/resources still in use, but no parser/load failure.
+
+## Phase 2 — Safe Skill Targeting and Damage Entry Points
+
+Implemented:
+- Added `DangerManager.get_tracked_rings_snapshot()`
+- Added `RingInstance.get_skill_target_snapshot()`
+- Added `RingInstance.get_segment_world_position_safe()`
+- Added `RingInstance.apply_skill_hit()`
+- Added `RingInstance.apply_skill_multi_hit()`
+
+Architecture notes:
+- No UI added.
+- No SkillController added.
+- No VFX added.
+- No SFX added.
+- No assets added.
+- Skill damage entry points do not trigger weapon-choice procs.
+
+Validation:
+- `apply_skill_hit()` and `apply_skill_multi_hit()` do not call `_apply_active_weapon_choice_for_hit()`.
+- `apply_projectile_hit()` behavior remains unchanged.
+- Airborne jumping segments remain immune because `_damage_segment()` is reused.
