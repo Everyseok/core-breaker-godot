@@ -50,14 +50,14 @@ static func spawn_machine_gun_tracer(
 	var jitter := tangent * float((tracer_index % 3) - 1) * 3.0
 	local_target += jitter
 
-	_add_line(root, Vector2.ZERO, local_target, 5.0, Color(0.34, 0.58, 1.0, 0.28), -1)
-	_add_line(root, Vector2.ZERO, local_target, 2.0, Color(0.86, 0.96, 1.0, 0.88), 0)
+	_add_machine_gun_beam(root, local_target, tangent)
+	_spawn_target_marker(layer, target, 12.0, Color(0.52, 0.96, 1.0, 0.82), 0.18)
 
 	_spawn_tiny_hit_spark(layer, target, Color(0.70, 0.88, 1.0, 0.92), Color(0.96, 0.98, 1.0, 0.92))
 
 	var tween := layer.create_tween()
-	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(root, "scale", Vector2(0.72, 0.72), 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(root, "scale", Vector2(0.86, 0.86), 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.finished.connect(func() -> void:
 		_safe_queue_free(root)
 	)
@@ -78,6 +78,19 @@ static func _spawn_catapult_stone(
 	layer.add_child(root)
 	root.global_position = start
 
+	var safe_time := maxf(flight_time, 0.08)
+	var arc_height := clampf(start.distance_to(target) * 0.20, 22.0, 64.0)
+	_spawn_area_targeting_marks(
+		layer,
+		origin,
+		start,
+		target,
+		34.0,
+		arc_height,
+		safe_time,
+		Color(0.50, 0.96, 0.88, 0.62),
+		Color(0.82, 1.0, 0.94, 0.82)
+	)
 	_spawn_launch_puff(layer, start, Color(0.42, 0.28, 0.16, 0.36), Color(0.76, 0.64, 0.50, 0.28))
 
 	var projectile := Node2D.new()
@@ -92,9 +105,6 @@ static func _spawn_catapult_stone(
 
 	_add_rect(projectile, Vector2.ZERO, Vector2(13.0, 13.0), Color(0.54, 0.54, 0.56, 1.0), 1)
 	_add_rect(projectile, Vector2(-3.0, -3.0), Vector2(5.0, 5.0), Color(0.72, 0.72, 0.74, 0.94), 2)
-
-	var safe_time := maxf(flight_time, 0.08)
-	var arc_height := clampf(start.distance_to(target) * 0.20, 22.0, 64.0)
 
 	var move_tween := layer.create_tween()
 	move_tween.tween_property(root, "global_position", target, safe_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -128,6 +138,19 @@ static func _spawn_cannon_meteor_shell(
 	layer.add_child(root)
 	root.global_position = start
 
+	var safe_time := maxf(flight_time, 0.08)
+	var arc_height := clampf(start.distance_to(target) * 0.10, 12.0, 34.0)
+	_spawn_area_targeting_marks(
+		layer,
+		origin,
+		start,
+		target,
+		52.0,
+		arc_height,
+		safe_time,
+		Color(0.42, 0.96, 1.0, 0.58),
+		Color(1.0, 0.86, 0.36, 0.82)
+	)
 	_spawn_meteor_muzzle_flash(layer, start, target)
 
 	var projectile := Node2D.new()
@@ -144,9 +167,6 @@ static func _spawn_cannon_meteor_shell(
 	# Attached ember tail behind the shell; not a sky-fall trail.
 	_add_rect(projectile, -direction * 12.0, Vector2(20.0, 7.0), Color(1.0, 0.66, 0.16, 0.42), 0)
 	_add_rect(projectile, -direction * 22.0 + tangent * 2.0, Vector2(16.0, 5.0), Color(1.0, 0.22, 0.08, 0.30), -1)
-
-	var safe_time := maxf(flight_time, 0.08)
-	var arc_height := clampf(start.distance_to(target) * 0.10, 12.0, 34.0)
 
 	var move_tween := layer.create_tween()
 	move_tween.tween_property(root, "global_position", target, safe_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -171,6 +191,108 @@ static func _launch_origin_behind_core(origin: Vector2, target: Vector2, offset:
 	if direction.length_squared() <= 0.001:
 		direction = Vector2.UP
 	return origin - (direction * offset)
+
+
+static func _spawn_area_targeting_marks(
+	layer: Node2D,
+	origin: Vector2,
+	start: Vector2,
+	target: Vector2,
+	impact_radius: float,
+	arc_height: float,
+	duration: float,
+	guide_color: Color,
+	impact_color: Color
+) -> void:
+	_spawn_range_circle(layer, origin, start.distance_to(target), guide_color, duration)
+	_spawn_arc_guide(layer, start, target, arc_height, guide_color, duration)
+	_spawn_target_marker(layer, target, impact_radius, impact_color, duration)
+
+
+static func _spawn_range_circle(layer: Node2D, origin: Vector2, radius: float, color: Color, duration: float) -> void:
+	if radius <= 8.0:
+		return
+	var root := Node2D.new()
+	root.z_index = 55
+	layer.add_child(root)
+	root.global_position = origin
+
+	var soft_color := Color(color.r, color.g, color.b, minf(color.a * 0.32, 0.24))
+	var edge_color := Color(color.r, color.g, color.b, minf(color.a * 0.58, 0.38))
+	_spawn_ring(root, radius, soft_color, 6.0, -1)
+	_spawn_ring(root, radius, edge_color, 1.5, 0)
+
+	var tween := layer.create_tween()
+	tween.parallel().tween_property(root, "scale", Vector2(1.015, 1.015), duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(root, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
+
+
+static func _spawn_arc_guide(
+	layer: Node2D,
+	start: Vector2,
+	target: Vector2,
+	arc_height: float,
+	color: Color,
+	duration: float
+) -> void:
+	var root := Node2D.new()
+	root.z_index = 57
+	layer.add_child(root)
+	root.global_position = start
+
+	var local_target := target - start
+	var points := PackedVector2Array()
+	for i in range(13):
+		var t := float(i) / 12.0
+		var point := local_target * t
+		point.y -= sin(t * PI) * arc_height
+		points.append(point)
+
+	_add_polyline(root, points, 5.0, Color(color.r, color.g, color.b, minf(color.a * 0.34, 0.28)), -1)
+	_add_polyline(root, points, 1.6, Color(color.r, color.g, color.b, minf(color.a * 1.20, 0.78)), 0)
+
+	var tween := layer.create_tween()
+	tween.parallel().tween_property(root, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
+
+
+static func _spawn_target_marker(layer: Node2D, target: Vector2, radius: float, color: Color, duration: float) -> void:
+	var root := Node2D.new()
+	root.z_index = 58
+	layer.add_child(root)
+	root.global_position = target
+
+	var halo := Color(color.r, color.g, color.b, minf(color.a * 0.26, 0.26))
+	var edge := Color(color.r, color.g, color.b, minf(color.a * 0.95, 0.82))
+	_spawn_ring(root, radius, halo, 8.0, -1)
+	_spawn_ring(root, radius, edge, 2.0, 0)
+	_spawn_ring(root, maxf(radius * 0.48, 7.0), Color(edge.r, edge.g, edge.b, edge.a * 0.68), 1.4, 0)
+	_add_line(root, Vector2(-radius, 0.0), Vector2(-radius * 0.45, 0.0), 1.3, edge, 1)
+	_add_line(root, Vector2(radius * 0.45, 0.0), Vector2(radius, 0.0), 1.3, edge, 1)
+	_add_line(root, Vector2(0.0, -radius), Vector2(0.0, -radius * 0.45), 1.3, edge, 1)
+	_add_line(root, Vector2(0.0, radius * 0.45), Vector2(0.0, radius), 1.3, edge, 1)
+
+	var tween := layer.create_tween()
+	tween.parallel().tween_property(root, "scale", Vector2(1.10, 1.10), duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(root, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
+
+
+static func _add_machine_gun_beam(root: Node2D, local_target: Vector2, tangent: Vector2) -> void:
+	var rail_offset := 5.0
+	var muzzle_width := 2.0
+	_add_line(root, Vector2.ZERO, local_target, 8.0, Color(0.18, 0.72, 1.0, 0.18), -2)
+	_add_line(root, Vector2.ZERO, local_target, 4.0, Color(0.50, 0.96, 1.0, 0.38), -1)
+	_add_line(root, tangent * -muzzle_width, local_target + (tangent * -rail_offset), 1.5, Color(0.86, 1.0, 1.0, 0.92), 0)
+	_add_line(root, tangent * muzzle_width, local_target + (tangent * rail_offset), 1.5, Color(0.86, 1.0, 1.0, 0.92), 0)
+	_add_line(root, Vector2.ZERO, local_target, 1.0, Color(1.0, 1.0, 1.0, 0.72), 1)
 
 
 static func _spawn_launch_puff(layer: Node2D, position_value: Vector2, dust: Color, highlight: Color) -> void:
@@ -328,6 +450,20 @@ static func _add_line(parent: Node, start: Vector2, end: Vector2, width: float, 
 	line.end_cap_mode = Line2D.LINE_CAP_ROUND
 	line.joint_mode = Line2D.LINE_JOINT_ROUND
 	line.points = PackedVector2Array([start, end])
+	line.z_index = z_index
+	parent.add_child(line)
+	return line
+
+
+static func _add_polyline(parent: Node, points: PackedVector2Array, width: float, color: Color, z_index: int = 0) -> Line2D:
+	var line := Line2D.new()
+	line.width = width
+	line.default_color = color
+	line.antialiased = false
+	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	line.joint_mode = Line2D.LINE_JOINT_ROUND
+	line.points = points
 	line.z_index = z_index
 	parent.add_child(line)
 	return line
