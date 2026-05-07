@@ -115,6 +115,51 @@ Validation:
 Godot headless passed.
 git diff --check passed.
 
+## Phase 5B — Skill Projectile and Impact VFX
+
+Implemented:
+
+Added scripts/visual/skill_projectile_visual_factory.gd
+Added stone_throw catapult-stone arc VFX
+Added stone_throw blunt stone impact VFX
+Added meteor cannon-fired shell VFX
+Added meteor ember impact burst VFX
+Added machine_gun toy tracer VFX and tiny hit sparks
+Wired SkillController area skills to apply damage on VFX impact callback
+Wired machine_gun to spawn tracers before grouped ring damage
+
+Semantic direction:
+
+stone_throw is interpreted as a catapult launching a stone in a parabolic arc.
+meteor is interpreted as a meteor cannon firing an ember shell from the core-back cannon toward the target.
+meteor is not implemented as a sky-falling vertical projectile.
+machine_gun is interpreted as toy turret/drone pixel tracer bursts, not realistic firearm shots.
+
+Architecture notes:
+
+VFX are code-native only.
+No PNG/assets were added.
+No SFX/audio was added.
+No AudioEvents calls were added.
+No AudioStreamPlayer was added.
+RingInstance still owns damage application.
+SkillController still calls only skill-specific damage entry points.
+SkillProjectileVisualFactory is visual-only and receives callbacks for impact timing.
+
+Expected behavior:
+
+stone_throw visually lobs a gray stone from behind core to the target, then shows blunt impact.
+meteor fires a glowing ember shell from the core-back cannon toward target, then shows ember burst.
+machine_gun shows short tracers and tiny sparks for selected targets.
+If VFX layer is unavailable, area-skill damage still applies immediately through fallback callback.
+
+Validation:
+
+Godot headless passed.
+git diff --check passed.
+No assets/audio/UI/Core/RingInstance/DangerManager changes were made.
+Boundary grep checks passed.
+
 ## Phase 5A.1 — Machine Gun Skill Interval Balance
 
 Changed:

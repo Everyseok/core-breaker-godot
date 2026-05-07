@@ -1,9 +1,10 @@
 extends Node2D
 # SkillController — automatic runtime skill firing only.
 # This node must not own UI, permanent visuals, or audio assets.
-# Phase 3 intentionally applies damage without projectile VFX.
+# Phase 5B adds code-native flight and impact VFX, but this node still owns no audio/assets.
 
 const SkillRulesRef := preload("res://scripts/domain/skills/skill_rules.gd")
+const SkillProjectileVisualFactoryRef := preload("res://scripts/visual/skill_projectile_visual_factory.gd")
 
 var _core: Node2D
 var _projectile_layer: Node2D
@@ -79,6 +80,40 @@ func _get_skill_manager():
 	return get_node_or_null("/root/SkillManager")
 
 
+func _get_skill_origin() -> Vector2:
+	if _core != null and is_instance_valid(_core):
+		if _core.has_method("get_launch_origin_global"):
+			var origin_variant: Variant = _core.call("get_launch_origin_global")
+			if origin_variant is Vector2:
+				return origin_variant
+		return _core.global_position
+	return global_position
+
+
+func _get_skill_vfx_layer() -> Node2D:
+	if _projectile_layer != null and is_instance_valid(_projectile_layer):
+		return _projectile_layer
+	if _vfx_layer != null and is_instance_valid(_vfx_layer):
+		return _vfx_layer
+	return null
+
+
+func _target_world_position(target: Dictionary, fallback: Vector2) -> Vector2:
+	var world_variant: Variant = target.get("world_position", fallback)
+	if world_variant is Vector2:
+		return world_variant
+
+	var ring = target.get("ring")
+	var segment_index := int(target.get("segment_index", -1))
+	if ring != null and is_instance_valid(ring):
+		if ring.has_method("get_segment_world_position_safe"):
+			var safe_position: Variant = ring.call("get_segment_world_position_safe", segment_index)
+			if safe_position is Vector2:
+				return safe_position
+
+	return fallback
+
+
 func _select_targets(skill_id: String) -> Array:
 	var all_targets := _collect_all_skill_targets()
 	if all_targets.is_empty():
@@ -145,11 +180,30 @@ func _fire_area_skill(skill_id: String, target: Dictionary) -> void:
 
 	var damage := SkillRulesRef.damage_for_id(skill_id)
 	var spread_radius := SkillRulesRef.spread_radius_for_id(skill_id)
-	ring.call("apply_skill_hit", segment_index, damage, spread_radius, skill_id)
+	var origin := _get_skill_origin()
+	var target_position := _target_world_position(target, origin)
+	var flight_time := SkillRulesRef.flight_time_for_id(skill_id)
+	var layer := _get_skill_vfx_layer()
+
+	var impact_callback := func() -> void:
+		if ring != null and is_instance_valid(ring) and ring.has_method("apply_skill_hit"):
+			ring.call("apply_skill_hit", segment_index, damage, spread_radius, skill_id)
+
+	SkillProjectileVisualFactoryRef.spawn_area_skill_vfx(
+		layer,
+		skill_id,
+		origin,
+		target_position,
+		flight_time,
+		impact_callback
+	)
 
 
 func _fire_machine_gun(skill_id: String, targets: Array) -> void:
 	var grouped_by_ring: Dictionary = {}
+	var origin := _get_skill_origin()
+	var layer := _get_skill_vfx_layer()
+	var tracer_index := 0
 
 	for target_variant in targets:
 		if not (target_variant is Dictionary):
@@ -163,6 +217,10 @@ func _fire_machine_gun(skill_id: String, targets: Array) -> void:
 		var segment_index := int(target.get("segment_index", -1))
 		if segment_index < 0:
 			continue
+
+		var target_position := _target_world_position(target, origin)
+		SkillProjectileVisualFactoryRef.spawn_machine_gun_tracer(layer, origin, target_position, tracer_index)
+		tracer_index += 1
 
 		var ring_key := str(ring.get_instance_id())
 		if not grouped_by_ring.has(ring_key):
