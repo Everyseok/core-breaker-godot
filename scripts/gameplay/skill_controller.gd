@@ -88,7 +88,10 @@ func _select_targets(skill_id: String) -> Array:
 
 	if skill_id == SkillRulesRef.MACHINE_GUN:
 		var max_targets := mini(SkillRulesRef.max_targets_for_id(skill_id), all_targets.size())
-		return all_targets.slice(0, max_targets)
+		var selected: Array = []
+		for i in range(max_targets):
+			selected.append(all_targets[i])
+		return selected
 
 	return [all_targets[0]]
 

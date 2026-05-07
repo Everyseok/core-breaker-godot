@@ -115,3 +115,18 @@ Validation:
 Godot headless passed.
 git diff --check passed.
 No UI/Core/AimJoystick/assets/audio changes were made.
+
+Phase 3.1 — Machine Gun Target Selection Safety Refactor
+
+Implemented:
+
+Replaced `Array.slice(0, max_targets)` in `SkillController._select_targets()` with an explicit loop.
+
+Reason:
+
+This avoids ambiguity in Godot `Array.slice()` end-index behavior and guarantees machine_gun selects exactly `max_targets` items when enough valid targets exist.
+
+Validation:
+
+Godot headless passed.
+git diff --check passed.
