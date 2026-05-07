@@ -58,7 +58,9 @@ static func spawn_machine_gun_tracer(
 	var tween := layer.create_tween()
 	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(root, "scale", Vector2(0.72, 0.72), 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(root.queue_free)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
 
 
 static func _spawn_catapult_stone(
@@ -98,8 +100,9 @@ static func _spawn_catapult_stone(
 	move_tween.tween_property(root, "global_position", target, safe_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	move_tween.finished.connect(func() -> void:
 		_call_impact(impact_callback)
-		_spawn_stone_impact(layer, target)
-		root.queue_free()
+		if layer != null and is_instance_valid(layer):
+			_spawn_stone_impact(layer, target)
+		_safe_queue_free(root)
 	)
 
 	var arc_tween := layer.create_tween()
@@ -149,8 +152,9 @@ static func _spawn_cannon_meteor_shell(
 	move_tween.tween_property(root, "global_position", target, safe_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	move_tween.finished.connect(func() -> void:
 		_call_impact(impact_callback)
-		_spawn_meteor_impact(layer, target)
-		root.queue_free()
+		if layer != null and is_instance_valid(layer):
+			_spawn_meteor_impact(layer, target)
+		_safe_queue_free(root)
 	)
 
 	var arc_tween := layer.create_tween()
@@ -182,7 +186,9 @@ static func _spawn_launch_puff(layer: Node2D, position_value: Vector2, dust: Col
 	var tween := layer.create_tween()
 	tween.parallel().tween_property(root, "scale", Vector2(1.45, 1.20), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(root.queue_free)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
 
 
 static func _spawn_meteor_muzzle_flash(layer: Node2D, start: Vector2, target: Vector2) -> void:
@@ -202,7 +208,9 @@ static func _spawn_meteor_muzzle_flash(layer: Node2D, start: Vector2, target: Ve
 	var tween := layer.create_tween()
 	tween.parallel().tween_property(root, "scale", Vector2(1.25, 1.25), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(root.queue_free)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
 
 
 static func _spawn_stone_impact(layer: Node2D, position_value: Vector2) -> void:
@@ -217,7 +225,9 @@ static func _spawn_stone_impact(layer: Node2D, position_value: Vector2) -> void:
 	var tween := layer.create_tween()
 	tween.parallel().tween_property(root, "scale", Vector2(1.36, 1.10), 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(root.queue_free)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
 
 
 static func _spawn_meteor_impact(layer: Node2D, position_value: Vector2) -> void:
@@ -233,7 +243,9 @@ static func _spawn_meteor_impact(layer: Node2D, position_value: Vector2) -> void
 	var tween := layer.create_tween()
 	tween.parallel().tween_property(root, "scale", Vector2(1.62, 1.42), 0.30).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(root.queue_free)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
 
 
 static func _spawn_tiny_hit_spark(layer: Node2D, position_value: Vector2, primary: Color, secondary: Color) -> void:
@@ -248,7 +260,9 @@ static func _spawn_tiny_hit_spark(layer: Node2D, position_value: Vector2, primar
 	var tween := layer.create_tween()
 	tween.parallel().tween_property(root, "scale", Vector2(1.40, 1.40), 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(root, "modulate:a", 0.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(root.queue_free)
+	tween.finished.connect(func() -> void:
+		_safe_queue_free(root)
+	)
 
 
 static func _spawn_flash(parent: Node, size: Vector2, color: Color, z_index: int) -> void:
@@ -317,6 +331,11 @@ static func _add_line(parent: Node, start: Vector2, end: Vector2, width: float, 
 	line.z_index = z_index
 	parent.add_child(line)
 	return line
+
+
+static func _safe_queue_free(node: Node) -> void:
+	if node != null and is_instance_valid(node) and not node.is_queued_for_deletion():
+		node.queue_free()
 
 
 static func _call_impact(impact_callback: Callable) -> void:
