@@ -62,15 +62,24 @@ var _buff_lock_shackle: Line2D
 var _buff_lock_body: Panel
 var _buff_lock_keyhole: ColorRect
 var _buff_lock_spark: ColorRect
+var _buff_manager = null
 
 
 func _ready() -> void:
+	_buff_manager = get_node_or_null("/root/BuffManager")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_ui()
 	_apply_visual_style()
 	_load_saved_position()
 	_update_layout()
+	_sync_play_visibility()
+	if not GameState.game_started.is_connected(_sync_play_visibility):
+		GameState.game_started.connect(_sync_play_visibility)
+	if not GameState.game_over.is_connected(_sync_play_visibility):
+		GameState.game_over.connect(_sync_play_visibility)
+	if not GameState.max_level_cleared.is_connected(_sync_play_visibility):
+		GameState.max_level_cleared.connect(_sync_play_visibility)
 	if not resized.is_connected(_update_layout):
 		resized.connect(_update_layout)
 
@@ -90,6 +99,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	_sync_play_visibility()
+	if not visible:
+		return
 	_update_buff_button_state()
 	if _is_dragging_stick():
 		return
@@ -484,6 +496,10 @@ func _is_dragging_stick() -> bool:
 	return _mouse_drag_active or _active_touch_index >= 0
 
 
+func _sync_play_visibility() -> void:
+	visible = GameState.is_playing
+
+
 func _update_button_state() -> void:
 	_left_button.disabled = _position_slot == PositionSlot.LEFT
 	_right_button.disabled = _position_slot == PositionSlot.RIGHT
@@ -500,7 +516,8 @@ func _slot_ratio(slot: int) -> float:
 
 
 func _on_buff_button_pressed() -> void:
-	if BuffManager.start_buff_roll():
+	var buff_manager = _get_buff_manager()
+	if buff_manager != null and bool(buff_manager.call("start_buff_roll")):
 		AudioEvents.ui_confirm()
 	else:
 		AudioEvents.ui_error()
@@ -510,42 +527,54 @@ func _on_buff_button_pressed() -> void:
 func _update_buff_button_state() -> void:
 	if _buff_button == null:
 		return
+	var buff_manager = _get_buff_manager()
+	if buff_manager == null:
+		_buff_button.disabled = true
+		_buff_button.text = "--"
+		_set_buff_lock_visible(false)
+		return
 	if not GameState.is_playing:
 		_buff_button.disabled = true
 		_buff_button.text = "--"
 		_set_buff_lock_visible(false)
 		return
 
-	if BuffManager.is_roll_in_progress():
+	if bool(buff_manager.call("is_roll_in_progress")):
 		_buff_button.disabled = true
 		_buff_button.text = "선택중"
 		_set_buff_lock_visible(false)
 		return
 
-	if BuffManager.is_buff_active():
+	if bool(buff_manager.call("is_buff_active")):
 		_buff_button.disabled = true
 		_buff_button.text = "%s\n%d초" % [
-			BuffManager.get_active_buff_display_name(),
-			BuffManager.get_active_time_remaining_ceil()
+			String(buff_manager.call("get_active_buff_display_name")),
+			int(buff_manager.call("get_active_time_remaining_ceil"))
 		]
 		_set_buff_lock_visible(false)
 		return
 
-	if BuffManager.is_in_cooldown():
+	if bool(buff_manager.call("is_in_cooldown")):
 		_buff_button.disabled = true
-		_buff_button.text = "대기\n%d" % BuffManager.get_cooldown_time_remaining_ceil()
+		_buff_button.text = "대기\n%d" % int(buff_manager.call("get_cooldown_time_remaining_ceil"))
 		_set_buff_lock_visible(false)
 		return
 
-	if not BuffManager.is_buff_unlocked(GameState.current_level_k):
+	if not bool(buff_manager.call("is_buff_unlocked", GameState.current_level_k)):
 		_buff_button.disabled = true
-		_buff_button.text = "버프\n%d개" % BuffManager.get_unlock_k()
+		_buff_button.text = "버프\n%d개" % int(buff_manager.call("get_unlock_k"))
 		_set_buff_lock_visible(true)
 		return
 
-	_buff_button.disabled = not BuffManager.can_open_buff(GameState.current_level_k)
+	_buff_button.disabled = not bool(buff_manager.call("can_open_buff", GameState.current_level_k))
 	_buff_button.text = "버프"
 	_set_buff_lock_visible(false)
+
+
+func _get_buff_manager():
+	if _buff_manager == null or not is_instance_valid(_buff_manager):
+		_buff_manager = get_node_or_null("/root/BuffManager")
+	return _buff_manager
 
 
 func _set_buff_lock_visible(is_visible: bool) -> void:
