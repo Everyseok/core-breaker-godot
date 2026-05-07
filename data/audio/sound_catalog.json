@@ -171,42 +171,42 @@
     },
     "passive.stone_throw.launch": {
       "path": "res://assets/audio/sfx/passives/stone_throw/launch.ogg",
-      "volume_db": -11.0,
+      "volume_db": -10.5,
       "pitch_variation": 0.05,
       "cooldown_ms": 120,
       "max_instances": 2
     },
     "passive.stone_throw.impact": {
       "path": "res://assets/audio/sfx/passives/stone_throw/impact.ogg",
-      "volume_db": -10.0,
+      "volume_db": -10.5,
       "pitch_variation": 0.06,
       "cooldown_ms": 90,
       "max_instances": 3
     },
     "passive.meteor.launch": {
       "path": "res://assets/audio/sfx/passives/meteor/launch.ogg",
-      "volume_db": -11.5,
+      "volume_db": -10.5,
       "pitch_variation": 0.04,
       "cooldown_ms": 180,
       "max_instances": 2
     },
     "passive.meteor.impact": {
       "path": "res://assets/audio/sfx/passives/meteor/impact.ogg",
-      "volume_db": -9.5,
+      "volume_db": -10.5,
       "pitch_variation": 0.04,
       "cooldown_ms": 160,
       "max_instances": 2
     },
     "passive.machine_gun.burst": {
       "path": "res://assets/audio/sfx/passives/machine_gun/burst.ogg",
-      "volume_db": -14.5,
+      "volume_db": -10.5,
       "pitch_variation": 0.05,
       "cooldown_ms": 220,
       "max_instances": 1
     },
     "passive.machine_gun.hit": {
       "path": "res://assets/audio/sfx/passives/machine_gun/hit.ogg",
-      "volume_db": -16.5,
+      "volume_db": -10.5,
       "pitch_variation": 0.06,
       "cooldown_ms": 180,
       "max_instances": 2
