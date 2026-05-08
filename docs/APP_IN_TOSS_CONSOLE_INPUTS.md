@@ -11,6 +11,7 @@
 | Terms URL | https://everyseok.github.io/core-breaker-godot/legal/terms.html | VERIFIED_200 | App-in-Toss Console 등록 가능 |
 | Privacy URL | https://everyseok.github.io/core-breaker-godot/legal/privacy.html | VERIFIED_200 | App-in-Toss Console 등록 가능 |
 | Legal placeholders | RESOLVED_NO_TODO | USER_REPORTED_DONE | 운영자명/대표자/이메일/사업자등록번호/시행일 반영; 주소는 운영자 문의처 안내 |
+| Legal copy status | PRODUCTION_COPY_READY | DONE | 약관/개인정보처리방침 production 문구 정리 완료 |
 
 ## 2. Game Center / Ranking
 

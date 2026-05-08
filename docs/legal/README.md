@@ -35,6 +35,7 @@ TERMS_URL="https://example.com/legal/terms.html" PRIVACY_URL="https://example.co
 - Public HTTPS deployment: `VERIFIED`
 - HTTP 200 verification: `VERIFIED_200`
 - Operator/business placeholders: `RESOLVED_NO_TODO`
+- Legal copy status: `PRODUCTION_COPY_READY`
 - Final legal PASS: ready for App-in-Toss console URL entry.
 
 Verified URLs:

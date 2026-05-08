@@ -10,6 +10,7 @@
 | Public HTTPS 200 OK | `DONE` |
 | Final legal PASS | `READY_FOR_CONSOLE_ENTRY` |
 | Legal placeholders | `RESOLVED_NO_TODO` |
+| Legal copy status | `PRODUCTION_COPY_READY` |
 
 ## Business / Operator Info
 

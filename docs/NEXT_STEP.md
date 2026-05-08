@@ -30,6 +30,7 @@ Phone artifact guide: [`docs/ANDROID_PHONE_TEST_FROM_GITHUB.md`](ANDROID_PHONE_T
    - Terms: `https://everyseok.github.io/core-breaker-godot/legal/terms.html`
    - Privacy: `https://everyseok.github.io/core-breaker-godot/legal/privacy.html`
    - Legal placeholders are resolved with operator `엔드포인트`, representative `김준석`, contact `junseok3055@gmail.com`, business registration number `711-34-01671`, and effective date `2026년 5월 6일`.
+   - Legal copy status is `PRODUCTION_COPY_READY`; no draft or public-HTTPS-pending warning remains in the production pages.
 
 4. **Configure Game Center**
    - Game profile and leaderboard are `USER_REPORTED_DONE`.

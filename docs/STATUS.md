@@ -22,7 +22,7 @@
 | App-in-Toss official docs | Rechecked by curl/Markdown fetch in `docs/PRE_BUNDLE_OFFICIAL_AUDIT.md` |
 | Ads bridge | `STRUCTURALLY_WIRED_BUILD_VALIDATED` — blocked by ad group IDs, Toss Console, QR/device QA, and final wrapper packaging validation |
 | Packaging policy | `PACKAGING_POLICY_LOCKED_WRAPPER`; final source candidate is `web/toss_wrapper/dist`; final size must be remeasured |
-| Legal URLs | Static pages prepared, placeholders resolved, GitHub Pages deployed, public HTTPS 200 verified |
+| Legal URLs | `VERIFIED_200`; legal copy `PRODUCTION_COPY_READY`; App-in-Toss Console entry ready |
 | Dry-run Web export | Passed to `exports/prebundle_dry_run/`, size `55M`; generated output must not be staged |
 | Rejection-case checklist | Integrated into `docs/TOSS_QR_DEVICE_QA_PLAN.md`; 33 cases mapped, 16 remaining-before-review gates, community ad/leaderboard risk rows added, QR/device validation pending |
 | Final `.ait` | Not created |

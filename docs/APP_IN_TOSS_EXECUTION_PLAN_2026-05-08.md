@@ -107,4 +107,4 @@ Phase 0 changed only this audit snapshot document. No code, scenes, web prototyp
 - Candidate GitHub Pages URLs are `https://everyseok.github.io/core-breaker-godot/legal/terms.html` and `https://everyseok.github.io/core-breaker-godot/legal/privacy.html`.
 - Verification script: `tools/verify_legal_urls.sh`.
 - Legal placeholders are `RESOLVED_NO_TODO`: operator `엔드포인트`, representative `김준석`, contact `junseok3055@gmail.com`, business registration number `711-34-01671`, effective date `2026년 5월 6일`; business address is listed as available through the operator contact channel.
-- Current legal URL status: `VERIFIED_200`. GitHub Pages deploys `feature/android-debug-apk-artifact` `/docs`; both Terms and Privacy return HTTP 200 and are ready for App-in-Toss Console entry.
+- Current legal URL status: `VERIFIED_200`. GitHub Pages deploys `feature/android-debug-apk-artifact` `/docs`; both Terms and Privacy return HTTP 200, legal copy is `PRODUCTION_COPY_READY`, and the URLs are ready for App-in-Toss Console entry.
