@@ -1,7 +1,7 @@
 # Project Status
 
-**Date:** 2026-05-07
-**Phase:** 4.33 — Late-Game Pattern Pass 5B QA
+**Date:** 2026-05-08
+**Phase:** Pre-Bundle Readiness — App-in-Toss Ads / Game Center / Legal Gate
 **Master source-of-truth:** [`docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md`](APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
 **Breadth audit:** [`docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md`](APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
 **Dual-platform audit:** [`docs/DUAL_PLATFORM_BRIDGE_AUDIT.md`](DUAL_PLATFORM_BRIDGE_AUDIT.md)
@@ -16,9 +16,16 @@
 | Can submit Google Play today? | **No** |
 | Can push this pass to GitHub? | **Yes — private remote is configured; use path-specific staging only** |
 | Can build Android debug APK artifact today? | **Closer — debug preset and workflow exist; private GitHub push/run is still blocked** |
-| Top banner | `USER_DESIRED_BUT_REQUIRES_LAYOUT_REDESIGN_AND_OFFICIAL_ADS_QA` |
-| Death/game-over ad | Post-run interstitial or rewarded continue candidates only; do not implement now |
-| Ranking / Game Center | Structurally partial on App-in-Toss; future Google Play Games path not implemented |
+| Top banner | `STRUCTURALLY_WIRED_NOT_QR_VALIDATED` |
+| Rewarded revive ad | `STRUCTURALLY_WIRED_NOT_QR_VALIDATED`; success only on `USER_EARNED_REWARD` |
+| Ranking / Game Center | `STRUCTURALLY_WIRED_NOT_QR_VALIDATED`; future Google Play Games path not implemented |
+| App-in-Toss official docs | Rechecked by curl/Markdown fetch in `docs/PRE_BUNDLE_OFFICIAL_AUDIT.md` |
+| Ads bridge | `STRUCTURALLY_WIRED_BUILD_VALIDATED` — blocked by ad group IDs, Toss Console, QR/device QA, and final wrapper packaging validation |
+| Packaging policy | `PACKAGING_POLICY_LOCKED_WRAPPER`; final source candidate is `web/toss_wrapper/dist`; final size must be remeasured |
+| Legal URLs | Static pages prepared; placeholders resolved; GitHub Pages deployment and public HTTPS 200 verification still blocked |
+| Dry-run Web export | Passed to `exports/prebundle_dry_run/`, size `55M`; generated output must not be staged |
+| Rejection-case checklist | Integrated into `docs/TOSS_QR_DEVICE_QA_PLAN.md`; 33 cases mapped, 16 remaining-before-review gates, community ad/leaderboard risk rows added, QR/device validation pending |
+| Final `.ait` | Not created |
 
 ## Current State Summary
 
@@ -28,15 +35,15 @@
 | Main flow | MainMenu starts the app; gameplay starts only on user action |
 | Save source of truth | `SaveManager.get_best_record_value()` |
 | Platform owner today | `PlatformBridge` owns Toss lifecycle, user key, leaderboard submit/open, and future ad wrapper concerns |
-| Platform direction | shared core + platform adapters; no runtime wiring yet |
+| Platform direction | App-in-Toss runtime now uses `window.CoreBreakerToss` structurally; QR/device proof is still missing |
 | Export state | Historical dry run exists; no current final `.ait` |
 | Google Play export state | Debug-only APK preset exists; no production AAB, signing, or Play Console setup |
 | GitHub APK artifact state | Hardened workflow exists at `.github/workflows/android-debug-apk.yml`; it installs Godot 4.6.2 export templates and Android SDK packages for a real debug APK attempt, but still needs private push and first CI run |
 | Android debug APK launch state | Debug APK uses temporary package `com.junseokism.corebreaker.debug` and is configured as launcher-visible |
 | Worktree hygiene | Dirty worktree includes pre-existing gameplay/domain/scene/asset changes outside this release-pipeline loop; do not stage with `git add .` |
 | Branding | `res://assets/branding/app_logo.png` is canonical source, `res://assets/branding/app_icon_600.png` is the exact `600x600` candidate pending approval |
-| Console state | App is not registered yet; console-dependent work stays `NEEDS_CONSOLE_ACCESS` |
-| Ads state | `NOT_IMPLEMENTED / FUTURE`; no placeholder slots, no fake ad UI |
+| Console state | App title/categories and Game Center profile/leaderboard are user-reported; adGroupIds, settlement review, public legal URLs, and QR/device validation remain blocked |
+| Ads state | `STRUCTURALLY_WIRED_BUILD_VALIDATED`; no fake ad UI; `BLOCKED_BY_AD_GROUP_ID` and `BLOCKED_BY_QR_DEVICE_QA` |
 | Developer Center breadth | All first-column categories are now mapped; many marketing/API/revenue items are future-stage rather than current blockers |
 | GitHub push safety | Private remote is configured; keep using path-specific staging and do not stage `.godot` cache files |
 | Buff System MVP | Timed cooldown pass implemented: projectile x2 and damage x1.5 now expire after 10 seconds, then enter 30-second cooldown |
@@ -47,18 +54,32 @@
 
 ## Highest-Priority Blockers
 
-1. A fresh Android artifact/device install validation is still needed after the latest gameplay changes.
-2. Toss console registration and QR/device validation are not complete.
-3. Google Play has no production AAB preset, signing path, or Play Console setup.
-4. Public title/icon/logo are not fully locked for store registration.
-5. Asset/license proof is still incomplete.
-6. Ranking/Game Center is only structurally partial and still needs Toss-shell validation.
-7. `JavaScriptBridge.eval(...)` in `PlatformBridge` is a review-sensitive implementation detail that needs careful later validation.
+1. Rejection-case checklist is integrated into `docs/TOSS_QR_DEVICE_QA_PLAN.md`; 16 remaining-before-review gates still need Toss QR/device QA evidence.
+2. PlatformBridge is structurally wired to `window.CoreBreakerToss`; bridge/wrapper builds pass, but Toss QR/device runtime validation is not complete.
+3. Packaging policy is locked to Vite wrapper, but final wrapper output has not been rebuilt from the final export or converted to `.ait`.
+4. Banner and rewarded ad group IDs are not configured and must not be invented.
+5. Business registration is user-reported done; settlement review remains `PENDING_REVIEW`.
+6. Public terms/privacy URLs are prepared as static pages and placeholders are resolved, but URLs are not deployed or verified with HTTP 200.
+7. Toss Game Center profile/leaderboard setup is `USER_REPORTED_DONE`, but QR/device runtime verification is not complete.
+8. Toss QR/device QA for navigation, schemes, external links, ads, ranking, low-score leaderboard validation, safe area, lifecycle, and audio is not complete.
+9. Selected `Toss Web` export completeness audit passed, but final wrapper output still must be refreshed from the final export and remeasured before `.ait`.
+10. Final `.ait` export has not been created.
+
+## Release STOP GATES
+
+| Gate | Status |
+|---|---|
+| Console / Legal | `BLOCKED` |
+| QR / Device QA | `BLOCKED` |
+| Export / Packaging | `BLOCKED` |
+| Code Integrity | `STRUCTURALLY_READY_NOT_QR_VALIDATED` |
+| Submit ready | `false` |
+| Final `.ait` allowed | `false` |
 
 ## What Was Not Changed By This Release-Pipeline Loop
 
 - No gameplay math, `DamageRules`, `BrickRules`, progression thresholds, wall rules, projectile mechanics, or weapon balance were intentionally changed by the APK/dual-platform release loop.
 - The current worktree still contains pre-existing gameplay/domain/scene/asset changes from other passes, so final staging must be path-specific and must not use `git add .`.
-- Platform scripts added in this phase are no-op skeletons only and are not wired into live runtime.
-- `exports/` was not modified and no `.ait`, APK, or AAB export was generated.
-- No ad SDK integration, leaderboard SDK integration, ads, placeholder ad boxes, Toss Ads Pixel, production signing, production ad IDs, or Play Games SDK integration were added.
+- PlatformBridge changes in the pre-bundle worktree are structurally wired to `window.CoreBreakerToss`, but release remains QR/device and console blocked.
+- `exports/prebundle_dry_run/` was generated for a dry-run Web export and must not be staged; no final `.ait`, APK, or AAB export was generated.
+- No fake ad UI, placeholder ad box, Toss Ads Pixel, production signing, production ad IDs, or Play Games SDK integration were added. App-in-Toss Ads/Game Center paths are structural only until QR/device validation.
