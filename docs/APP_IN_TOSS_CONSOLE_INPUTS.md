@@ -8,8 +8,8 @@
 | Console app/service name | 코어 브레이커 | USER_REPORTED_DONE | Toss console 등록명 |
 | App category is Game | 게임 > 액션, 게임 > 클래식 | USER_REPORTED_DONE | Game Center 사용 조건 |
 | Console app id / URL |  | MISSING | 있으면 기록, 없으면 비움 |
-| Terms URL | https://everyseok.github.io/core-breaker-godot/legal/terms.html | PENDING_DEPLOYMENT_NOT_VERIFIED | GitHub Pages `/docs` 배포와 HTTPS 200 필요 |
-| Privacy URL | https://everyseok.github.io/core-breaker-godot/legal/privacy.html | PENDING_DEPLOYMENT_NOT_VERIFIED | GitHub Pages `/docs` 배포와 HTTPS 200 필요 |
+| Terms URL | https://everyseok.github.io/core-breaker-godot/legal/terms.html | VERIFIED_200 | App-in-Toss Console 등록 가능 |
+| Privacy URL | https://everyseok.github.io/core-breaker-godot/legal/privacy.html | VERIFIED_200 | App-in-Toss Console 등록 가능 |
 | Legal placeholders | RESOLVED_NO_TODO | USER_REPORTED_DONE | 운영자명/대표자/이메일/사업자등록번호/시행일 반영; 주소는 운영자 문의처 안내 |
 
 ## 2. Game Center / Ranking
@@ -77,7 +77,5 @@
 1) 배너 광고 adGroupId
 2) 부활 리워드 광고 adGroupId
 3) 정산 심사 완료 여부
-4) GitHub Pages source branch: main인지, feature/android-debug-apk-artifact인지, 또는 별도 Pages branch인지
-5) public HTTPS 200 OK 검증 결과
-6) App-in-Toss QR/private test URL 또는 실행 가능 여부
-7) iOS/Android 실기기 QA 가능 기기/OS/Toss 앱 버전
+4) App-in-Toss QR/private test URL 또는 실행 가능 여부
+5) iOS/Android 실기기 QA 가능 기기/OS/Toss 앱 버전

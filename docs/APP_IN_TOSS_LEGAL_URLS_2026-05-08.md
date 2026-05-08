@@ -6,9 +6,9 @@
 |---|---|
 | App public title | `코어브레이커` |
 | Console/service name | `코어 브레이커` |
-| Legal URL status | `BLOCKED_BY_LEGAL_URLS` |
-| Public HTTPS 200 OK | `NOT_DONE` |
-| Final legal PASS | `NO` |
+| Legal URL status | `VERIFIED_200` |
+| Public HTTPS 200 OK | `DONE` |
+| Final legal PASS | `READY_FOR_CONSOLE_ENTRY` |
 | Legal placeholders | `RESOLVED_NO_TODO` |
 
 ## Business / Operator Info
@@ -28,23 +28,20 @@ Preferred default deployment path: GitHub Pages for `Everyseok/core-breaker-godo
 
 | Page | Candidate URL | Local file | Status |
 |---|---|---|---|
-| Terms | `https://everyseok.github.io/core-breaker-godot/legal/terms.html` | `docs/legal/terms.html` | `PENDING_DEPLOYMENT_NOT_VERIFIED` |
-| Privacy | `https://everyseok.github.io/core-breaker-godot/legal/privacy.html` | `docs/legal/privacy.html` | `PENDING_DEPLOYMENT_NOT_VERIFIED` |
-| Legal index | `https://everyseok.github.io/core-breaker-godot/legal/` | `docs/legal/index.html` | `PENDING_DEPLOYMENT_NOT_VERIFIED` |
+| Terms | `https://everyseok.github.io/core-breaker-godot/legal/terms.html` | `docs/legal/terms.html` | `VERIFIED_200` |
+| Privacy | `https://everyseok.github.io/core-breaker-godot/legal/privacy.html` | `docs/legal/privacy.html` | `VERIFIED_200` |
+| Legal index | `https://everyseok.github.io/core-breaker-godot/legal/` | `docs/legal/index.html` | `PAGES_DEPLOYED` |
 
 ## GitHub Pages Setup
 
-1. Open GitHub repo `Everyseok/core-breaker-godot`.
-2. Open **Settings**.
-3. Open **Pages**.
-4. Set **Build and deployment** to **Deploy from a branch**.
-5. Select the branch that will host legal pages.
-   - If Pages is configured for `main`, these legal files must be pushed to `main`.
-   - If Pages can serve `feature/android-debug-apk-artifact`, confirm that branch is intended for public legal URL hosting.
-6. Set folder to `/docs`.
-7. Save.
-8. Wait for Pages deployment.
-9. Run:
+Current setup:
+
+- Repository: `Everyseok/core-breaker-godot`
+- Pages source branch: `feature/android-debug-apk-artifact`
+- Pages source folder: `/docs`
+- Pages root: `https://everyseok.github.io/core-breaker-godot/`
+
+Verification command:
 
 ```sh
 tools/verify_legal_urls.sh
@@ -67,10 +64,9 @@ TERMS_URL="https://example.com/legal/terms.html" PRIVACY_URL="https://example.co
 
 ## Blockers
 
-| Blocker | Required unblock evidence |
+| Gate | Evidence |
 |---|---|
-| `BLOCKED_BY_LEGAL_URLS` | Terms and Privacy URLs return HTTP 200 via `curl -I -L --max-time 10` |
-| `PAGES_DEPLOYMENT_PENDING` | GitHub Pages source branch is selected and `/docs` deployment finishes |
-| `PAGES_BRANCH_UNCONFIRMED` | User confirms GitHub Pages source branch and `/docs` folder |
+| `LEGAL_URLS_VERIFIED_200` | `tools/verify_legal_urls.sh` returns `LEGAL URLS VERIFIED` |
+| `PAGES_SOURCE` | GitHub Pages is configured to deploy `feature/android-debug-apk-artifact` `/docs` |
 
-Do not mark legal URLs as PASS until both public URLs return HTTP 200.
+Legal URLs are ready to enter in App-in-Toss Console.

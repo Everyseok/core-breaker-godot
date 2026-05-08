@@ -32,9 +32,12 @@ TERMS_URL="https://example.com/legal/terms.html" PRIVACY_URL="https://example.co
 
 ## Release Status
 
-- Public HTTPS deployment: `NOT_VERIFIED`
-- HTTP 200 verification: `NOT_DONE`
+- Public HTTPS deployment: `VERIFIED`
+- HTTP 200 verification: `VERIFIED_200`
 - Operator/business placeholders: `RESOLVED_NO_TODO`
-- Final legal PASS: blocked until public URLs return 200.
+- Final legal PASS: ready for App-in-Toss console URL entry.
 
-Do not mark `BLOCKED_BY_LEGAL_URLS` resolved until both public URLs return HTTP 200.
+Verified URLs:
+
+- Terms: `https://everyseok.github.io/core-breaker-godot/legal/terms.html`
+- Privacy: `https://everyseok.github.io/core-breaker-godot/legal/privacy.html`

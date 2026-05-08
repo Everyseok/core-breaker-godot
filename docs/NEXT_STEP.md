@@ -2,7 +2,7 @@
 
 **Phase:** Pre-Bundle Readiness Gate
 **Date:** 2026-05-08
-**Current verdict:** Final `.ait` export is not allowed. `PlatformBridge` is structurally wired/build validated through `window.CoreBreakerToss`, packaging policy is locked to Vite wrapper, Game Center console setup is user-reported done, but legal URLs, adGroupIds, settlement review, QR/device QA, and final export validation are still blocked.
+**Current verdict:** Final `.ait` export is not allowed. `PlatformBridge` is structurally wired/build validated through `window.CoreBreakerToss`, packaging policy is locked to Vite wrapper, Game Center console setup is user-reported done, legal URLs are verified 200, but adGroupIds, settlement review, QR/device QA, and final export validation are still blocked.
 
 Master source-of-truth: [`docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md`](APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
 Breadth audit: [`docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md`](APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
@@ -26,7 +26,9 @@ Phone artifact guide: [`docs/ANDROID_PHONE_TEST_FROM_GITHUB.md`](ANDROID_PHONE_T
    - Final public title is `코어브레이커`; Toss Console service name is `코어 브레이커`.
    - User/Toss Console must provide banner ad group ID and rewarded revive ad group ID after review approval.
    - Keep production IDs out of commit until sensitivity policy is confirmed.
-   - Publish `docs/legal/terms.html` and `docs/legal/privacy.html` through GitHub Pages `/docs`, then run `tools/verify_legal_urls.sh` and verify public HTTPS 200.
+   - Legal URLs are verified 200 and can be entered in App-in-Toss Console.
+   - Terms: `https://everyseok.github.io/core-breaker-godot/legal/terms.html`
+   - Privacy: `https://everyseok.github.io/core-breaker-godot/legal/privacy.html`
    - Legal placeholders are resolved with operator `엔드포인트`, representative `김준석`, contact `junseok3055@gmail.com`, business registration number `711-34-01671`, and effective date `2026년 5월 6일`.
 
 4. **Configure Game Center**

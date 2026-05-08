@@ -22,7 +22,7 @@
 | App-in-Toss official docs | Rechecked by curl/Markdown fetch in `docs/PRE_BUNDLE_OFFICIAL_AUDIT.md` |
 | Ads bridge | `STRUCTURALLY_WIRED_BUILD_VALIDATED` — blocked by ad group IDs, Toss Console, QR/device QA, and final wrapper packaging validation |
 | Packaging policy | `PACKAGING_POLICY_LOCKED_WRAPPER`; final source candidate is `web/toss_wrapper/dist`; final size must be remeasured |
-| Legal URLs | Static pages prepared; placeholders resolved; GitHub Pages deployment and public HTTPS 200 verification still blocked |
+| Legal URLs | Static pages prepared, placeholders resolved, GitHub Pages deployed, public HTTPS 200 verified |
 | Dry-run Web export | Passed to `exports/prebundle_dry_run/`, size `55M`; generated output must not be staged |
 | Rejection-case checklist | Integrated into `docs/TOSS_QR_DEVICE_QA_PLAN.md`; 33 cases mapped, 16 remaining-before-review gates, community ad/leaderboard risk rows added, QR/device validation pending |
 | Final `.ait` | Not created |
@@ -59,17 +59,16 @@
 3. Packaging policy is locked to Vite wrapper, but final wrapper output has not been rebuilt from the final export or converted to `.ait`.
 4. Banner and rewarded ad group IDs are not configured and must not be invented.
 5. Business registration is user-reported done; settlement review remains `PENDING_REVIEW`.
-6. Public terms/privacy URLs are prepared as static pages and placeholders are resolved, but URLs are not deployed or verified with HTTP 200.
-7. Toss Game Center profile/leaderboard setup is `USER_REPORTED_DONE`, but QR/device runtime verification is not complete.
-8. Toss QR/device QA for navigation, schemes, external links, ads, ranking, low-score leaderboard validation, safe area, lifecycle, and audio is not complete.
-9. Selected `Toss Web` export completeness audit passed, but final wrapper output still must be refreshed from the final export and remeasured before `.ait`.
-10. Final `.ait` export has not been created.
+6. Toss Game Center profile/leaderboard setup is `USER_REPORTED_DONE`, but QR/device runtime verification is not complete.
+7. Toss QR/device QA for navigation, schemes, external links, ads, ranking, low-score leaderboard validation, safe area, lifecycle, and audio is not complete.
+8. Selected `Toss Web` export completeness audit passed, but final wrapper output still must be refreshed from the final export and remeasured before `.ait`.
+9. Final `.ait` export has not been created.
 
 ## Release STOP GATES
 
 | Gate | Status |
 |---|---|
-| Console / Legal | `BLOCKED` |
+| Console / Legal | `PARTIAL`: legal URLs verified; adGroupIds and settlement review still blocked |
 | QR / Device QA | `BLOCKED` |
 | Export / Packaging | `BLOCKED` |
 | Code Integrity | `STRUCTURALLY_READY_NOT_QR_VALIDATED` |
