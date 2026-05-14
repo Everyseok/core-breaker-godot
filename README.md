@@ -2,13 +2,9 @@
   <img src="docs/assets/readme/core-breaker-banner.png" alt="Core Breaker Banner" width="100%" />
 </p>
 
-<!-- Add core-breaker-banner.png under docs/assets/readme/ when available. -->
-
 <p align="center">
-  <img src="docs/assets/readme/core-breaker-icon.png" alt="Core Breaker Icon" width="96" />
+  <img src="docs/assets/readme/core-breaker-icon.png" alt="Core Breaker Icon" width="112" />
 </p>
-
-<!-- Add core-breaker-icon.png under docs/assets/readme/ when available. -->
 
 <h1 align="center">Core Breaker</h1>
 
