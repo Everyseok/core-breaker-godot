@@ -52,8 +52,6 @@ You aim from the center, fire into shrinking radial brick walls, destroy segment
   <img src="docs/assets/readme/screenshot-gameplay-03.png" alt="Gameplay Screenshot 3" width="31%" />
 </p>
 
-<!-- Add screenshots under docs/assets/readme/ when available. -->
-
 ---
 
 ## Core Gameplay
@@ -116,33 +114,11 @@ For detailed steps, see:
 
 ---
 
-## Project Status
+## Current Build
 
-Core Breaker is currently in **private testing and release preparation**.
+Core Breaker is currently available as a **private Android debug build** for hands-on device testing.
 
-Current focus:
-
-- Android APK validation
-- Mobile input and layout stability
-- Gameplay readability
-- Weapon progression balancing
-- Store/App-in-Toss release preparation
-- Leaderboard and monetization workflow preparation
-
----
-
-## Roadmap
-
-- [x] Core radial-defense gameplay loop
-- [x] Central-core projectile combat
-- [x] Shrinking radial wall system
-- [x] Android debug APK workflow
-- [x] Phone installation guide
-- [ ] Final mobile QA pass
-- [ ] Leaderboard integration
-- [ ] Ad integration
-- [ ] Store/App-in-Toss release packaging
-- [ ] Public production release
+The game already presents its core arcade loop: a glowing center core, radial brick pressure, directional attacks, and weapon progression tuned for portrait mobile play. The public-facing repository page is kept focused on what the game is, how it plays, and how testers can try the current APK.
 
 ---
 
@@ -169,7 +145,8 @@ The direct APK link depends on a successful GitHub Actions build and publication
 
 **Jun Seok Kim**<br />
 Independent Researcher & AI Builder<br />
-GitHub: [@Everyseok](https://github.com/Everyseok)
+GitHub: [@Everyseok](https://github.com/Everyseok)<br />
+Website: [about-jun-seok-kim.vercel.app](https://about-jun-seok-kim.vercel.app/)
 
 ---
 
