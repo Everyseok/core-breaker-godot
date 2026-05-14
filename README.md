@@ -122,17 +122,6 @@ The game already presents its core arcade loop: a glowing center core, radial br
 
 ---
 
-## Documentation
-
-- [Korean README](README.ko.md)
-- [App-in-Toss monetized release checklist](docs/APP_IN_TOSS_MONETIZED_RELEASE_MASTER_CHECKLIST.md)
-- [App-in-Toss Developer Center full audit](docs/APP_IN_TOSS_DEVCENTER_FULL_AUDIT.md)
-- [Dual-platform bridge audit](docs/DUAL_PLATFORM_BRIDGE_AUDIT.md)
-- [Google Play release checklist](docs/GOOGLE_PLAY_RELEASE_MASTER_CHECKLIST.md)
-- [Android phone test from GitHub](docs/ANDROID_PHONE_TEST_FROM_GITHUB.md)
-
----
-
 ## Repository Notes
 
 This repository is currently used for private development, Android debug testing, and release preparation.
