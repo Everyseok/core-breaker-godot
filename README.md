@@ -122,6 +122,14 @@ The game already presents its core arcade loop: a glowing center core, radial br
 
 ---
 
+## License
+
+Source code is licensed under the [MIT License](LICENSE).
+
+Game assets are not automatically covered by the MIT License. Artwork, branding images, screenshots, marketing images, fonts, audio, exported game resources, and store/App-in-Toss submission materials are covered by their own rights or asset-specific license records. See [NOTICE](NOTICE) for the repository license scope.
+
+---
+
 ## Repository Notes
 
 This repository is currently used for private development, Android debug testing, and release preparation.
